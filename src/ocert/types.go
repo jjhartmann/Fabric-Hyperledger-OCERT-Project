@@ -5,7 +5,6 @@
 package ocert
 
 import (
-	"math/big"
 	// "github.com/Nik-U/pbc"
 )
 
@@ -43,7 +42,7 @@ type G2Element struct {
 
 // A wrapper of an element in Gt
 type GtElement struct {
-	
+
 }
 
 /*****************************************************************/
@@ -53,7 +52,7 @@ type GtElement struct {
  * the rerandomization scheme E, and it is an element in G1.
  */
 type AuditorPublicKey struct {
-	PK *G1Element
+	PK []byte
 }
 
 /*
@@ -147,47 +146,50 @@ type Ecert struct {
 
 /*
  * Pairing product equation has form
- * e(G1_1, G2_1) * e(G1_2, G2_2) * ... * (G1_l, G2_l) = RHS
+ * e(G1_1, G2_1) * e(G1_2, G2_2) * ... * (G1_l, G2_l) = RHS,
+ * where RHS is in Gt
  */
 type PairingProductEquationPair struct {
-	X *G1Element
-	Y *G2Element
+	X []byte
+	Y []byte
 }
 
 type PairingProductEquation struct {
 	Length uint32
 	LHS []PairingProductEquationPair
-	RHS *GtElement
+	RHS []byte
 }
 
 /*
  * Multi-scalar multiplication equation in G1 has form
- * a_1 * G1_1 + a_2 * G1_2 + ... + a_l * G1_l = RHS
+ * a_1 * G1_1 + a_2 * G1_2 + ... + a_l * G1_l = RHS,
+ * where RHS is in G1
  */
 type MultiScalarMultiplicationEquationG1Pair struct {
-	A *big.Int
-	X *G1Element
+	A []byte
+	X []byte
 }
 
 type MultiScalarMultiplicationEquationG1 struct {
 	Length uint32
 	LHS []MultiScalarMultiplicationEquationG1Pair
-	RHS *G1Element
+	RHS []byte
 }
 
 /*
  * Multi-scalar multiplication equation in G2 has form
- * a_1 * G2_1 + a_2 * G2_2 + ... + a_l * G2_l = RHS
+ * a_1 * G2_1 + a_2 * G2_2 + ... + a_l * G2_l = RHS,
+ * where RHS is in G2
  */
 type MultiScalarMultiplicationEquationG2Pair struct {
-	A *big.Int
-	Y *G2Element
+	A []byte
+	Y []byte
 }
 
 type MultiScalarMultiplicationEquationG2 struct {
 	Length uint32
 	LHS []MultiScalarMultiplicationEquationG2Pair
-	RHS *G2Element
+	RHS []byte
 }
 
 /*
