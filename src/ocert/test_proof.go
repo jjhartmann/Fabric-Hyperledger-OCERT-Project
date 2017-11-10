@@ -15,7 +15,7 @@ func Ptest() bool {
 /*
  * Run test b times
  */
-func runPTest(b int) {
+func RunPTest(b int) {
 	for i := 0; i < b; i++ {
 		if !Ptest() {
 			os.Exit(1)

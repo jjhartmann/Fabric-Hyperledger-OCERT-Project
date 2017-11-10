@@ -6,10 +6,31 @@ package ocert
 
 import (
 	"math/big"
+	// "github.com/Nik-U/pbc"
 )
+
+/*
+ * Since all schemes are based on same G1, G2 and Gt, this structure
+ * holds the parameters shared by all schemes. G1, G2 and Gt here
+ * are generators.
+ */
+// TODO
+// We should choose same generator for each group and use these in
+// KeyGen and Setup
+type SharedParams struct {
+	Params string
+	G1 []byte
+	G2 []byte
+}
+
+/*****************************************************************/
 
 // TODO Based on PBC library we choose, we need to modify following
 // wrappers
+// TODO My suggestion is not to use these wrappers, as this makes us
+// life easier. (see structure_preserving.go)
+// TODO We need to store all elements in bytes array
+
 // A wrapper of an element in G1
 type G1Element struct {
 
@@ -22,7 +43,7 @@ type G2Element struct {
 
 // A wrapper of an element in Gt
 type GtElement struct {
-
+	
 }
 
 /*****************************************************************/
@@ -59,7 +80,7 @@ type ClientID struct {
  * TODO (Is it okay for us to hash any key to an element in G2?)
  */
 type ClientPublicKey struct {
-	PK *G2Element
+	PK []byte
 }
 
 /*
@@ -67,8 +88,8 @@ type ClientPublicKey struct {
  * rerandomization scheme E. It is an element in G1 * G1
  */
 type Pseudonym struct {
-	C *G1Element
-	D *G1Element
+	C []byte
+	D []byte
 }
 
 /*****************************************************************/
@@ -88,11 +109,11 @@ type Pseudonym struct {
  * the rest are elements in G2.
  */
 type SVerificationKey struct {
-	U *G1Element
-	V *G2Element
-	W1 *G2Element
-	W2 *G2Element
-	Z *G2Element
+	U []byte
+	V []byte
+	W1 []byte
+	W2 []byte
+	Z []byte
 }
 
 /*
@@ -100,11 +121,11 @@ type SVerificationKey struct {
  * key.
  */
 type SSigningKey struct {
-	U *big.Int
-	V *big.Int
-	W1 *big.Int
-	W2 *big.Int
-	Z *big.Int
+	U []byte
+	V []byte
+	W1 []byte
+	W2 []byte
+	Z []byte
 }
 
 /*
@@ -112,9 +133,9 @@ type SSigningKey struct {
  * R, S and T, where R and S are in G1 and T is in G2.
  */
 type Ecert struct {
-	R *G1Element
-	S *G1Element
-	T *G2Element
+	R []byte
+	S []byte
+	T []byte
 }
 
 /*****************************************************************/

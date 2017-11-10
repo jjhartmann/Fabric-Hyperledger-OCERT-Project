@@ -27,7 +27,7 @@ func Etest() bool {
 /*
  * Run test b times
  */
-func runETest(b int) {
+func RunETest(b int) {
 	for i := 0; i < b; i++ {
 		if !Etest() {
 			os.Exit(1)
