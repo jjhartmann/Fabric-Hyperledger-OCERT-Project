@@ -13,12 +13,12 @@ func Stest() bool {
 	fmt.Println("Stest")
 	sharedParams := new(SharedParams)
 	params := pbc.GenerateF(160)
-    pairing := params.NewPairing()
-    g1 := pairing.NewG1().Rand()
-    g2 := pairing.NewG2().Rand()
-    sharedParams.Params = params.String()
-    sharedParams.G1 = g1.Bytes()
-    sharedParams.G2 = g2.Bytes()
+	pairing := params.NewPairing()
+	g1 := pairing.NewG1().Rand()
+	g2 := pairing.NewG2().Rand()
+	sharedParams.Params = params.String()
+	sharedParams.G1 = g1.Bytes()
+	sharedParams.G2 = g2.Bytes()
 
 	VK, SK := SKeyGen(sharedParams)
 
