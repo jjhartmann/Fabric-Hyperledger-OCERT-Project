@@ -7,7 +7,7 @@ import (
 /*
  * Run a single test
  */
-func test() bool {
+func Etest() bool {
 	PK, SK := EKeyGen()
 
 	// TODO randomly generate id
@@ -27,9 +27,9 @@ func test() bool {
 /*
  * Run test b times
  */
-func runTest(b int) {
+func runETest(b int) {
 	for i := 0; i < b; i++ {
-		if !test() {
+		if !Etest() {
 			os.Exit(1)
 		}
 	} 

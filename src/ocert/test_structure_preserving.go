@@ -7,7 +7,7 @@ import (
 /*
  * Run a single test
  */
-func test() bool {
+func Stest() bool {
 	VK, SK := SKeyGen()
 
 	// TODO randomly generate P and PKc
@@ -22,9 +22,9 @@ func test() bool {
 /*
  * Run test b times
  */
-func runTest(b int) {
+func runSTest(b int) {
 	for i := 0; i < b; i++ {
-		if !test() {
+		if !Stest() {
 			os.Exit(1)
 		}
 	} 

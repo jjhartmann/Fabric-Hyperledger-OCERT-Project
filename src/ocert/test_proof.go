@@ -7,7 +7,7 @@ import (
 /*
  * Run a single test
  */
-func test() bool {
+func Ptest() bool {
 	pi := Setup()
 	return Prove(pi)
 }
@@ -15,9 +15,9 @@ func test() bool {
 /*
  * Run test b times
  */
-func runTest(b int) {
+func runPTest(b int) {
 	for i := 0; i < b; i++ {
-		if !test() {
+		if !Ptest() {
 			os.Exit(1)
 		}
 	} 
