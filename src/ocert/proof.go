@@ -8,51 +8,33 @@ import (
 )
 
 /*
- * Set up the proof of knowledge, called by the client
+ * Set up the proof of knowledge, called by the client. It takes a system
+ * of equations(e.g. pairing product equations and multi-scalar multiplication
+ * equations) and outputs proof (e.g pi and theta ...)
  */
-// TODO the parameters
-// TODO extra information used in proof may return
-func Setup() *ProofOfKnowledge {
+func Setup(sharedParams *SharedParams, eqs *SystemOfEquations, vars *ProofVariables) *ProofOfKnowledge {
 	pi := new(ProofOfKnowledge)
+
+	// TODO setup proof of eq1
+	// TODO setup proof of eq2
+	// TODO setup proof of eq3
+	// TODO setup proof of eq4
+	// TODO setup proof of eq5
 
 	return pi
 }
 
 /*
- * Prove a pairing product equaction, return true if such equation holds.
- */
-// TODO it may take extra information to prove
-func ProvePairingProductEquation(eq *PairingProductEquation) bool {
-	return false
-}
-
-/*
- * Prove a multi-scalar multiplication equation in G1,
- * return true if such equation holds.
- */
-// TODO it may take extra information to prove
-func ProveMultiScalarMultiplicationEquationG1(eq *MultiScalarMultiplicationEquationG1) bool {
-	return false
-}
-
-/*
- * Prove a multi-scalar multiplication equation in G2,
- * return true if such equation holds.
- */
-// TODO it may take extra information to prove
-func ProveMultiScalarMultiplicationEquationG2(eq *MultiScalarMultiplicationEquationG2) bool {
-	return false
-}
-
-/*
  * Validate the proof of knowledage, return true if all the equations
- * in the system are proved.
+ * in the system hold.
  */
 // TODO it may take extra information to prove
-func Prove(pi *ProofOfKnowledge) bool {
-	return ProveMultiScalarMultiplicationEquationG2(pi.Eq1) && 
-		ProveMultiScalarMultiplicationEquationG1(pi.Eq2) &&
-		ProveMultiScalarMultiplicationEquationG1(pi.Eq3) &&
-		ProvePairingProductEquation(pi.Eq4) &&
-		ProvePairingProductEquation(pi.Eq5)
+func Prove(sharedParams *SharedParams, pi *ProofOfKnowledge, consts *ProofConstants) bool {
+	// TODO validate eq1
+	// TODO validate eq2
+	// TODO validate eq3
+	// TODO validate eq4
+	// TODO validate eq5
+
+	return false
 }
