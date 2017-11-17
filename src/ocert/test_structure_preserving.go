@@ -36,7 +36,7 @@ func Stest() bool {
     	fmt.Println("[Structure Preserving] Modify C")
     	P.C = pairing.NewG1().Rand().Bytes()
     } else if seed == 1 {
-    	fmt.Println("[Structure Preserving] Modify C")
+    	fmt.Println("[Structure Preserving] Modify D")
     	P.D = pairing.NewG1().Rand().Bytes()
     } else {
     	fmt.Println("[Structure Preserving] Modify PKc")
