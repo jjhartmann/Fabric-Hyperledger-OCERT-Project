@@ -4,12 +4,15 @@ import (
 	"os"
 	"fmt"
 	"github.com/Nik-U/pbc"
+	"math/rand"
 )
 
 /*
  * Run a single test
  */
+// TODO add benchmark in future
 func Stest() bool {
+	fmt.Println("[Structure Preserving] Start test")
 	sharedParams := GenerateSharedParams()
 	VK, SK := SKeyGen(sharedParams)
 
@@ -22,11 +25,33 @@ func Stest() bool {
 	ecert := SSign(sharedParams, SK, P, PKc)
 
 	if SVerify(sharedParams, VK, P, PKc, ecert) {
-		fmt.Println("Stest passes")
-		return true
+		fmt.Println("[Structure Preserving] Verify a ecert successfully")
 	} else {
+		fmt.Println("[Structure Preserving] Cannot verify a ecert")
 		return false
 	}
+
+    seed := rand.Intn(3)
+    if seed == 0 {
+    	fmt.Println("[Structure Preserving] Modify C")
+    	P.C = pairing.NewG1().Rand().Bytes()
+    } else if seed == 1 {
+    	fmt.Println("[Structure Preserving] Modify C")
+    	P.D = pairing.NewG1().Rand().Bytes()
+    } else {
+    	fmt.Println("[Structure Preserving] Modify PKc")
+    	PKc.PK = pairing.NewG2().Rand().Bytes()
+    }
+	
+	if !SVerify(sharedParams, VK, P, PKc, ecert) {
+		fmt.Println("[Structure Preserving] Reject a ecert correctly")
+	} else {
+		fmt.Println("[Structure Preserving] Fail to reject a false ecert")
+		return false
+	}
+
+	fmt.Println("[Structure Preserving] Pass test")
+	return true
 }
 
 /*

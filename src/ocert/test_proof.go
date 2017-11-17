@@ -8,8 +8,13 @@ import (
  * Run a single test
  */
 func Ptest() bool {
-	pi := Setup()
-	return Prove(pi)
+	sharedParams := GenerateSharedParams()
+	eqs := new(SystemOfEquations)
+	vars := new(ProofVariables)
+	pi := Setup(sharedParams, eqs, vars)
+
+	consts := new(ProofConstants)
+	return Prove(sharedParams, pi, consts)
 }
 
 /*

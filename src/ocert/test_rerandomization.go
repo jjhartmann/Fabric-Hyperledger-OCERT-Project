@@ -8,20 +8,21 @@ import (
  * Run a single test
  */
 func Etest() bool {
-	PK, SK := EKeyGen()
+	sharedParams := GenerateSharedParams()
+	PK, SK := EKeyGen(sharedParams)
 
 	// TODO randomly generate id
 	id := new(ClientID)
-	P := EEnc(PK, id)
+	P := EEnc(sharedParams, PK, id)
 
-	decryptedId := EDec(SK, P)
+	decryptedId := EDec(sharedParams, SK, P)
 
 	if id != decryptedId {
 		return false
 	}
 
-	PPrime := ERerand(P)
-	return ERerandVerify(P, PPrime)
+	PPrime := ERerand(sharedParams, P)
+	return ERerandVerify(sharedParams, P, PPrime)
 }
 
 /*

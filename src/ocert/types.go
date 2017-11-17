@@ -224,7 +224,7 @@ type SystemOfEquations struct {
 type ProofString struct {
 	U1 []byte
 	U2 []byte
-	V2 []byte
+	V1 []byte
 	V2 []byte
 }
 
@@ -250,7 +250,7 @@ type ProofOfEquation struct {
 	CPrime *C
 	DPrime *D
 	Pi *Pi
-	Theta *The
+	Theta *Theta
 }
 
 type ProofOfKnowledge struct {

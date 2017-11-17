@@ -10,7 +10,6 @@ import (
 /*
  * Generate the pair of public key and secret key used by auditor.
  */
-// TODO it should take some security parameter
 func EKeyGen(sharedParams *SharedParams) (*AuditorPublicKey, *AuditorSecretKey) {
 	PKa := new(AuditorPublicKey)
 	SKa := new(AuditorSecretKey)
@@ -23,7 +22,7 @@ func EKeyGen(sharedParams *SharedParams) (*AuditorPublicKey, *AuditorSecretKey) 
  * result is the pseudonym of a client, where pseudonym of a client
  * has form (C, D), where both C and D are in G1
  */
-func EEnc(PKa *AuditorPublicKey, id *ClientID) *Pseudonym {
+func EEnc(sharedParams *SharedParams, PKa *AuditorPublicKey, id *ClientID) *Pseudonym {
 	P := new(Pseudonym)
 
 	return P
@@ -32,7 +31,7 @@ func EEnc(PKa *AuditorPublicKey, id *ClientID) *Pseudonym {
 /*
  * Decrypt the client real identiy based on the pseudonym of a client
  */
-func EDec(SKa *AuditorSecretKey, P *Pseudonym) *ClientID {
+func EDec(sharedParams *SharedParams, SKa *AuditorSecretKey, P *Pseudonym) *ClientID {
 	id := new(ClientID)
 	return id
 }
@@ -43,7 +42,7 @@ func EDec(SKa *AuditorSecretKey, P *Pseudonym) *ClientID {
  * P' = (C', D'), where P' is also in G1 * G1.
  */
 // TODO This function may also return the extra information used in validation
-func ERerand(P *Pseudonym) *Pseudonym {
+func ERerand(sharedParams *SharedParams, P *Pseudonym) *Pseudonym {
 	// TODO rerandomize P
 	return P
 }
@@ -53,6 +52,6 @@ func ERerand(P *Pseudonym) *Pseudonym {
  * from P 
  */
 // TODO This function may take extra information to do verification
-func ERerandVerify(P *Pseudonym, PPrime *Pseudonym) bool {
+func ERerandVerify(sharedParams *SharedParams, P *Pseudonym, PPrime *Pseudonym) bool {
 	return false
 }
