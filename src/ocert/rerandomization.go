@@ -11,7 +11,7 @@ import (
  * Generate the pair of public key and secret key used by auditor.
  */
 // TODO it should take some security parameter
-func EKeyGen() (*AuditorPublicKey, *AuditorSecretKey) {
+func EKeyGen(sharedParams *SharedParams) (*AuditorPublicKey, *AuditorSecretKey) {
 	PKa := new(AuditorPublicKey)
 	SKa := new(AuditorSecretKey)
 
