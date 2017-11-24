@@ -216,6 +216,15 @@ type SystemOfEquations struct {
  */
 
 /*
+ * Holds a pair of elements form G1 or G2 in the group B1 or B2
+ * Iota: G -> B
+ */
+type BPair struct {
+	b1 []byte
+	b2 []byte
+}
+
+/*
  * Sigma: the common reference string (CRS) for NIWI ProofOfEquation
  */
 type Sigma struct {

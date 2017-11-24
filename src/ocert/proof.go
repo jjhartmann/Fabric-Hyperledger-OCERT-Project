@@ -85,3 +85,68 @@ func CreateCommonReferenceString(sharedParams *SharedParams) *Sigma {
 
 	return sigma
 }
+
+/*
+ * Creates a mapping between elements in G1 and maps them
+ * to elements in B1
+ *
+ * Iota1: G1 -> B1
+ * Pairing: the pairing in the PBC lib described in CRS
+ * Element: The element from G1 that is to be mapped to B1
+ */
+func Iota1(pairing *pbc.Pairing, el *pbc.Element) *BPair {
+	pair := new(BPair)
+	pair.b1 = pairing.NewG1().Set0().Bytes()
+	pair.b2 = el.Bytes()
+	return pair
+
+}
+
+/*
+ * Takes an element in B1 which are a pair of elements in G1 (g_1, g_2)
+ * and maps them back to G1
+ *
+ * Rho1: B1 -> G1
+ * pairing: The pairing from the pbc library described in the CRS
+ * BPair: the element in B1
+ * Returns: element in G1
+ */
+func Rho1(pairing *pbc.Pairing, pair *BPair, alpha *pbc.Element) *pbc.Element {
+	Z1 := pairing.NewG1().SetBytes(pair.b1)
+	Z2 := pairing.NewG1().SetBytes(pair.b2)
+	tmp := pairing.NewG1().MulZn(Z1, alpha)
+	return pairing.NewG1().Sub(Z2, tmp)
+}
+
+
+
+/*
+ * Creates a mapping between elements in G2 and maps them
+ * to elements in B2
+ *
+ * Iota1: G2 -> B2
+ * Pairing: the pairing in the PBC lib described in CRS
+ * Element: The element from G2 that is to be mapped to B2
+ */
+func Iota2(pairing *pbc.Pairing, el *pbc.Element) *BPair {
+	pair := new(BPair)
+	pair.b1 = pairing.NewG1().Set0().Bytes()
+	pair.b2 = el.Bytes()
+	return pair
+}
+
+/*
+ * Takes an element in B2 which are a pair of elements in G2 (g_1, g_2)
+ * and maps them back to G2
+ *
+ * Rho1: B2 -> G2
+ * pairing: The pairing from the pbc library described in the CRS
+ * BPair: the element in B2
+ * Returns: element in G2
+ */
+func Rho2(pairing *pbc.Pairing, pair *BPair, alpha *pbc.Element) *pbc.Element {
+	Z1 := pairing.NewG1().SetBytes(pair.b1)
+	Z2 := pairing.NewG1().SetBytes(pair.b2)
+	tmp := pairing.NewG1().MulZn(Z1, alpha)
+	return pairing.NewG1().Sub(Z2, tmp)
+}
