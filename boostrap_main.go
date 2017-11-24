@@ -17,7 +17,7 @@ func main() {
   g1 := pairing.NewG1().Rand()
   g2 := pairing.NewG2().Rand()
   gt := pairing.NewGT().Pair(g1, g2)
-
+  _ = gt
 
 
 }

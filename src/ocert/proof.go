@@ -130,7 +130,7 @@ func Rho1(pairing *pbc.Pairing, pair *BPair, alpha *pbc.Element) *pbc.Element {
  */
 func Iota2(pairing *pbc.Pairing, el *pbc.Element) *BPair {
 	pair := new(BPair)
-	pair.b1 = pairing.NewG1().Set0().Bytes()
+	pair.b1 = pairing.NewG2().Set0().Bytes()
 	pair.b2 = el.Bytes()
 	return pair
 }
@@ -145,8 +145,8 @@ func Iota2(pairing *pbc.Pairing, el *pbc.Element) *BPair {
  * Returns: element in G2
  */
 func Rho2(pairing *pbc.Pairing, pair *BPair, alpha *pbc.Element) *pbc.Element {
-	Z1 := pairing.NewG1().SetBytes(pair.b1)
-	Z2 := pairing.NewG1().SetBytes(pair.b2)
-	tmp := pairing.NewG1().MulZn(Z1, alpha)
-	return pairing.NewG1().Sub(Z2, tmp)
+	Z1 := pairing.NewG2().SetBytes(pair.b1)
+	Z2 := pairing.NewG2().SetBytes(pair.b2)
+	tmp := pairing.NewG2().MulZn(Z1, alpha)
+	return pairing.NewG2().Sub(Z2, tmp)
 }
