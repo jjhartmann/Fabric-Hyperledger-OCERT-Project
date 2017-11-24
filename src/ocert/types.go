@@ -6,6 +6,8 @@ package ocert
 
 import (
 	// "github.com/Nik-U/pbc"
+ 	"encoding/json"
+ 	"bytes"
 )
 
 /*
@@ -116,6 +118,24 @@ type SVerificationKey struct {
 	Z []byte
 }
 
+func (VK *SVerificationKey) Bytes() ([]byte, error) {
+	msg, err := json.Marshal(VK)
+	return msg, err
+}
+
+func (VK *SVerificationKey) SetBytes(msg []byte) error {
+	err := json.Unmarshal(msg, VK)
+	return err
+}
+
+func (VK *SVerificationKey) Equals(VK2 *SVerificationKey) bool {
+	return bytes.Equal(VK.U, VK2.U) &&
+		bytes.Equal(VK.V, VK2.V) &&
+		bytes.Equal(VK.W1, VK2.W1) &&
+		bytes.Equal(VK.W2, VK2.W2) &&
+		bytes.Equal(VK.Z, VK2.Z)
+}
+
 /*
  * The signing key contains the order of each element in the verification
  * key.
@@ -126,6 +146,39 @@ type SSigningKey struct {
 	W1 []byte
 	W2 []byte
 	Z []byte
+}
+
+func (SK *SSigningKey) Bytes() ([]byte, error) {
+	msg, err := json.Marshal(SK)
+	return msg, err
+}
+
+func (SK *SSigningKey) SetBytes(msg []byte) error {
+	err := json.Unmarshal(msg, SK)
+	return err
+}
+
+func (SK *SSigningKey) Equals(SK2 *SSigningKey) bool {
+	return bytes.Equal(SK.U, SK2.U) &&
+		bytes.Equal(SK.V, SK2.V) &&
+		bytes.Equal(SK.W1, SK2.W1) &&
+		bytes.Equal(SK.W2, SK2.W2) &&
+		bytes.Equal(SK.Z, SK2.Z)
+}
+
+type SKeyPair struct {
+	SK []byte
+	VK []byte
+}
+
+func (SKP *SKeyPair) Bytes() ([]byte, error) {
+	msg, err := json.Marshal(SKP)
+	return msg, err
+}
+
+func (SKP *SKeyPair) SetBytes(msg []byte) error {
+	err := json.Unmarshal(msg, SKP)
+	return err
 }
 
 /*
