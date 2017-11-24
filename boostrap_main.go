@@ -9,7 +9,7 @@ import (
 
 func main() {
   //fmt.Println(ocert.Stest())
-  fmt.Println(ocert.IotaTest(true))
+  fmt.Println(ocert.IotaRhoTest(true))
 
   // Testing Stuff
   params := pbc.GenerateF(160)

@@ -19,7 +19,7 @@ func Ptest() bool {
 	return Prove(sharedParams, pi, consts)
 }
 
-func IotaTest(verbose bool) bool {
+func IotaRhoTest(verbose bool) bool {
 	fmt.Println("Testing Iota1 and Iota2 Conversion B")
 	sharedParams := GenerateSharedParams()
 	pairing, _ := pbc.NewPairingFromString(sharedParams.Params)
