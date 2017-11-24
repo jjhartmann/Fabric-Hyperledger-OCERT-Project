@@ -63,7 +63,7 @@ func Setup(stub Wrapper, args [][]byte) ([]byte, error) {
 		return nil, fmt.Errorf("Incorrect arguments. Expecting the id of an auditor")
 	}
 
-	// TODO validate auditor by its public key
+	// TODO verify auditor
 	err := stub.PutState("auditor_id", args[0])
 	if err != nil {
 		return nil, fmt.Errorf("Failed to set auditor_id")
@@ -101,8 +101,51 @@ func Setup(stub Wrapper, args [][]byte) ([]byte, error) {
 	return KPab, nil
 }
 
+/*
+ * GenECert is used to generate an ecert of a client
+ * It takes the client id and the client's public key, and returns
+ * psudonym P and ecert to the client.
+ */
 func GenECert(stub Wrapper, args [][]byte) ([]byte, error) {
-	return nil, nil
+	if len(args) != 2 {
+		return nil, fmt.Errorf("Incorrect arguments. Expecting the id and the PK of client")
+	}
+
+	IDc := new(ClientID)
+	IDc.ID = args[0]
+	PKc := new(ClientPublicKey)
+	PKc.PK = args[1]
+
+	// Generate pseudonym P
+	valuePKa, err := stub.GetState("auditor_pk")
+	if err != nil {
+		return nil, fmt.Errorf("Failed to get auditor_pk")
+	}
+	if valuePKa == nil {
+		return nil, fmt.Errorf("Asset not found: auditor_pk")
+	}
+	PKa := new(AuditorPublicKey)
+	PKa.PK = valuePKa
+
+	P := EEnc(sharedParams, PKa, IDc)
+
+	// Generate ecert
+	ecert := SSign(sharedParams, SSK, P, PKc)
+
+	reply := new(GenECertReply)
+	reply.P, err = P.Bytes()
+	if err != nil {
+		return nil, fmt.Errorf("Failed to generate pesudonym")
+	}
+	reply.ecert, err = ecert.Bytes()
+	if err != nil {
+		return nil, fmt.Errorf("Failed to generate ecert")
+	}
+	replyBytes, err := reply.Bytes()
+		if err != nil {
+		return nil, fmt.Errorf("Failed to generate GenECertReply")
+	}
+	return replyBytes, nil
 }
 
 func GenOCert(stub Wrapper, args [][]byte) ([]byte, error) {

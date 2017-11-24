@@ -91,7 +91,7 @@ func (KPa *AuditorKeypair) SetBytes(msg []byte) error {
 // TODO We may use the identity structure of fabric here, and hash
 // it to some value in a group in our scheme.
 type ClientID struct {
-
+	ID []byte
 }
 
 /*
@@ -111,6 +111,16 @@ type ClientPublicKey struct {
 type Pseudonym struct {
 	C []byte
 	D []byte
+}
+
+func (P *Pseudonym) Bytes() ([]byte, error) {
+	msg, err := json.Marshal(P)
+	return msg, err
+}
+
+func (P *Pseudonym) SetBytes(msg []byte) error {
+	err := json.Unmarshal(msg, P)
+	return err
 }
 
 /*****************************************************************/
@@ -323,4 +333,24 @@ type ProofConstants struct {
 	PPrime *Pseudonym // C' and D'
 	Egz []byte // e(g1, Z)
 	PKa *AuditorPublicKey
+}
+
+/*****************************************************************/
+/*
+ * Result from main scheme(chaincode)
+ */
+
+type GenECertReply struct {
+	P []byte
+	ecert []byte
+}
+
+func (reply *GenECertReply) Bytes() ([]byte, error) {
+	msg, err := json.Marshal(reply)
+	return msg, err
+}
+
+func (reply *GenECertReply) SetBytes(msg []byte) error {
+	err := json.Unmarshal(msg, reply)
+	return err
 }
