@@ -11,10 +11,10 @@ func Ptest() bool {
 	sharedParams := GenerateSharedParams()
 	eqs := new(SystemOfEquations)
 	vars := new(ProofVariables)
-	pi := Setup(sharedParams, eqs, vars)
+	pi := PSetup(sharedParams, eqs, vars)
 
 	consts := new(ProofConstants)
-	return Prove(sharedParams, pi, consts)
+	return PProve(sharedParams, pi, consts)
 }
 
 /*

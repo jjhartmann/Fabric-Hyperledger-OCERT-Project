@@ -12,7 +12,7 @@ import (
  * of equations(e.g. pairing product equations and multi-scalar multiplication
  * equations) and outputs proof (e.g pi and theta ...)
  */
-func Setup(sharedParams *SharedParams, eqs *SystemOfEquations, vars *ProofVariables) *ProofOfKnowledge {
+func PSetup(sharedParams *SharedParams, eqs *SystemOfEquations, vars *ProofVariables) *ProofOfKnowledge {
 	pi := new(ProofOfKnowledge)
 
 	// TODO setup proof of eq1
@@ -29,7 +29,7 @@ func Setup(sharedParams *SharedParams, eqs *SystemOfEquations, vars *ProofVariab
  * in the system hold.
  */
 // TODO it may take extra information to prove
-func Prove(sharedParams *SharedParams, pi *ProofOfKnowledge, consts *ProofConstants) bool {
+func PProve(sharedParams *SharedParams, pi *ProofOfKnowledge, consts *ProofConstants) bool {
 	// TODO validate eq1
 	// TODO validate eq2
 	// TODO validate eq3

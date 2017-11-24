@@ -27,6 +27,7 @@ func main() {
 	db := new(DB)
 	db.DB = make(map[string][]byte)
 
+	// TODO delete
 	var argPut []string
 	argPut = append(argPut, "key1")
 	argPut = append(argPut, "value1")
@@ -40,4 +41,6 @@ func main() {
 	if err == nil {
 		fmt.Println(string(val))
 	}
+
+	// Benchmark starts here
 }
