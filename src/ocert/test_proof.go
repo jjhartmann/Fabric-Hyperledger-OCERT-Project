@@ -341,12 +341,31 @@ func TestSimpleCommitment(verbose bool) bool {
   alpha := pairing.NewZr().Rand() // Secret Key
   sigma := CreateCommonReferenceString(sharedParams, alpha) // CRS
 
-  r1 := pairing.NewZr().Rand()
-  r2 := pairing.NewZr().Rand()
+  // Test with Functions
+  chi := []*pbc.Element{X}
+  C, Ru, rmat := CreateCommitmentOnG1(pairing, chi, sigma.U)
+  _ = C
+  _ = Ru
+
+  if (verbose){
+    fmt.Println("Function Commitsments C")
+    fmt.Println(pairing.NewG1().SetBytes(C[0].b1))
+    fmt.Println(pairing.NewG1().SetBytes(C[0].b2))
+  }
+
+
+  if (verbose){
+    fmt.Println("Function Commitsments Ru")
+    fmt.Println(pairing.NewG1().SetBytes(Ru[0].b1))
+    fmt.Println(pairing.NewG1().SetBytes(Ru[0].b2))
+  }
+
+  // Simple Toy Test
+  r1 := rmat.mat[0][0]
+  r2 := rmat.mat[0][1]
 
   b1 := pairing.NewG1().SetBytes(Xi.b1)
   b2 := pairing.NewG1().SetBytes(Xi.b2)
-
 
   if (verbose){
     fmt.Println("B1 and B2")
@@ -395,7 +414,10 @@ func TestSimpleCommitment(verbose bool) bool {
   ret1 := cp1.Equals(b1)
   ret2 := cp2.Equals(b2)
 
-  return ret1 && ret2
+  ret3 := c1.Equals(pairing.NewG1().SetBytes(C[0].b1))
+  ret4 := c2.Equals(pairing.NewG1().SetBytes(C[0].b2))
+
+  return ret1 && ret2 && ret3 && ret4
 }
 
 func TestCreateCommitments(verbose bool) bool {
@@ -412,8 +434,8 @@ func TestCreateCommitments(verbose bool) bool {
 
 
   if (verbose) {fmt.Println("Create Commitments On G1")}
-  chi := []*pbc.Element{pairing.NewG1().Rand(), pairing.NewG1().Rand()}
-  C, Ru := CreateCommitmentOnG1(pairing, chi, sigma.U)
+  chi := []*pbc.Element{pairing.NewG1().Rand()}
+  C, Ru, _ := CreateCommitmentOnG1(pairing, chi, sigma.U)
   ret1 := (len(chi) == len(C) && len(C) == len(Ru))
 
   if (verbose){
@@ -430,11 +452,10 @@ func TestCreateCommitments(verbose bool) bool {
   if (verbose){fmt.Println("Testing Equality: ι1(X) = C - Ru")}
   ret2 := false
   for i:=0; i<len(C); i++ {
-    g1 := chi[i]
     Bc := C[i]
     Br := Ru[i]
     Bp := Bc.SubinG1(pairing, Br)
-    Bi := Iota1(pairing, g1)
+    Bi := Iota1(pairing, chi[i])
 
     tmp := reflect.DeepEqual(Bp, Bi)
     if (verbose){
@@ -471,4 +492,5 @@ func RunAllPTests(verbose bool) {
   fmt.Println("Iota Hat:           ", TestIotaHat(verbose))
   fmt.Println("F function Map:     ", TestFMap(verbose))
   fmt.Println("Matrix Map:         ", TestCompleteMatrixMapping(verbose))
+  fmt.Println("Simple Commitment   ", TestSimpleCommitment(verbose))
 }
