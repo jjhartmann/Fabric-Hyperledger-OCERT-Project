@@ -326,7 +326,76 @@ func TestCompleteMatrixMapping(verbose bool) bool {
 }
 
 func TestSimpleCommitment(verbose bool) bool {
-  
+  sharedParams := GenerateSharedParams()
+  pairing, _ := pbc.NewPairingFromString(sharedParams.Params)
+  g1 := pairing.NewG1().Rand()
+  g2 := pairing.NewG2().Rand()
+  gt := pairing.NewGT().Pair(g1, g2)
+  _ = gt
+
+  // Create random value in G1
+  X := pairing.NewG1().Rand()
+  Xi := Iota1(pairing, X)
+
+  if (verbose) {fmt.Println("Creating CRS Sigma")}
+  alpha := pairing.NewZr().Rand() // Secret Key
+  sigma := CreateCommonReferenceString(sharedParams, alpha) // CRS
+
+  r1 := pairing.NewZr().Rand()
+  r2 := pairing.NewZr().Rand()
+
+  b1 := pairing.NewG1().SetBytes(Xi.b1)
+  b2 := pairing.NewG1().SetBytes(Xi.b2)
+
+
+  if (verbose){
+    fmt.Println("B1 and B2")
+    fmt.Println(b1)
+    fmt.Println(b2)
+  }
+
+  ruP1 := pairing.NewG1().MulZn(pairing.NewG1().SetBytes(sigma.U[0].u1), r1)
+  ruQ1 := pairing.NewG1().MulZn(pairing.NewG1().SetBytes(sigma.U[0].u2), r1)
+  ruP2 := pairing.NewG1().MulZn(pairing.NewG1().SetBytes(sigma.U[1].u1), r2)
+  ruQ2 := pairing.NewG1().MulZn(pairing.NewG1().SetBytes(sigma.U[1].u2), r2)
+
+  // Add components together
+  P := pairing.NewG1().Add(ruP1, ruP2)
+  Q := pairing.NewG1().Add(ruQ1, ruQ2)
+
+  if (verbose){
+    fmt.Println("P and Q")
+    fmt.Println(P)
+    fmt.Println(Q)
+  }
+
+  c1 := pairing.NewG1().Add(b1, P)
+  c2 := pairing.NewG1().Add(b2, Q)
+
+  if (verbose){
+    fmt.Println("C1 and C2")
+    fmt.Println(c1)
+    fmt.Println(c2)
+  }
+
+  // Subtract
+  cp1 := pairing.NewG1().Sub(c1, P)
+  cp2 := pairing.NewG1().Sub(c2, Q)
+
+  if (verbose){
+    fmt.Println("C'1 and C'2")
+    fmt.Println(cp1)
+    fmt.Println(cp2)
+  }
+
+  if (verbose) {
+    fmt.Println("Testing Equality")
+  }
+
+  ret1 := cp1.Equals(b1)
+  ret2 := cp2.Equals(b2)
+
+  return ret1 && ret2
 }
 
 func TestCreateCommitments(verbose bool) bool {
