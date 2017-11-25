@@ -47,15 +47,18 @@ func PProve(sharedParams *SharedParams, pi *ProofOfKnowledge, consts *ProofConst
  * u1 = (O, P)
  * u2 = t * u1
  */
-func CreateCommonReferenceString(sharedParams *SharedParams) *Sigma {
+func CreateCommonReferenceString(sharedParams *SharedParams, alpha *pbc.Element) *Sigma {
 	pairing, _ := pbc.NewPairingFromString(sharedParams.Params)
-	g1 := pairing.NewG1().SetBytes(sharedParams.G1)
-	g2 := pairing.NewG2().SetBytes(sharedParams.G2)
+
+	// Proof should use different generators then what is stored in the
+	// params. Florian: Using the same generators could case security issues
+	// due to the discrete logrihtm problem
+	// Since the groups are cyclic, this should not matter.
+	g1 := pairing.NewG1().Rand()
+	g2 := pairing.NewG2().Rand()
 	sigma := new(Sigma)
 
 	// Create commit keys for u1 and u2 on G1
-	alpha := pairing.NewZr().Rand()
-
 	p1 := g1.Bytes()
 	q1 := pairing.NewG1().MulZn(g1, alpha)
 
@@ -69,10 +72,8 @@ func CreateCommonReferenceString(sharedParams *SharedParams) *Sigma {
 	}
 
 	// Create commit keys v1 and v2 on G2
-	alpha2 := pairing.NewZr().Rand()
-
 	p12 := g2.Bytes()
-	q12 := pairing.NewG1().MulZn(g2, alpha2)
+	q12 := pairing.NewG1().MulZn(g2, alpha)
 
 	t2 := pairing.NewZr().Rand()
 	p22 := pairing.NewG1().MulZn(g2, t2)
@@ -82,6 +83,9 @@ func CreateCommonReferenceString(sharedParams *SharedParams) *Sigma {
 		CommitmentKey{p12, q12.Bytes()},
 		CommitmentKey{p22.Bytes(), q22.Bytes()},
 	}
+
+	// Create commitment keys u and v on Zn
+	
 
 	return sigma
 }
