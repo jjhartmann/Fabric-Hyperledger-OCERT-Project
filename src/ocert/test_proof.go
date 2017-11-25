@@ -109,6 +109,7 @@ func TestIotaRhoPrime(verbose bool) bool {
 
   // To Check, we need to multiple the generator g1 by z to see
   // if the conversin back is successful.
+  fmt.Println("Testing Equality:")
   P1 := pairing.NewG1().SetBytes(sigma.U[0].u1)
   P2 := pairing.NewG2().SetBytes(sigma.V[0].u1)
 
@@ -122,6 +123,7 @@ func TestIotaRhoPrime(verbose bool) bool {
 
   return retU && retV
 }
+
 
 
 /*
