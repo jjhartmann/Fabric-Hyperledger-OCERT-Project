@@ -1,6 +1,9 @@
 package ocert
 
-import "github.com/Nik-U/pbc"
+import (
+  "github.com/Nik-U/pbc"
+  "fmt"
+)
 
 /*
  * RMatrix: Builds a matrix of random elements from Zp
@@ -8,11 +11,14 @@ import "github.com/Nik-U/pbc"
 
 type RMatrix struct {
   mat [][]*pbc.Element
+  rows int
+  cols int
 }
 
 func NewRMatrix(pairing *pbc.Pairing, rows int, cols int) *RMatrix {
   rmat := new(RMatrix)
-
+  rmat.rows = rows
+  rmat.cols = cols
   for i := 0; i < rows; i++ {
     elementRow := []*pbc.Element{}
     for j := 0; j < cols; j++ {
@@ -22,8 +28,48 @@ func NewRMatrix(pairing *pbc.Pairing, rows int, cols int) *RMatrix {
     rmat.mat = append(rmat.mat, elementRow)
   }
 
-
-
-
   return rmat
+}
+
+func (rmat *RMatrix) MulCommitmentKeysG1(pairing *pbc.Pairing, U []CommitmentKey) []*BPair {
+  rows := rmat.rows
+  cols := len(U)
+  Ru := []*BPair{}
+  if (rmat.cols != len(U) ){
+    fmt.Errorf("Error Occured in MulCommitmentKeys: CommitmentKeys incompatiable\n%s", U)
+    return Ru
+  }
+
+  for i := 0; i < rows; i++ {
+
+    // The BPair in B1
+    B1 := pairing.NewG1().Set1()
+    B2 := pairing.NewG1().Set1()
+
+    for j := 0; j < cols; j++ {
+      // Get pair (P, Q) form commitment key
+      P := pairing.NewG1().SetBytes(U[j].u1)
+      Q := pairing.NewG1().SetBytes(U[j].u2)
+
+      // Get random r in Zp
+      r := rmat.mat[i][j]
+
+      // Multiple r by P and Q
+      Pr := pairing.NewG1().MulZn(P, r)
+      Qr := pairing.NewG1().MulZn(Q, r)
+
+      // Add to Bpairs
+      B1 = pairing.NewG1().Add(B1, Pr)
+      B2 = pairing.NewG1().Add(B2, Qr)
+    }
+
+    // Append to BPair
+    tmp := new(BPair)
+    tmp.b1 = B1.Bytes()
+    tmp.b2 = B2.Bytes()
+
+    Ru = append(Ru, tmp)
+  }
+
+  return Ru
 }

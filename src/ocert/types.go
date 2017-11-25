@@ -301,6 +301,9 @@ type CommitmentKey struct {
 	u2 []byte
 }
 
+
+
+
 type ProofString struct {
 	U1 []byte
 	U2 []byte

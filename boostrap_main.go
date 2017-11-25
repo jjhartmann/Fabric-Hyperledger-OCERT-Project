@@ -12,7 +12,7 @@ func main() {
   //fmt.Println("Run Proof Tests")
   //ocert.RunAllPTests(false)
 
-  fmt.Println(ocert.TestRMatrix(true))
+  fmt.Println(ocert.TestRMatrixGen(true))
 
   // Scrap
   sharedParams := ocert.GenerateSharedParams()

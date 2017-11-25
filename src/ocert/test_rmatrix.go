@@ -6,7 +6,7 @@ import (
   "github.com/Nik-U/pbc"
 )
 
-func TestRMatrix(verbose bool) bool{
+func TestRMatrixGen(verbose bool) bool{
   sharedParams := GenerateSharedParams()
   pairing, _ := pbc.NewPairingFromString(sharedParams.Params)
   g1 := pairing.NewG1().Rand()
@@ -15,7 +15,7 @@ func TestRMatrix(verbose bool) bool{
   _ = gt
 
   if (verbose) {fmt.Println("Starting RMatrix Test")}
-  rows := 5
+  rows := 3
   cols := 2
   rmat := NewRMatrix(pairing, rows, cols)
 
@@ -26,6 +26,23 @@ func TestRMatrix(verbose bool) bool{
           fmt.Printf("%s \t", rmat.mat[i][j])
         }
       }
+      fmt.Println()
+  }
+
+
+  if (verbose) {fmt.Println("Creating CRS Sigma")}
+  alpha := pairing.NewZr().Rand() // Secret Key
+  sigma := CreateCommonReferenceString(sharedParams, alpha) // CRS
+
+  if (verbose) {fmt.Println("Testing Muliplication on Commitment Key")}
+  Ru := rmat.MulCommitmentKeysG1(pairing, sigma.U)
+
+  if (verbose) {
+    for i := 0; i < len(Ru); i++ {
+      fmt.Printf("%s\t", pairing.NewG1().SetBytes(Ru[i].b1))
+      fmt.Printf("%s\t\n", pairing.NewG1().SetBytes(Ru[i].b2))
+    }
+    fmt.Println()
   }
 
   return true
@@ -42,7 +59,7 @@ func TestRMatrix(verbose bool) bool{
  */
 func RunRMatTest(b int) {
   for i := 0; i < b; i++ {
-    if !TestRMatrix(false) {
+    if !TestRMatrixGen(false) {
       os.Exit(1)
     }
   }
