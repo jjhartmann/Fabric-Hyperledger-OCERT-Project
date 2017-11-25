@@ -281,16 +281,32 @@ type BPair struct {
 
 // BPair Helper function to add elements
 func (l BPair) AddinG1(pairing *pbc.Pairing, r *BPair) *BPair{
+  ret := new(BPair)
+
 	// Convert to Groups
   lb1 := pairing.NewG1().SetBytes(l.b1)
   lb2 := pairing.NewG1().SetBytes(l.b2)
   rb1 := pairing.NewG1().SetBytes(r.b1)
   rb2 := pairing.NewG1().SetBytes(r.b2)
 
-  r.b1 = pairing.NewG1().Add(lb1, rb1).Bytes()
-  r.b2 = pairing.NewG1().Add(lb2, rb2).Bytes()
+  ret.b1 = pairing.NewG1().Add(lb1, rb1).Bytes()
+  ret.b2 = pairing.NewG1().Add(lb2, rb2).Bytes()
 
-  return r
+  return ret
+}
+func (l BPair) SubinG1(pairing *pbc.Pairing, r *BPair) *BPair{
+  ret := new(BPair)
+
+  // Convert to Groups
+  lb1 := pairing.NewG1().SetBytes(l.b1)
+  lb2 := pairing.NewG1().SetBytes(l.b2)
+  rb1 := pairing.NewG1().SetBytes(r.b1)
+  rb2 := pairing.NewG1().SetBytes(r.b2)
+
+  ret.b1 = pairing.NewG1().Sub(lb1, rb1).Bytes()
+  ret.b2 = pairing.NewG1().Sub(lb2, rb2).Bytes()
+
+  return ret
 }
 
 // Row x Col

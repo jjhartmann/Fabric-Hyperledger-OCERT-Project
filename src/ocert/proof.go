@@ -105,7 +105,7 @@ func CreateCommonReferenceString(sharedParams *SharedParams, alpha *pbc.Element)
  * - Creates a commitment of a variable from G1 to B1
  *   c := ι1(X) + Ru
  */
-func CreateCommitmentOnG1(pairing *pbc.Pairing, chi []*pbc.Element, U []CommitmentKey) []*BPair {
+func CreateCommitmentOnG1(pairing *pbc.Pairing, chi []*pbc.Element, U []CommitmentKey) ([]*BPair, []*BPair){
 
   // Create RMatrix of random elements
   rows := len(chi)
@@ -119,7 +119,7 @@ func CreateCommitmentOnG1(pairing *pbc.Pairing, chi []*pbc.Element, U []Commitme
   C := []*BPair{}
   if (len(Ru) != len(chi)){
     fmt.Errorf("Error in CreateCommitmentOnG1: Ru and X needs to have the same length")
-    return C
+    return C, Ru
   }
 
   // Build commitments in B1
@@ -129,7 +129,7 @@ func CreateCommitmentOnG1(pairing *pbc.Pairing, chi []*pbc.Element, U []Commitme
     C = append(C, B)
   }
 
-  return C
+  return C, Ru
 }
 
 

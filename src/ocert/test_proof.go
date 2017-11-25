@@ -325,6 +325,63 @@ func TestCompleteMatrixMapping(verbose bool) bool {
   return ret2 && ret1 && ret3 && ret4 && ret5
 }
 
+func TestSimpleCommitment(verbose bool) bool {
+  
+}
+
+func TestCreateCommitments(verbose bool) bool {
+  sharedParams := GenerateSharedParams()
+  pairing, _ := pbc.NewPairingFromString(sharedParams.Params)
+  g1 := pairing.NewG1().Rand()
+  g2 := pairing.NewG2().Rand()
+  gt := pairing.NewGT().Pair(g1, g2)
+  _ = gt
+
+  if (verbose) {fmt.Println("Creating CRS Sigma")}
+  alpha := pairing.NewZr().Rand() // Secret Key
+  sigma := CreateCommonReferenceString(sharedParams, alpha) // CRS
+
+
+  if (verbose) {fmt.Println("Create Commitments On G1")}
+  chi := []*pbc.Element{pairing.NewG1().Rand(), pairing.NewG1().Rand()}
+  C, Ru := CreateCommitmentOnG1(pairing, chi, sigma.U)
+  ret1 := (len(chi) == len(C) && len(C) == len(Ru))
+
+  if (verbose){
+    fmt.Println("Length Consistency Test: ", ret1)
+    for i:=0; i<len(C); i++ {
+      fmt.Printf("%s\t", pairing.NewG1().SetBytes(C[i].b1))
+      fmt.Printf("%s\n", pairing.NewG1().SetBytes(C[i].b2))
+    }
+    fmt.Println()
+    fmt.Println()
+  }
+
+
+  if (verbose){fmt.Println("Testing Equality: ι1(X) = C - Ru")}
+  ret2 := false
+  for i:=0; i<len(C); i++ {
+    g1 := chi[i]
+    Bc := C[i]
+    Br := Ru[i]
+    Bp := Bc.SubinG1(pairing, Br)
+    Bi := Iota1(pairing, g1)
+
+    tmp := reflect.DeepEqual(Bp, Bi)
+    if (verbose){
+      fmt.Println("Testing Equality: ", i, tmp)
+      fmt.Println(Bp)
+      fmt.Println(Bi)
+    }
+
+    ret2 = (ret2 && tmp)
+  }
+
+
+
+  return ret1 && ret2
+}
+
 /*
  * Run test b times
  */
