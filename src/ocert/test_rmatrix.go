@@ -26,7 +26,8 @@ func TestRMatrixGen(verbose bool) bool{
           fmt.Printf("%s \t", rmat.mat[i][j])
         }
       }
-      fmt.Println()
+    fmt.Println()
+    fmt.Println()
   }
 
 
@@ -34,13 +35,27 @@ func TestRMatrixGen(verbose bool) bool{
   alpha := pairing.NewZr().Rand() // Secret Key
   sigma := CreateCommonReferenceString(sharedParams, alpha) // CRS
 
-  if (verbose) {fmt.Println("Testing Muliplication on Commitment Key")}
+
+  if (verbose) {fmt.Println("Testing Muliplication on Commitment Key in G1")}
   Ru := rmat.MulCommitmentKeysG1(pairing, sigma.U)
 
   if (verbose) {
     for i := 0; i < len(Ru); i++ {
       fmt.Printf("%s\t", pairing.NewG1().SetBytes(Ru[i].b1))
       fmt.Printf("%s\t\n", pairing.NewG1().SetBytes(Ru[i].b2))
+    }
+    fmt.Println()
+    fmt.Println()
+  }
+
+
+  if (verbose) {fmt.Println("Testing Muliplication on Commitment Key in G2")}
+  Rv := rmat.MulCommitmentKeysG2(pairing, sigma.V)
+
+  if (verbose) {
+    for i := 0; i < len(Rv); i++ {
+      fmt.Printf("%s\t", pairing.NewG2().SetBytes(Rv[i].b1))
+      fmt.Printf("%s\t\n", pairing.NewG2().SetBytes(Rv[i].b2))
     }
     fmt.Println()
   }
