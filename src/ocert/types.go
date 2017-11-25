@@ -278,6 +278,14 @@ type BPair struct {
 	b2 []byte
 }
 
+// Row x Col
+type BTMat struct {
+	el11 []byte
+	el12 []byte
+	el21 []byte
+	el22 []byte
+}
+
 /*
  * Sigma: the common reference string (CRS) for NIWI ProofOfEquation
  */

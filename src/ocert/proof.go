@@ -99,6 +99,28 @@ func CreateCommonReferenceString(sharedParams *SharedParams, alpha *pbc.Element)
 }
 
 /*
+ Mapping between B1 and B2 to BT (Groth & Sahai p. 25)
+ B1 in A1^2
+ B2 in A2^2
+ BTMat in AT^4
+ */
+func FMap(pairing *pbc.Pairing, B1 *BPair, B2 *BPair) *BTMat {
+	mat := new(BTMat)
+	X1 := pairing.NewG1().SetBytes(B1.b1)
+	X2 := pairing.NewG1().SetBytes(B1.b2)
+	Y1 := pairing.NewG2().SetBytes(B2.b1)
+	Y2 := pairing.NewG2().SetBytes(B2.b2)
+
+	mat.el11 = pairing.NewGT().Pair(X1, Y1).Bytes()
+	mat.el12 = pairing.NewGT().Pair(X1, Y2).Bytes()
+	mat.el21 = pairing.NewGT().Pair(X2, Y1).Bytes()
+	mat.el22 = pairing.NewGT().Pair(X2, Y2).Bytes()
+
+	return mat
+}
+
+
+/*
  * Creates a mapping between elements in G1 and maps them
  * to elements in B1
  *
