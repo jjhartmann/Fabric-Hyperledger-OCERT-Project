@@ -7,12 +7,17 @@ import (
 )
 
 func main() {
-  //fmt.Println(ocert.Stest())
-  //fmt.Println(ocert.IotaRhoTest(true))
-  //fmt.Println("Run Proof Tests")
-  //ocert.RunAllPTests(false)
+  fmt.Printf("\nRun Structure Perserving Tests\n")
+  fmt.Println(ocert.Stest())
 
-  fmt.Println(ocert.TestRMatrixGen(true))
+  fmt.Printf("\nRun Proof Tests\n")
+  ocert.RunAllPTests(false)
+
+  fmt.Printf("\nRun RMatrix Tests\n")
+  ocert.RunAllRTests(false)
+
+
+  //fmt.Println(ocert.TestRMatrixGen(true))
 
   // Scrap
   sharedParams := ocert.GenerateSharedParams()

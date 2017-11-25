@@ -66,8 +66,12 @@ func TestRMatrixGen(verbose bool) bool{
 
 
 
-
-
+/*
+ Run all Matrix Tests
+ */
+func RunAllRTests(verbose bool) {
+  fmt.Println("RMatrix Generator   ", TestRMatrixGen(verbose))
+}
 
 /*
  * Run test b times
