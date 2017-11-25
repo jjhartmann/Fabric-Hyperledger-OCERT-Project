@@ -434,7 +434,43 @@ func TestCreateCommitments(verbose bool) bool {
 
 
   if (verbose) {fmt.Println("Create Commitments On G1")}
-  chi := []*pbc.Element{pairing.NewG1().Rand()}
+  chi := []*pbc.Element{
+    pairing.NewG1().Rand(),
+    pairing.NewG1().Rand(),
+    pairing.NewG1().Rand(),
+    pairing.NewG1().Rand(),
+    pairing.NewG1().Rand(),
+    pairing.NewG1().Rand(),
+    pairing.NewG1().Rand(),
+    pairing.NewG1().Rand(),
+    pairing.NewG1().Rand(),
+    pairing.NewG1().Rand(),
+    pairing.NewG1().Rand(),
+    pairing.NewG1().Rand(),
+    pairing.NewG1().Rand(),
+    pairing.NewG1().Rand(),
+    pairing.NewG1().Rand(),
+    pairing.NewG1().Rand(),
+    pairing.NewG1().Rand(),
+    pairing.NewG1().Rand(),
+    pairing.NewG1().Rand(),
+    pairing.NewG1().Rand(),
+    pairing.NewG1().Rand(),
+    pairing.NewG1().Rand(),
+    pairing.NewG1().Rand(),
+    pairing.NewG1().Rand(),
+    pairing.NewG1().Rand(),
+    pairing.NewG1().Rand(),
+    pairing.NewG1().Rand(),
+    pairing.NewG1().Rand(),
+    pairing.NewG1().Rand(),
+    pairing.NewG1().Rand(),
+    pairing.NewG1().Rand(),
+    pairing.NewG1().Rand(),
+    pairing.NewG1().Rand(),
+    pairing.NewG1().Rand(),
+    pairing.NewG1().Rand(),
+    }
   C, Ru, _ := CreateCommitmentOnG1(pairing, chi, sigma.U)
   ret1 := (len(chi) == len(C) && len(C) == len(Ru))
 
@@ -450,21 +486,30 @@ func TestCreateCommitments(verbose bool) bool {
 
 
   if (verbose){fmt.Println("Testing Equality: ι1(X) = C - Ru")}
-  ret2 := false
+  ret2 := true
   for i:=0; i<len(C); i++ {
-    Bc := C[i]
-    Br := Ru[i]
-    Bp := Bc.SubinG1(pairing, Br)
+    //Bc := C[i] // Pair b1 and b2 in B1
+    //Br := Ru[i]
+    Bp1 := pairing.NewG1().Sub(pairing.NewG1().SetBytes(C[i].b1),
+                              pairing.NewG1().SetBytes(Ru[i].b1))
+    Bp2 := pairing.NewG1().Sub(pairing.NewG1().SetBytes(C[i].b2),
+                               pairing.NewG1().SetBytes(Ru[i].b2))
+
     Bi := Iota1(pairing, chi[i])
+    Bi1 := pairing.NewG1().SetBytes(Bi.b1)
+    Bi2 := pairing.NewG1().SetBytes(Bi.b2)
 
-    tmp := reflect.DeepEqual(Bp, Bi)
+    tmp1 := Bp1.Equals(Bi1)
+    tmp2 := Bp2.Equals(Bi2)
+
     if (verbose){
-      fmt.Println("Testing Equality: ", i, tmp)
-      fmt.Println(Bp)
-      fmt.Println(Bi)
+      fmt.Println("Testing Equality: ", i, tmp1 && tmp2)
+      fmt.Printf("%s\t",Bp1)
+      fmt.Printf("%s\n",Bp2)
+      fmt.Printf("%s\t",Bi1)
+      fmt.Printf("%s\n",Bi2)
     }
-
-    ret2 = (ret2 && tmp)
+    ret2 = (ret2 && tmp1 && tmp2)
   }
 
 
@@ -493,4 +538,5 @@ func RunAllPTests(verbose bool) {
   fmt.Println("F function Map:     ", TestFMap(verbose))
   fmt.Println("Matrix Map:         ", TestCompleteMatrixMapping(verbose))
   fmt.Println("Simple Commitment   ", TestSimpleCommitment(verbose))
+  fmt.Println("Complex Commitment  ", TestCreateCommitments(verbose))
 }
