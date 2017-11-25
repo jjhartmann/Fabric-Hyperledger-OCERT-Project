@@ -119,6 +119,28 @@ func FMap(pairing *pbc.Pairing, B1 *BPair, B2 *BPair) *BTMat {
 	return mat
 }
 
+/*
+ IotaHat: AT -> BT
+ Here, the mapping is occuring from G2 -> B2^4
+ */
+func IotaHat(pairing *pbc.Pairing, Z *pbc.Element, sigma *Sigma) *BTMat {
+	// Element from G2, first convert to B1 and B2
+	// then map element into BT^4
+	B1 := IotaPrime1(pairing, pairing.NewZr().SetInt32(1), sigma)
+	B2 := Iota2(pairing, Z)
+
+	// Map into BT
+	mat := FMap(pairing, B1, B2)
+
+	return mat
+}
+
+/*
+ TODO: RhoHat - might not be possible since this function needs the inverse e^1
+ */
+ func RhoHat() {
+ 	
+ }
 
 /*
  * Creates a mapping between elements in G1 and maps them
