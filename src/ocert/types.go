@@ -4,7 +4,11 @@
 
 package ocert
 
-// "github.com/Nik-U/pbc"
+import (
+	// "github.com/Nik-U/pbc"
+ 	"encoding/json"
+ 	// "bytes"
+)
 
 /*
  * Since all schemes are based on same G1, G2 and Gt, this structure
@@ -53,8 +57,27 @@ type AuditorPublicKey struct {
 /*
  * The secret key of the auditor.
  */
-type AuditorSecretKey struct {
-	// TODO, the group depends on scheme
+ type AuditorSecretKey struct {
+ 	// TODO, the group depends on scheme
+ 	SK []byte
+ }
+
+/*
+ * The keypair of the auditor
+ */
+type AuditorKeypair struct {
+	PK []byte
+	SK []byte
+}
+
+func (KPa *AuditorKeypair) Bytes() ([]byte, error) {
+	msg, err := json.Marshal(KPa)
+	return msg, err
+}
+
+func (KPa *AuditorKeypair) SetBytes(msg []byte) error {
+	err := json.Unmarshal(msg, KPa)
+	return err
 }
 
 /*****************************************************************/
@@ -65,6 +88,7 @@ type AuditorSecretKey struct {
 // TODO We may use the identity structure of fabric here, and hash
 // it to some value in a group in our scheme.
 type ClientID struct {
+	ID []byte
 }
 
 /*
@@ -84,6 +108,16 @@ type ClientPublicKey struct {
 type Pseudonym struct {
 	C []byte
 	D []byte
+}
+
+func (P *Pseudonym) Bytes() ([]byte, error) {
+	msg, err := json.Marshal(P)
+	return msg, err
+}
+
+func (P *Pseudonym) SetBytes(msg []byte) error {
+	err := json.Unmarshal(msg, P)
+	return err
 }
 
 /*****************************************************************/
@@ -110,6 +144,16 @@ type SVerificationKey struct {
 	Z  []byte
 }
 
+func (VK *SVerificationKey) Bytes() ([]byte, error) {
+	msg, err := json.Marshal(VK)
+	return msg, err
+}
+
+func (VK *SVerificationKey) SetBytes(msg []byte) error {
+	err := json.Unmarshal(msg, VK)
+	return err
+}
+
 /*
  * The signing key contains the order of each element in the verification
  * key.
@@ -130,6 +174,16 @@ type Ecert struct {
 	R []byte
 	S []byte
 	T []byte
+}
+
+func (ecert *Ecert) Bytes() ([]byte, error) {
+	msg, err := json.Marshal(ecert)
+	return msg, err
+}
+
+func (ecert *Ecert) SetBytes(msg []byte) error {
+	err := json.Unmarshal(msg, ecert)
+	return err
 }
 
 /*****************************************************************/
@@ -294,4 +348,24 @@ type ProofConstants struct {
 	PPrime *Pseudonym        // C' and D'
 	Egz    []byte            // e(g1, Z)
 	PKa    *AuditorPublicKey
+}
+
+/*****************************************************************/
+/*
+ * Result from main scheme(chaincode)
+ */
+
+type GenECertReply struct {
+	P []byte
+	ecert []byte
+}
+
+func (reply *GenECertReply) Bytes() ([]byte, error) {
+	msg, err := json.Marshal(reply)
+	return msg, err
+}
+
+func (reply *GenECertReply) SetBytes(msg []byte) error {
+	err := json.Unmarshal(msg, reply)
+	return err
 }
