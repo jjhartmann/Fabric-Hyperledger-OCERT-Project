@@ -99,6 +99,26 @@ func CreateCommonReferenceString(sharedParams *SharedParams, alpha *pbc.Element)
 }
 
 /*
+  Multi-Scalar Multiplication Mapping for G1
+  f: (x, Y) -> xY
+ */
+func MultiScalar_f_G1_map(pairing *pbc.Pairing, y *pbc.Element, X *pbc.Element) *pbc.Element{
+	return pairing.NewG1().MulZn(X, y)
+}
+
+/*
+  Multi-Scalar Multiplication Mapping for G2
+  f: (x, Y) -> xY
+ */
+func MultiScalar_f_G2_map(pairing *pbc.Pairing, x *pbc.Element, Y *pbc.Element) *pbc.Element{
+	return pairing.NewG2().MulZn(Y, x)
+}
+
+func ProductPairing_e_GT_map(pairing *pbc.Pairing, X *pbc.Element, Y *pbc.Element) *pbc.Element{
+	return pairing.NewGT().Pair(X, Y)
+}
+
+/*
  Mapping between B1 and B2 to BT (Groth & Sahai p. 25)
  B1 in A1^2
  B2 in A2^2
@@ -205,6 +225,20 @@ func Rho2(pairing *pbc.Pairing, pair *BPair, alpha *pbc.Element) *pbc.Element {
 	Z2 := pairing.NewG2().SetBytes(pair.b2)
 	tmp := pairing.NewG2().MulZn(Z1, alpha)
 	return pairing.NewG2().Sub(Z2, tmp)
+}
+
+/*
+ * IotaT: GT -> BT
+ * BT is in GT^4
+ */
+func IotaT(pairing *pbc.Pairing, el *pbc.Element) *BTMat{
+	mat := new(BTMat)
+	mat.el11 = pairing.NewGT().Set1().Bytes() // identity
+	mat.el12 = pairing.NewGT().Set1().Bytes() // identity
+	mat.el21 = pairing.NewGT().Set1().Bytes() // identity
+	mat.el22 = el.Bytes()
+
+	return mat
 }
 
 

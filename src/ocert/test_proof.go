@@ -235,12 +235,12 @@ func TestCompleteMatrixMapping(verbose bool) bool {
   sigma := CreateCommonReferenceString(sharedParams, alpha) // CRS
 
 
-  fmt.Println("Testing Multi-Scalar Multiplication Mapping Matrix")
+  fmt.Println("Testing Multi-Scalar Multiplication Mapping Matrix for G2")
   fmt.Println("    - F(ι'1(x), ι2(Y)) = F(ι'1(1), ι2(xY)) = ιT(xY)")
   c := pairing.NewZr().SetInt32(1)
   x := pairing.NewZr().Rand()
   Y := pairing.NewG2().Rand()
-  xY := pairing.NewG2().MulZn(Y, x)
+  xY := MultiScalar_f_G2_map(pairing, x, Y)
 
   B1x := IotaPrime1(pairing, x, sigma)
   B1c := IotaPrime1(pairing, c, sigma)
@@ -263,7 +263,59 @@ func TestCompleteMatrixMapping(verbose bool) bool {
     fmt.Println("F(ι'1(x), ι2(Y)) = F(ι'1(1), ι2(xY)): ", ret2)
   }
 
-  return ret2 && ret1
+
+
+  fmt.Println()
+  fmt.Println("Testing Multi-Scalar Multiplication Mapping Matrix for G1")
+  fmt.Println("    - F(ι'1(x), ι2(Y)) = F(ι'1(1), ι2(xY)) = ιT(xY)")
+  MSc := pairing.NewZr().SetInt32(1)
+  MSx := pairing.NewZr().Rand()
+  MSY := pairing.NewG1().Rand()
+  MSxY := MultiScalar_f_G1_map(pairing, MSx, MSY)
+
+  MSB1x := IotaPrime2(pairing, MSx, sigma)
+  MSB1c := IotaPrime2(pairing, MSc, sigma)
+  MSB2Y := Iota1(pairing, MSY)
+  MSB2xY := Iota1(pairing, MSxY)
+
+
+  MSBTxY := IotaHat(pairing, MSxY, sigma)
+  MSBTF1 := FMap(pairing, MSB1x, MSB2Y)
+  MSBTF2 := FMap(pairing, MSB1c, MSB2xY)
+
+  ret4 := reflect.DeepEqual(MSBTxY, MSBTF1)
+  ret5 := reflect.DeepEqual(MSBTF1, MSBTF2)
+
+  if (verbose) {
+    fmt.Println("BTxY:   ", MSBTxY)
+    fmt.Println("BTF1:   ", MSBTF1)
+    fmt.Println("BTF2:   ", MSBTF2)
+    fmt.Println("F(ι'1(1), ι2(xY)) = ιT(xY):           ", ret4)
+    fmt.Println("F(ι'1(x), ι2(Y)) = F(ι'1(1), ι2(xY)): ", ret5)
+  }
+
+
+
+  fmt.Println()
+  fmt.Println("Testing Pairing Product Mapping Matrix")
+  PPX := pairing.NewG1().Rand()
+  PPY := pairing.NewG2().Rand()
+  PPgt := ProductPairing_e_GT_map(pairing, PPX, PPY)
+
+  PPB1 := Iota1(pairing, PPX)
+  PPB2 := Iota2(pairing, PPY)
+  PPBTi := IotaT(pairing, PPgt)
+  PPBTF := FMap(pairing, PPB1, PPB2)
+
+  ret3 := reflect.DeepEqual(PPBTi, PPBTF)
+
+  if (verbose){
+    fmt.Println("PPBTi:   ", PPBTi)
+    fmt.Println("PPBTF:   ", PPBTF)
+    fmt.Println("F(ι1(X), ι2(Y)) = ιT(e(X,Y)): ", ret3)
+  }
+
+  return ret2 && ret1 && ret3
 }
 
 /*
