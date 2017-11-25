@@ -8,6 +8,7 @@ import (
 	// "github.com/Nik-U/pbc"
  	"encoding/json"
  	// "bytes"
+	"github.com/Nik-U/pbc"
 )
 
 /*
@@ -276,6 +277,20 @@ type SystemOfEquations struct {
 type BPair struct {
 	b1 []byte
 	b2 []byte
+}
+
+// BPair Helper function to add elements
+func (l BPair) AddinG1(pairing *pbc.Pairing, r *BPair) *BPair{
+	// Convert to Groups
+  lb1 := pairing.NewG1().SetBytes(l.b1)
+  lb2 := pairing.NewG1().SetBytes(l.b2)
+  rb1 := pairing.NewG1().SetBytes(r.b1)
+  rb2 := pairing.NewG1().SetBytes(r.b2)
+
+  r.b1 = pairing.NewG1().Add(lb1, rb1).Bytes()
+  r.b2 = pairing.NewG1().Add(lb2, rb2).Bytes()
+
+  return r
 }
 
 // Row x Col

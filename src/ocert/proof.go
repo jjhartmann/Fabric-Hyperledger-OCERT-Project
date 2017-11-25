@@ -6,6 +6,7 @@ package ocert
 
 import (
   "github.com/Nik-U/pbc"
+  "fmt"
 )
 
 /*
@@ -97,6 +98,40 @@ func CreateCommonReferenceString(sharedParams *SharedParams, alpha *pbc.Element)
 
 	return sigma
 }
+
+
+/*
+ * Create Commitment: G1 -> B1
+ * - Creates a commitment of a variable from G1 to B1
+ *   c := ι1(X) + Ru
+ */
+func CreateCommitmentOnG1(pairing *pbc.Pairing, chi []*pbc.Element, U []CommitmentKey) []*BPair {
+
+  // Create RMatrix of random elements
+  rows := len(chi)
+  cols := len(U)
+  rmat := NewRMatrix(pairing, rows, cols)
+
+  // Create pairs in B1
+  Ru := rmat.MulCommitmentKeysG1(pairing, U)
+
+  // Create Commitment container
+  C := []*BPair{}
+  if (len(Ru) != len(chi)){
+    fmt.Errorf("Error in CreateCommitmentOnG1: Ru and X needs to have the same length")
+    return C
+  }
+
+  // Build commitments in B1
+  for i:=0; i<len(chi); i++ {
+    tmp := Iota1(pairing, chi[i])
+    B := tmp.AddinG1(pairing, Ru[i])
+    C = append(C, B)
+  }
+
+  return C
+}
+
 
 /*
   Multi-Scalar Multiplication Mapping for G1
