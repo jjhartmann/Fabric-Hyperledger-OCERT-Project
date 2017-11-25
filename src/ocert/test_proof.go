@@ -19,6 +19,7 @@ func Ptest() bool {
 	return PProve(sharedParams, pi, consts)
 }
 
+// Test mapping between G and B
 func IotaRhoTest(verbose bool) bool {
 	fmt.Println("Testing Iota1 and Iota2 Conversion B")
 	sharedParams := GenerateSharedParams()
@@ -65,6 +66,14 @@ func IotaRhoTest(verbose bool) bool {
 	}
 
 	return (ret1 == true) && (ret2 == true)
+}
+
+
+// Test mapping between Zp and B
+func TestIotaRhoPrime(verbose bool) bool {
+
+
+  return true
 }
 
 

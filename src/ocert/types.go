@@ -282,8 +282,10 @@ type BPair struct {
  * Sigma: the common reference string (CRS) for NIWI ProofOfEquation
  */
 type Sigma struct {
-	U []CommitmentKey
-	V []CommitmentKey
+	U []CommitmentKey // el1 holds generator
+	V []CommitmentKey // el1 holds generator
+	u CommitmentKey
+	v CommitmentKey
 }
 
 type CommitmentKey struct {

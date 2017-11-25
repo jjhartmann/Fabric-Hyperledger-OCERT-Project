@@ -59,33 +59,39 @@ func CreateCommonReferenceString(sharedParams *SharedParams, alpha *pbc.Element)
 	sigma := new(Sigma)
 
 	// Create commit keys for u1 and u2 on G1
-	p1 := g1.Bytes()
-	q1 := pairing.NewG1().MulZn(g1, alpha)
+	u11 := g1.Bytes()
+	u12 := pairing.NewG1().MulZn(g1, alpha)
 
 	t := pairing.NewZr().Rand()
-	p2 := pairing.NewG1().MulZn(g1, t)
-	q2 := pairing.NewG1().MulZn(q1, t)
+	u21 := pairing.NewG1().MulZn(g1, t)
+	u22 := pairing.NewG1().MulZn(u12, t)
 
 	sigma.U = []CommitmentKey{
-		CommitmentKey{p1, q1.Bytes()},
-		CommitmentKey{p2.Bytes(), q2.Bytes()},
+		CommitmentKey{u11, u12.Bytes()},
+		CommitmentKey{u21.Bytes(), u22.Bytes()},
 	}
 
 	// Create commit keys v1 and v2 on G2
-	p12 := g2.Bytes()
-	q12 := pairing.NewG1().MulZn(g2, alpha)
+	v11 := g2.Bytes()
+	v12 := pairing.NewG2().MulZn(g2, alpha)
 
 	t2 := pairing.NewZr().Rand()
-	p22 := pairing.NewG1().MulZn(g2, t2)
-	q22 := pairing.NewG1().MulZn(q1, t2)
+	v21 := pairing.NewG2().MulZn(g2, t2)
+	v22 := pairing.NewG2().MulZn(v12, t2)
 
 	sigma.V = []CommitmentKey{
-		CommitmentKey{p12, q12.Bytes()},
-		CommitmentKey{p22.Bytes(), q22.Bytes()},
+		CommitmentKey{v11, v12.Bytes()},
+		CommitmentKey{v21.Bytes(), v22.Bytes()},
 	}
 
 	// Create commitment keys u and v on Zn
-	
+  su1 := pairing.NewG1().Add(u21, pairing.NewG1().Set0())
+  su2 := pairing.NewG1().Add(u22, g1)
+  sigma.u = CommitmentKey{su1.Bytes(), su2.Bytes()}
+
+  sv1 := pairing.NewG2().Add(v21, pairing.NewG2().Set0())
+  sv2 := pairing.NewG2().Add(v22, g2)
+  sigma.v = CommitmentKey{sv1.Bytes(), sv2.Bytes()}
 
 	return sigma
 }
@@ -153,4 +159,17 @@ func Rho2(pairing *pbc.Pairing, pair *BPair, alpha *pbc.Element) *pbc.Element {
 	Z2 := pairing.NewG2().SetBytes(pair.b2)
 	tmp := pairing.NewG2().MulZn(Z1, alpha)
 	return pairing.NewG2().Sub(Z2, tmp)
+}
+
+
+/* IotaPrime1: Zp -> B1
+ * IotaPrimt1(z) = zu
+ */
+func IotaPrime1(pairing *pbc.Pairing, z *pbc.Element, sigma *Sigma) *BPair {
+  pair := new(BPair)
+  u1 := pairing.NewG1().SetBytes(sigma.u.u1)
+  u2 := pairing.NewG1().SetBytes(sigma.u.u2)
+  pair.b1 = pairing.NewG1().MulZn(u1, z).Bytes()
+  pair.b2 = pairing.NewG1().MulZn(u2, z).Bytes()
+  return pair
 }
