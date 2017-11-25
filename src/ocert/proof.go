@@ -139,7 +139,7 @@ func IotaHat(pairing *pbc.Pairing, Z *pbc.Element, sigma *Sigma) *BTMat {
  TODO: RhoHat - might not be possible since this function needs the inverse e^1
  */
  func RhoHat() {
- 	
+
  }
 
 /*

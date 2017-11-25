@@ -4,6 +4,7 @@ import (
 	"os"
 	"fmt"
 	"github.com/Nik-U/pbc"
+  "reflect"
 )
 
 /*
@@ -171,6 +172,59 @@ func TestFMap(verbose bool) bool {
   return ret1 && ret2 && ret3 && ret4
 }
 
+
+func TestIotaHat(verbose bool) bool {
+  sharedParams := GenerateSharedParams()
+  pairing, _ := pbc.NewPairingFromString(sharedParams.Params)
+  g1 := pairing.NewG1().Rand()
+  g2 := pairing.NewG2().Rand()
+  gt := pairing.NewGT().Pair(g1, g2)
+  _ = gt
+
+  fmt.Println("Creating CRS Sigma")
+  alpha := pairing.NewZr().Rand() // Secret Key
+  sigma := CreateCommonReferenceString(sharedParams, alpha) // CRS
+
+
+  fmt.Println("Create IotaHat int BT")
+  AT := pairing.NewG2().Rand() // Element to test
+  BT := IotaHat(pairing, AT, sigma)
+
+  fmt.Println("Testing: F(ι'1(1), ι2(AT)) = F(u, (O,AT))")
+  c := pairing.NewZr().SetInt32(1)
+  B1_1 := IotaPrime1(pairing, c, sigma)
+  B2_1 := Iota2(pairing, AT)
+  BT_1 := FMap(pairing, B1_1 , B2_1)
+
+  B1_2 := new(BPair)
+  B1_2.b1 = sigma.u.u1
+  B1_2.b2 = sigma.u.u2
+  B2_2 := new(BPair)
+  B2_2.b1 = pairing.NewG2().Set0().Bytes()
+  B2_2.b2 = AT.Bytes()
+  BT_2 := FMap(pairing, B1_2, B2_2)
+
+
+  ret1 := reflect.DeepEqual(BT, BT_1)
+  ret2 := reflect.DeepEqual(BT_1, BT_2)
+
+
+  if (verbose){
+    fmt.Println("BT:   ", BT)
+    fmt.Println("BT_1: ", BT_1)
+    fmt.Println("BT_2: ", BT_2)
+    fmt.Println("ι^T(AT) == F(ι'1(1), ι2(AT)): ", ret1)
+    fmt.Println("F(ι'1(1), ι2(AT)) = F(u, (O,AT)): ", ret2)
+  }
+
+  return ret1 && ret2
+}
+
+
+
+func TestCompleteMatrixMapping(verbose bool) bool {
+  return true
+}
 
 /*
  * Run test b times
