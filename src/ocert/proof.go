@@ -179,6 +179,7 @@ func IotaPrime1(pairing *pbc.Pairing, z *pbc.Element, sigma *Sigma) *BPair {
 /*
  RhoPrime1: B1 -> Zp
   = (z2 - alpha * z1)
+  // TODO: Convert zP back into z in Zp: z = z*P(P^-1)
  */
 func RhoPrime1(pairing *pbc.Pairing, pair *BPair, alpha *pbc.Element) *pbc.Element{
   b1 := pairing.NewG1().SetBytes(pair.b1)
@@ -186,6 +187,35 @@ func RhoPrime1(pairing *pbc.Pairing, pair *BPair, alpha *pbc.Element) *pbc.Eleme
 
   b2prime := pairing.NewG1().MulZn(b1, alpha)
   zprime := pairing.NewG1().Sub(b2, b2prime)
+  // TODO: zprime should be in the group Zp but it is currently in G1 (need to convert)
+
+  return zprime
+}
+
+/* IotaPrime2: Zp -> B2
+ * IotaPrimt1(z) = zu
+ */
+func IotaPrime2(pairing *pbc.Pairing, z *pbc.Element, sigma *Sigma) *BPair {
+  pair := new(BPair)
+  u1 := pairing.NewG2().SetBytes(sigma.v.u1)
+  u2 := pairing.NewG2().SetBytes(sigma.v.u2)
+  pair.b1 = pairing.NewG2().MulZn(u1, z).Bytes()
+  pair.b2 = pairing.NewG2().MulZn(u2, z).Bytes()
+  return pair
+}
+
+/*
+ RhoPrime2: B2 -> Zp
+  = (z2 - alpha * z1)
+  // TODO: Convert zP back into z in Zp: z = z*P(P^-1)
+ */
+func RhoPrime2(pairing *pbc.Pairing, pair *BPair, alpha *pbc.Element) *pbc.Element{
+  b1 := pairing.NewG2().SetBytes(pair.b1)
+  b2 := pairing.NewG2().SetBytes(pair.b2)
+
+  b2prime := pairing.NewG2().MulZn(b1, alpha)
+  zprime := pairing.NewG2().Sub(b2, b2prime)
+  // TODO: zprime should be in the group Zp but it is currently in G1 (need to convert)
 
   return zprime
 }

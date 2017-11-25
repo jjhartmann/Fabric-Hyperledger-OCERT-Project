@@ -65,7 +65,7 @@ func IotaRhoTest(verbose bool) bool {
     fmt.Println("Test2 ==", ret2)
 	}
 
-	return (ret1 == true) && (ret2 == true)
+	return ret1 && ret2
 }
 
 
@@ -79,31 +79,48 @@ func TestIotaRhoPrime(verbose bool) bool {
   _ = gt
 
   fmt.Println("Creating CRS Sigma")
-  alpha := pairing.NewZr().Rand()
-  sigma := CreateCommonReferenceString(sharedParams, alpha)
-  _ = sigma
+  alpha := pairing.NewZr().Rand() // Secret Key
+  sigma := CreateCommonReferenceString(sharedParams, alpha) // CRS
 
   // Test IotaPrim: Zp -> B1
   fmt.Println("Calling IotaPrime")
   z := pairing.NewZr().Rand()
-  B := IotaPrime1(pairing, z, sigma)
+  B1 := IotaPrime1(pairing, z, sigma)
+  B2 := IotaPrime2(pairing, z, sigma)
 
   if (verbose){
-    b1 := pairing.NewG1().SetBytes(B.b1)
-    b2 := pairing.NewG1().SetBytes(B.b2)
+    b1 := pairing.NewG1().SetBytes(B1.b1)
+    b2 := pairing.NewG1().SetBytes(B1.b2)
+    b3 := pairing.NewG2().SetBytes(B2.b1)
+    b4 := pairing.NewG2().SetBytes(B2.b1)
+
     fmt.Printf("z = %s\n", z)
     fmt.Printf("b1 = %s\n", b1)
     fmt.Printf("b2 = %s\n", b2)
+    fmt.Printf("b3 = %s\n", b3)
+    fmt.Printf("b4 = %s\n", b4)
+
   }
 
   fmt.Println("Calling RhoPrime")
-  ret := RhoPrime1(pairing, B, alpha)
+  zP1 := RhoPrime1(pairing, B1, alpha)
+  zP2 := RhoPrime2(pairing, B2, alpha)
+
+
+  // To Check, we need to multiple the generator g1 by z to see
+  // if the conversin back is successful.
+  P1 := pairing.NewG1().SetBytes(sigma.U[0].u1)
+  P2 := pairing.NewG2().SetBytes(sigma.V[0].u1)
+
+  retU := zP1.Equals(pairing.NewG1().MulZn(P1, z))
+  retV := zP2.Equals(pairing.NewG2().MulZn(P2, z))
 
   if (verbose){
-    fmt.Printf("ret = %s\n", ret)
+    fmt.Println("retU =", retU)
+    fmt.Println("retV =", retV)
   }
 
-  return true
+  return retU && retV
 }
 
 

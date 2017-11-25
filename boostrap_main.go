@@ -3,7 +3,7 @@ package main
 import (
   "fmt"
 	 "./src/ocert"
-  //"github.com/Nik-U/pbc"
+  "github.com/Nik-U/pbc"
 )
 
 func main() {
@@ -11,12 +11,24 @@ func main() {
   //fmt.Println(ocert.IotaRhoTest(true))
   fmt.Println(ocert.TestIotaRhoPrime(true))
 
-  //sharedParams := ocert.GenerateSharedParams()
-  //pairing, _ := pbc.NewPairingFromString(sharedParams.Params)
-  //g1 := pairing.NewG1().Rand()
-  //g2 := pairing.NewG2().Rand()
-  //gt := pairing.NewGT().Pair(g1, g2)
-  //_ = gt
+  sharedParams := ocert.GenerateSharedParams()
+  pairing, _ := pbc.NewPairingFromString(sharedParams.Params)
+  g1 := pairing.NewG1().Rand()
+  g2 := pairing.NewG2().Rand()
+  gt := pairing.NewGT().Pair(g1, g2)
+  _ = gt
+
+  //z := pairing.NewZr().Rand()
+  //zP := pairing.NewG1().MulZn(g1, z)
+  //
+  //fmt.Println(z)
+  //fmt.Println(zP)
+  //
+  //negG1 := pairing.NewG1().Invert(g1)
+  //zprime := pairing.NewG1().Mul(zP, negG1)
+  //
+  //fmt.Println(negG1)
+  //fmt.Println("ZPrime:",zprime)
   //
   //
   //z := pairing.NewZr().SetInt32(2)
