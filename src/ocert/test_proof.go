@@ -223,7 +223,47 @@ func TestIotaHat(verbose bool) bool {
 
 
 func TestCompleteMatrixMapping(verbose bool) bool {
-  return true
+  sharedParams := GenerateSharedParams()
+  pairing, _ := pbc.NewPairingFromString(sharedParams.Params)
+  g1 := pairing.NewG1().Rand()
+  g2 := pairing.NewG2().Rand()
+  gt := pairing.NewGT().Pair(g1, g2)
+  _ = gt
+
+  fmt.Println("Creating CRS Sigma")
+  alpha := pairing.NewZr().Rand() // Secret Key
+  sigma := CreateCommonReferenceString(sharedParams, alpha) // CRS
+
+
+  fmt.Println("Testing Multi-Scalar Multiplication Mapping Matrix")
+  fmt.Println("    - F(ι'1(x), ι2(Y)) = F(ι'1(1), ι2(xY)) = ιT(xY)")
+  c := pairing.NewZr().SetInt32(1)
+  x := pairing.NewZr().Rand()
+  Y := pairing.NewG2().Rand()
+  xY := pairing.NewG2().MulZn(Y, x)
+
+  B1x := IotaPrime1(pairing, x, sigma)
+  B1c := IotaPrime1(pairing, c, sigma)
+  B2Y := Iota2(pairing, Y)
+  B2xY := Iota2(pairing, xY)
+
+
+  BTxY := IotaHat(pairing, xY, sigma)
+  BTF1 := FMap(pairing, B1x, B2Y)
+  BTF2 := FMap(pairing, B1c, B2xY)
+
+  ret1 := reflect.DeepEqual(BTxY, BTF1)
+  ret2 := reflect.DeepEqual(BTF1, BTF2)
+
+  if (verbose) {
+    fmt.Println("BTxY:   ", BTxY)
+    fmt.Println("BTF1:   ", BTF1)
+    fmt.Println("BTF2:   ", BTF2)
+    fmt.Println("F(ι'1(1), ι2(xY)) = ιT(xY):           ", ret1)
+    fmt.Println("F(ι'1(x), ι2(Y)) = F(ι'1(1), ι2(xY)): ", ret2)
+  }
+
+  return ret2 && ret1
 }
 
 /*

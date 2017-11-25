@@ -9,7 +9,7 @@ import (
 func main() {
   //fmt.Println(ocert.Stest())
   //fmt.Println(ocert.IotaRhoTest(true))
-  fmt.Println(ocert.TestIotaHat(true))
+  fmt.Println(ocert.TestCompleteMatrixMapping(true))
 
   sharedParams := ocert.GenerateSharedParams()
   pairing, _ := pbc.NewPairingFromString(sharedParams.Params)
