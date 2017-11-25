@@ -9,8 +9,10 @@ import (
 func main() {
   //fmt.Println(ocert.Stest())
   //fmt.Println(ocert.IotaRhoTest(true))
-  fmt.Println("Run Proof Tests")
-  ocert.RunAllPTests(false)
+  //fmt.Println("Run Proof Tests")
+  //ocert.RunAllPTests(false)
+
+  fmt.Println(ocert.TestRMatrix(true))
 
   // Scrap
   sharedParams := ocert.GenerateSharedParams()
