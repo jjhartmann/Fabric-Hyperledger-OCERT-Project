@@ -9,8 +9,10 @@ import (
 func main() {
   //fmt.Println(ocert.Stest())
   //fmt.Println(ocert.IotaRhoTest(true))
-  fmt.Println(ocert.TestCompleteMatrixMapping(true))
+  fmt.Println("Run Proof Tests")
+  ocert.RunAllPTests(false)
 
+  // Scrap
   sharedParams := ocert.GenerateSharedParams()
   pairing, _ := pbc.NewPairingFromString(sharedParams.Params)
   g1 := pairing.NewG1().Rand()

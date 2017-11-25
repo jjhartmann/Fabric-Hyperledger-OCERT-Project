@@ -21,9 +21,10 @@ func Ptest() bool {
 }
 
 // Test mapping between G and B
-func IotaRhoTest(verbose bool) bool {
-	fmt.Println("Testing Iota1 and Iota2 Conversion B")
-	sharedParams := GenerateSharedParams()
+func TestIotaRho(verbose bool) bool {
+
+  if (verbose) {fmt.Println("Testing Iota1 and Iota2 Conversion B")}
+  sharedParams := GenerateSharedParams()
 	pairing, _ := pbc.NewPairingFromString(sharedParams.Params)
 
 	// Generate element to test on conversion
@@ -52,7 +53,7 @@ func IotaRhoTest(verbose bool) bool {
 	}
 
 	// Alpha is a random integer of order prime (Secret Key)
-	fmt.Println("Testing Rho1 and Rho2 Conversion to G")
+  if (verbose) {fmt.Println("Testing Rho1 and Rho2 Conversion to G")}
 	alpha := pairing.NewZr().Rand()
 	Zprime1 := Rho1(pairing, b1pair, alpha)
 	ret1 := Zprime1.Equals(Z1)
@@ -79,12 +80,12 @@ func TestIotaRhoPrime(verbose bool) bool {
   gt := pairing.NewGT().Pair(g1, g2)
   _ = gt
 
-  fmt.Println("Creating CRS Sigma")
+  if (verbose) {fmt.Println("Creating CRS Sigma")}
   alpha := pairing.NewZr().Rand() // Secret Key
   sigma := CreateCommonReferenceString(sharedParams, alpha) // CRS
 
   // Test IotaPrim: Zp -> B1
-  fmt.Println("Calling IotaPrime")
+  if (verbose) {fmt.Println("Calling IotaPrime")}
   z := pairing.NewZr().Rand()
   B1 := IotaPrime1(pairing, z, sigma)
   B2 := IotaPrime2(pairing, z, sigma)
@@ -103,14 +104,14 @@ func TestIotaRhoPrime(verbose bool) bool {
 
   }
 
-  fmt.Println("Calling RhoPrime")
+  if (verbose) {fmt.Println("Calling RhoPrime")}
   zP1 := RhoPrime1(pairing, B1, alpha)
   zP2 := RhoPrime2(pairing, B2, alpha)
 
 
   // To Check, we need to multiple the generator g1 by z to see
   // if the conversin back is successful.
-  fmt.Println("Testing Equality:")
+  if (verbose) {fmt.Println("Testing Equality:")}
   P1 := pairing.NewG1().SetBytes(sigma.U[0].u1)
   P2 := pairing.NewG2().SetBytes(sigma.V[0].u1)
 
@@ -138,17 +139,17 @@ func TestFMap(verbose bool) bool {
   gt := pairing.NewGT().Pair(g1, g2)
   _ = gt
 
-  fmt.Println("Creating CRS Sigma")
+  if (verbose) {fmt.Println("Creating CRS Sigma")}
   alpha := pairing.NewZr().Rand() // Secret Key
   sigma := CreateCommonReferenceString(sharedParams, alpha) // CRS
 
-  fmt.Println("Creating Elements in B1 & B2")
+  if (verbose) {fmt.Println("Creating Elements in B1 & B2")}
   z := pairing.NewZr().Rand() // testing element to map
   Y := pairing.NewG2().Rand() // test element in G2
   B1 := IotaPrime1(pairing, z, sigma)
   B2 := Iota2(pairing, Y)
 
-  fmt.Println("Mapping into BT")
+  if (verbose) {fmt.Println("Mapping into BT")}
   BT := FMap(pairing, B1, B2)
 
   // Manual create pairs
@@ -181,16 +182,16 @@ func TestIotaHat(verbose bool) bool {
   gt := pairing.NewGT().Pair(g1, g2)
   _ = gt
 
-  fmt.Println("Creating CRS Sigma")
+  if (verbose) {fmt.Println("Creating CRS Sigma")}
   alpha := pairing.NewZr().Rand() // Secret Key
   sigma := CreateCommonReferenceString(sharedParams, alpha) // CRS
 
 
-  fmt.Println("Create IotaHat int BT")
+  if (verbose) {fmt.Println("Create IotaHat int BT")}
   AT := pairing.NewG2().Rand() // Element to test
   BT := IotaHat(pairing, AT, sigma)
 
-  fmt.Println("Testing: F(ι'1(1), ι2(AT)) = F(u, (O,AT))")
+  if (verbose) {fmt.Println("Testing: F(ι'1(1), ι2(AT)) = F(u, (O,AT))")}
   c := pairing.NewZr().SetInt32(1)
   B1_1 := IotaPrime1(pairing, c, sigma)
   B2_1 := Iota2(pairing, AT)
@@ -230,13 +231,15 @@ func TestCompleteMatrixMapping(verbose bool) bool {
   gt := pairing.NewGT().Pair(g1, g2)
   _ = gt
 
-  fmt.Println("Creating CRS Sigma")
+  if (verbose) {fmt.Println("Creating CRS Sigma")}
   alpha := pairing.NewZr().Rand() // Secret Key
   sigma := CreateCommonReferenceString(sharedParams, alpha) // CRS
 
 
-  fmt.Println("Testing Multi-Scalar Multiplication Mapping Matrix for G2")
-  fmt.Println("    - F(ι'1(x), ι2(Y)) = F(ι'1(1), ι2(xY)) = ιT(xY)")
+  if (verbose) {
+    fmt.Println("Testing Multi-Scalar Multiplication Mapping Matrix for G2")
+    fmt.Println("    - F(ι'1(x), ι2(Y)) = F(ι'1(1), ι2(xY)) = ιT(xY)")
+  }
   c := pairing.NewZr().SetInt32(1)
   x := pairing.NewZr().Rand()
   Y := pairing.NewG2().Rand()
@@ -265,9 +268,11 @@ func TestCompleteMatrixMapping(verbose bool) bool {
 
 
 
-  fmt.Println()
-  fmt.Println("Testing Multi-Scalar Multiplication Mapping Matrix for G1")
-  fmt.Println("    - F(ι'1(x), ι2(Y)) = F(ι'1(1), ι2(xY)) = ιT(xY)")
+  if (verbose) {
+    fmt.Println()
+    fmt.Println("Testing Multi-Scalar Multiplication Mapping Matrix for G1")
+    fmt.Println("    - F(ι'1(x), ι2(Y)) = F(ι'1(1), ι2(xY)) = ιT(xY)")
+  }
   MSc := pairing.NewZr().SetInt32(1)
   MSx := pairing.NewZr().Rand()
   MSY := pairing.NewG1().Rand()
@@ -296,8 +301,10 @@ func TestCompleteMatrixMapping(verbose bool) bool {
 
 
 
-  fmt.Println()
-  fmt.Println("Testing Pairing Product Mapping Matrix")
+  if (verbose) {
+    fmt.Println()
+    fmt.Println("Testing Pairing Product Mapping Matrix")
+    }
   PPX := pairing.NewG1().Rand()
   PPY := pairing.NewG2().Rand()
   PPgt := ProductPairing_e_GT_map(pairing, PPX, PPY)
@@ -315,7 +322,7 @@ func TestCompleteMatrixMapping(verbose bool) bool {
     fmt.Println("F(ι1(X), ι2(Y)) = ιT(e(X,Y)): ", ret3)
   }
 
-  return ret2 && ret1 && ret3
+  return ret2 && ret1 && ret3 && ret4 && ret5
 }
 
 /*
@@ -327,4 +334,15 @@ func RunPTest(b int) {
 			os.Exit(1)
 		}
 	} 
+}
+
+/*
+ * Run all Tests
+ */
+func RunAllPTests(verbose bool) {
+  fmt.Println("Iota and Rho:       ", TestIotaRho(verbose))
+  fmt.Println("Iota and Rho Prime: ", TestIotaRhoPrime(verbose))
+  fmt.Println("Iota Hat:           ", TestIotaHat(verbose))
+  fmt.Println("F function Map:     ", TestFMap(verbose))
+  fmt.Println("Matrix Map:         ", TestCompleteMatrixMapping(verbose))
 }
