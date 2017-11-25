@@ -125,6 +125,52 @@ func TestIotaRhoPrime(verbose bool) bool {
 }
 
 
+/*
+ Test FMap
+ F: B1^2 * B2^2 -> BT^4
+ */
+func TestFMap(verbose bool) bool {
+  sharedParams := GenerateSharedParams()
+  pairing, _ := pbc.NewPairingFromString(sharedParams.Params)
+  g1 := pairing.NewG1().Rand()
+  g2 := pairing.NewG2().Rand()
+  gt := pairing.NewGT().Pair(g1, g2)
+  _ = gt
+
+  fmt.Println("Creating CRS Sigma")
+  alpha := pairing.NewZr().Rand() // Secret Key
+  sigma := CreateCommonReferenceString(sharedParams, alpha) // CRS
+
+  fmt.Println("Creating Elements in B1 & B2")
+  z := pairing.NewZr().Rand() // testing element to map
+  Y := pairing.NewG2().Rand() // test element in G2
+  B1 := IotaPrime1(pairing, z, sigma)
+  B2 := Iota2(pairing, Y)
+
+  fmt.Println("Mapping into BT")
+  BT := FMap(pairing, B1, B2)
+
+  // Manual create pairs
+  X1 := pairing.NewG1().SetBytes(B1.b1)
+  X2 := pairing.NewG1().SetBytes(B1.b2)
+  Y1 := pairing.NewG2().SetBytes(B2.b1)
+  Y2 := pairing.NewG2().SetBytes(B2.b2)
+
+  ret1 := pairing.NewGT().Pair(X1, Y1).Equals(pairing.NewGT().SetBytes(BT.el11))
+  ret2 := pairing.NewGT().Pair(X1, Y2).Equals(pairing.NewGT().SetBytes(BT.el12))
+  ret3 := pairing.NewGT().Pair(X2, Y1).Equals(pairing.NewGT().SetBytes(BT.el21))
+  ret4 := pairing.NewGT().Pair(X2, Y2).Equals(pairing.NewGT().SetBytes(BT.el22))
+
+  if (verbose){
+    fmt.Println("BT[1, 1] == e(X1, Y1): ", ret1)
+    fmt.Println("BT[1, 2] == e(X1, Y2): ", ret2)
+    fmt.Println("BT[2, 1] == e(X2, Y1): ", ret3)
+    fmt.Println("BT[2, 2] == e(X2, Y2): ", ret4)
+  }
+
+  return ret1 && ret2 && ret3 && ret4
+}
+
 
 /*
  * Run test b times
