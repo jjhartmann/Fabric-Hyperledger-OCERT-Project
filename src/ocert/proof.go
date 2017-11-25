@@ -4,7 +4,9 @@
 
 package ocert
 
-import "github.com/Nik-U/pbc"
+import (
+  "github.com/Nik-U/pbc"
+)
 
 /*
  * Set up the proof of knowledge, called by the client. It takes a system
@@ -172,4 +174,18 @@ func IotaPrime1(pairing *pbc.Pairing, z *pbc.Element, sigma *Sigma) *BPair {
   pair.b1 = pairing.NewG1().MulZn(u1, z).Bytes()
   pair.b2 = pairing.NewG1().MulZn(u2, z).Bytes()
   return pair
+}
+
+/*
+ RhoPrime1: B1 -> Zp
+  = (z2 - alpha * z1)
+ */
+func RhoPrime1(pairing *pbc.Pairing, pair *BPair, alpha *pbc.Element) *pbc.Element{
+  b1 := pairing.NewG1().SetBytes(pair.b1)
+  b2 := pairing.NewG1().SetBytes(pair.b2)
+
+  b2prime := pairing.NewG1().MulZn(b1, alpha)
+  zprime := pairing.NewG1().Sub(b2, b2prime)
+
+  return zprime
 }

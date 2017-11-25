@@ -71,7 +71,37 @@ func IotaRhoTest(verbose bool) bool {
 
 // Test mapping between Zp and B
 func TestIotaRhoPrime(verbose bool) bool {
+  sharedParams := GenerateSharedParams()
+  pairing, _ := pbc.NewPairingFromString(sharedParams.Params)
+  g1 := pairing.NewG1().Rand()
+  g2 := pairing.NewG2().Rand()
+  gt := pairing.NewGT().Pair(g1, g2)
+  _ = gt
 
+  fmt.Println("Creating CRS Sigma")
+  alpha := pairing.NewZr().Rand()
+  sigma := CreateCommonReferenceString(sharedParams, alpha)
+  _ = sigma
+
+  // Test IotaPrim: Zp -> B1
+  fmt.Println("Calling IotaPrime")
+  z := pairing.NewZr().Rand()
+  B := IotaPrime1(pairing, z, sigma)
+
+  if (verbose){
+    b1 := pairing.NewG1().SetBytes(B.b1)
+    b2 := pairing.NewG1().SetBytes(B.b2)
+    fmt.Printf("z = %s\n", z)
+    fmt.Printf("b1 = %s\n", b1)
+    fmt.Printf("b2 = %s\n", b2)
+  }
+
+  fmt.Println("Calling RhoPrime")
+  ret := RhoPrime1(pairing, B, alpha)
+
+  if (verbose){
+    fmt.Printf("ret = %s\n", ret)
+  }
 
   return true
 }
