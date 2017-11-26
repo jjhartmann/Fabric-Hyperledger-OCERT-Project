@@ -294,6 +294,20 @@ func (l BPair) AddinG1(pairing *pbc.Pairing, r *BPair) *BPair{
 
   return ret
 }
+func (l BPair) AddinG2(pairing *pbc.Pairing, r *BPair) *BPair{
+  ret := new(BPair)
+
+  // Convert to Groups
+  lb1 := pairing.NewG2().SetBytes(l.b1)
+  lb2 := pairing.NewG2().SetBytes(l.b2)
+  rb1 := pairing.NewG2().SetBytes(r.b1)
+  rb2 := pairing.NewG2().SetBytes(r.b2)
+
+  ret.b1 = pairing.NewG2().Add(lb1, rb1).Bytes()
+  ret.b2 = pairing.NewG2().Add(lb2, rb2).Bytes()
+
+  return ret
+}
 func (l BPair) SubinG1(pairing *pbc.Pairing, r *BPair) *BPair{
   ret := new(BPair)
 
