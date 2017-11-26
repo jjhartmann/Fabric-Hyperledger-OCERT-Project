@@ -105,15 +105,15 @@ func CreateCommonReferenceString(sharedParams *SharedParams, alpha *pbc.Element)
  * - Creates a commitment of a variable from G1 to B1
  *   c := ι1(X) + Ru
  */
-func CreateCommitmentOnG1(pairing *pbc.Pairing, chi []*pbc.Element, U []CommitmentKey) ([]*BPair, []*BPair, *RMatrix){
+func CreateCommitmentOnG1(pairing *pbc.Pairing, chi []*pbc.Element, sigma *Sigma) ([]*BPair, []*BPair, *RMatrix){
 
   // Create RMatrix of random elements
   rows := len(chi)
-  cols := len(U)
+  cols := len(sigma.U)
   rmat := NewRMatrix(pairing, rows, cols)
 
   // Create pairs in B1
-  Ru := rmat.MulCommitmentKeysG1(pairing, U)
+  Ru := rmat.MulCommitmentKeysG1(pairing, sigma.U)
 
   // Create Commitment container
   C := []*BPair{}

@@ -343,7 +343,7 @@ func TestSimpleCommitment(verbose bool) bool {
 
   // Test with Functions
   chi := []*pbc.Element{X}
-  C, Ru, rmat := CreateCommitmentOnG1(pairing, chi, sigma.U)
+  C, Ru, rmat := CreateCommitmentOnG1(pairing, chi, sigma)
   _ = C
   _ = Ru
 
@@ -471,7 +471,7 @@ func TestCreateCommitmentsG1(verbose bool) bool {
     pairing.NewG1().Rand(),
     pairing.NewG1().Rand(),
     }
-  C, Ru, _ := CreateCommitmentOnG1(pairing, chi, sigma.U)
+  C, Ru, _ := CreateCommitmentOnG1(pairing, chi, sigma)
   ret1 := (len(chi) == len(C) && len(C) == len(Ru))
 
   if (verbose){
