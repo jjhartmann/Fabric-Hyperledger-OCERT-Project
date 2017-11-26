@@ -664,6 +664,87 @@ func TestCreateCommitmentsG2(verbose bool) bool {
   return ret1 && ret2
 }
 
+
+func TestCreateCommitmentPrimeOnG2(verbose bool) bool {
+  sharedParams := GenerateSharedParams()
+  pairing, _ := pbc.NewPairingFromString(sharedParams.Params)
+  g1 := pairing.NewG1().Rand()
+  g2 := pairing.NewG2().Rand()
+  gt := pairing.NewGT().Pair(g1, g2)
+  _ = gt
+
+  if (verbose) {fmt.Println("Creating CRS Sigma")}
+  alpha := pairing.NewZr().Rand() // Secret Key
+  sigma := CreateCommonReferenceString(sharedParams, alpha) // CRS
+
+
+  if (verbose) {fmt.Println("Create Commitment Primes On G2")}
+  y := []*pbc.Element{
+    pairing.NewZr().Rand(),
+    pairing.NewZr().Rand(),
+    pairing.NewZr().Rand(),
+    pairing.NewZr().Rand(),
+    pairing.NewZr().Rand(),
+    pairing.NewZr().Rand(),
+    pairing.NewZr().Rand(),
+    pairing.NewZr().Rand(),
+    pairing.NewZr().Rand(),
+    pairing.NewZr().Rand(),
+    pairing.NewZr().Rand(),
+    pairing.NewZr().Rand(),
+    pairing.NewZr().Rand(),
+    pairing.NewZr().Rand(),
+    pairing.NewZr().Rand(),
+    pairing.NewZr().Rand(),
+    pairing.NewZr().Rand(),
+    pairing.NewZr().Rand(),
+    pairing.NewZr().Rand(),
+    pairing.NewZr().Rand(),
+    pairing.NewZr().Rand(),
+  }
+  C, Su, _ := CreateCommitmentPrimeOnG2(pairing, y, sigma)
+  ret1 := (len(y) == len(C) && len(C) == len(Su))
+
+  if (verbose){
+    fmt.Println("Length Consistency Test: ", ret1)
+    for i:=0; i<len(C); i++ {
+      fmt.Printf("%s\t", pairing.NewG2().SetBytes(C[i].b1))
+      fmt.Printf("%s\n", pairing.NewG2().SetBytes(C[i].b2))
+    }
+    fmt.Println()
+    fmt.Println()
+  }
+
+
+  if (verbose){fmt.Println("Testing Equality: ι'2(X) = C - Ru")}
+  ret2 := true
+  for i:=0; i<len(C); i++ {
+    //Bc := C[i] // Pair b1 and b2 in B1
+    //Br := Ru[i]
+    Bp1 := pairing.NewG2().Sub(pairing.NewG2().SetBytes(C[i].b1),
+      pairing.NewG2().SetBytes(Su[i].b1))
+    Bp2 := pairing.NewG2().Sub(pairing.NewG2().SetBytes(C[i].b2),
+      pairing.NewG2().SetBytes(Su[i].b2))
+
+    Bi := IotaPrime2(pairing, y[i], sigma)
+    Bi1 := pairing.NewG2().SetBytes(Bi.b1)
+    Bi2 := pairing.NewG2().SetBytes(Bi.b2)
+
+    tmp1 := Bp1.Equals(Bi1)
+    tmp2 := Bp2.Equals(Bi2)
+
+    if (verbose){
+      fmt.Println("Testing Equality: ", i, tmp1 && tmp2)
+      fmt.Printf("%s\t",Bp1)
+      fmt.Printf("%s\n",Bp2)
+      fmt.Printf("%s\t",Bi1)
+      fmt.Printf("%s\n",Bi2)
+    }
+    ret2 = (ret2 && tmp1 && tmp2)
+  }
+
+  return ret1 && ret2
+}
 /*
  * Run test b times
  */
@@ -688,4 +769,5 @@ func RunAllPTests(verbose bool) {
   fmt.Println("Commitment: G1->B1  ", TestCreateCommitmentsG1(verbose))
   fmt.Println("Commitment: Zp->B1  ", TestCreateCommitmentPrimeOnG1(verbose))
   fmt.Println("Commitment: G2->B2  ", TestCreateCommitmentsG2(verbose))
+  fmt.Println("Commitment: Zp->B2  ", TestCreateCommitmentPrimeOnG2(verbose))
 }
