@@ -2,7 +2,6 @@ package ocert
 
 import (
   "github.com/Nik-U/pbc"
-  "fmt"
 )
 
 /*
@@ -13,6 +12,7 @@ type RMatrix struct {
   mat [][]*pbc.Element
   rows int
   cols int
+  invert bool
 }
 
 func NewRMatrix(pairing *pbc.Pairing, rows int, cols int) *RMatrix {
@@ -28,6 +28,22 @@ func NewRMatrix(pairing *pbc.Pairing, rows int, cols int) *RMatrix {
     rmat.mat = append(rmat.mat, elementRow)
   }
   return rmat
+}
+
+// TODO: A lot of these fucntions could be optimised!
+func (rmat *RMatrix) InvertMatrix() *RMatrix{
+  R := new(RMatrix)
+  R.rows = rmat.cols
+  R.cols = rmat.rows
+
+  for j := 0; j < rmat.cols; j++{
+    elrow := []*pbc.Element{}
+    for i := 0; i < rmat.rows; i++ {
+      elrow = append(elrow, rmat.mat[i][j])
+    }
+    R.mat = append(R.mat, elrow)
+  }
+  return R
 }
 
 func (rmat *RMatrix) ElementWiseSub(pairing *pbc.Pairing, L *RMatrix) *RMatrix {
@@ -78,7 +94,7 @@ func (rmat *RMatrix) MulCommitmentKeysG1(pairing *pbc.Pairing, U []CommitmentKey
   cols := len(U)
   Ru := []*BPair{}
   if (rmat.cols != len(U) ){
-    panic("Error Occured in MulCommitmentKeys: CommitmentKeys incompatiable\n%s", U)
+    panic("Error Occured in MulCommitmentKeys: CommitmentKeys incompatiable")
     return Ru
   }
 

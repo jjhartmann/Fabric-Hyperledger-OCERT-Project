@@ -748,6 +748,35 @@ func TestCreateCommitmentPrimeOnG2(verbose bool) bool {
 
   return ret1 && ret2
 }
+
+
+func TestEquation1ProofGen(verbose bool) bool {
+  sharedParams := GenerateSharedParams()
+  pairing, _ := pbc.NewPairingFromString(sharedParams.Params)
+  g1 := pairing.NewG1().Rand()
+  g2 := pairing.NewG2().Rand()
+  gt := pairing.NewGT().Pair(g1, g2)
+  _ = gt
+
+  if verbose {fmt.Println("Test Proof Generation for Eq1")}
+
+  Xc := pairing.NewZr().Rand() // Client Secret Key (variable)
+  H  := pairing.NewG2().SetBytes(sharedParams.G2) // Shared Generator ??
+  PKc := pairing.NewG2().Rand() // Public Key (variable
+
+  if verbose {fmt.Println("Creating CRS Sigma")}
+  alpha := pairing.NewZr().Rand() // Another Secret Key..
+  sigma := CreateCommonReferenceString(sharedParams, alpha) // CRS
+
+  proof := ProveEquation1(pairing, Xc, H, PKc, sigma)
+
+  if verbose {
+    fmt.Println(proof)
+  }
+
+return true
+}
+
 /*
  * Run test b times
  */
