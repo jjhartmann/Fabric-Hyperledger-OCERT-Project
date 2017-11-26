@@ -489,11 +489,14 @@ func TestCreateCommitmentsG1(verbose bool) bool {
   ret2 := true
   for i:=0; i<len(C); i++ {
     //Bc := C[i] // Pair b1 and b2 in B1
-    //Br := Ru[i]
     Bp1 := pairing.NewG1().Sub(pairing.NewG1().SetBytes(C[i].b1),
                               pairing.NewG1().SetBytes(Ru[i].b1))
     Bp2 := pairing.NewG1().Sub(pairing.NewG1().SetBytes(C[i].b2),
                                pairing.NewG1().SetBytes(Ru[i].b2))
+
+    //Cp := C[i].SubinG1(pairing, Ru[i])
+    //Bp1 := pairing.NewG1().SetBytes(Cp.b1)
+    //Bp2 := pairing.NewG1().SetBytes(Cp.b2)
 
     Bi := Iota1(pairing, chi[i])
     Bi1 := pairing.NewG1().SetBytes(Bi.b1)
