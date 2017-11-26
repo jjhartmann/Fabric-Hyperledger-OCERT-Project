@@ -78,6 +78,9 @@ func (rmat *RMatrix) MulBScalarinB1(pairing *pbc.Pairing, B BPair) [][]*BPair {
 
 func (rmat *RMatrix) MulScalarZn(pairing *pbc.Pairing, r *pbc.Element) *RMatrix {
   R := new(RMatrix)
+  R.rows = rmat.rows
+  R.cols = rmat.cols
+
   for i := 0; i < rmat.rows; i++ {
     elementRow := []*pbc.Element{}
     for j := 0; j < rmat.cols; j++ {
