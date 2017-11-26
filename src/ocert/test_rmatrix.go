@@ -108,17 +108,49 @@ func TestElementWiseSubtraction(verbose bool, rows int, cols int) bool {
   return ret
 }
 
+func TestRMatrixBPairScalar(verbose bool, rows int, cols int) bool {
+  sharedParams := GenerateSharedParams()
+  pairing, _ := pbc.NewPairingFromString(sharedParams.Params)
+  g1 := pairing.NewG1().Rand()
+  g2 := pairing.NewG2().Rand()
+  gt := pairing.NewGT().Pair(g1, g2)
+  _ = gt
+
+  R := NewRMatrix(pairing, rows, cols)
+  B := BPair{pairing.NewG1().Rand().Bytes(), pairing.NewG1().Rand().Bytes()}
+  Rb := R.MulBScalarinB1(pairing, B)
+
+  ret1 := len(Rb) == len(R.mat) && len(Rb[0]) == len(R.mat[0])
+  if(verbose) {fmt.Println("Equality on length: ", ret1)}
+
+  ret2 := true
+  for i := 0; i < R.rows; i++ {
+    for j := 0; j < R.cols; j++ {
+      b1 := pairing.NewG1().MulZn(pairing.NewG1().SetBytes(B.b1), R.mat[i][j])
+      b2 := pairing.NewG1().MulZn(pairing.NewG1().SetBytes(B.b2), R.mat[i][j])
+
+      ret2 = ret2 &&
+        pairing.NewG1().SetBytes(Rb[i][j].b1).Equals(b1) &&
+        pairing.NewG1().SetBytes(Rb[i][j].b2).Equals(b2)
+    }
+  }
+  return ret2 && ret1
+}
+
 /*
  Run all Matrix Tests
  */
 func RunAllRTests(verbose bool) {
   fmt.Println("RMatrix Generator          ", TestRMatrixGen(verbose))
-  fmt.Println("RMatrix Scalar Mul 1x1     ", TestRMatrixMulSclarInZn(true, 1, 1))
-  fmt.Println("RMatrix Scalar Mul 10x1    ", TestRMatrixMulSclarInZn(true, 10, 1))
-  fmt.Println("RMatrix Scalar Mul 10x10   ", TestRMatrixMulSclarInZn(true, 10, 10))
-  fmt.Println("RMatrix EW Subtract 1x1    ", TestElementWiseSubtraction(true, 1, 1))
-  fmt.Println("RMatrix EW Subtract 10x1   ", TestElementWiseSubtraction(true, 10, 1))
-  fmt.Println("RMatrix EW Subtract 10x10  ", TestElementWiseSubtraction(true, 10, 10))
+  fmt.Println("RMatrix Scalar Mul 1x1     ", TestRMatrixMulSclarInZn(false, 1, 1))
+  fmt.Println("RMatrix Scalar Mul 10x1    ", TestRMatrixMulSclarInZn(false, 10, 1))
+  fmt.Println("RMatrix Scalar Mul 10x10   ", TestRMatrixMulSclarInZn(false, 10, 10))
+  fmt.Println("RMatrix EW Subtract 1x1    ", TestElementWiseSubtraction(false, 1, 1))
+  fmt.Println("RMatrix EW Subtract 10x1   ", TestElementWiseSubtraction(false, 10, 1))
+  fmt.Println("RMatrix EW Subtract 10x10  ", TestElementWiseSubtraction(false, 10, 10))
+  fmt.Println("RMatrix BPair Scalar 1x1   ", TestRMatrixBPairScalar(false, 1, 1))
+  fmt.Println("RMatrix BPair Scalar 10x1  ", TestRMatrixBPairScalar(false, 10, 1))
+  fmt.Println("RMatrix BPair Scalar 10x10 ", TestRMatrixBPairScalar(false, 10, 10))
 }
 
 /*

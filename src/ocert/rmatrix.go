@@ -45,6 +45,22 @@ func (rmat *RMatrix) ElementWiseSub(pairing *pbc.Pairing, L *RMatrix) *RMatrix {
   return R
 }
 
+func (rmat *RMatrix) MulBScalarinB1(pairing *pbc.Pairing, B BPair) [][]*BPair {
+  Rb := [][]*BPair{}
+
+  for i := 0; i < rmat.rows; i++ {
+    pairRow := []*BPair{}
+    for j := 0; j < rmat.cols; j++ {
+      pair := new(BPair)
+      pair.b1 = pairing.NewG1().MulZn(pairing.NewG1().SetBytes(B.b1), rmat.mat[i][j]).Bytes()
+      pair.b2 = pairing.NewG1().MulZn(pairing.NewG1().SetBytes(B.b2), rmat.mat[i][j]).Bytes()
+      pairRow = append(pairRow, pair)
+    }
+    Rb = append(Rb, pairRow)
+  }
+  return Rb
+}
+
 func (rmat *RMatrix) MulScalarZn(pairing *pbc.Pairing, r *pbc.Element) *RMatrix {
   R := new(RMatrix)
   for i := 0; i < rmat.rows; i++ {
