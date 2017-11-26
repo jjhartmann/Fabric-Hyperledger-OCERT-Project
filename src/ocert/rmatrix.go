@@ -27,8 +27,20 @@ func NewRMatrix(pairing *pbc.Pairing, rows int, cols int) *RMatrix {
     }
     rmat.mat = append(rmat.mat, elementRow)
   }
-
   return rmat
+}
+
+func (rmat *RMatrix) MulScalarZn(pairing *pbc.Pairing, r *pbc.Element) *RMatrix {
+  R := new(RMatrix)
+  for i := 0; i < rmat.rows; i++ {
+    elementRow := []*pbc.Element{}
+    for j := 0; j < rmat.cols; j++ {
+      el := pairing.NewZr().Mul(rmat.mat[i][j], r)
+      elementRow = append(elementRow, el)
+    }
+    R.mat = append(R.mat, elementRow)
+  }
+  return R
 }
 
 func (rmat *RMatrix) MulCommitmentKeysG1(pairing *pbc.Pairing, U []CommitmentKey) []*BPair {

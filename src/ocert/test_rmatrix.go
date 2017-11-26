@@ -65,12 +65,39 @@ func TestRMatrixGen(verbose bool) bool{
 }
 
 
+func TestRMatrixMulSclarInZn(verbose bool, rows int, cols int) bool {
+  sharedParams := GenerateSharedParams()
+  pairing, _ := pbc.NewPairingFromString(sharedParams.Params)
+  g1 := pairing.NewG1().Rand()
+  g2 := pairing.NewG2().Rand()
+  gt := pairing.NewGT().Pair(g1, g2)
+  _ = gt
+
+  R := NewRMatrix(pairing, rows, cols)
+  x := pairing.NewZr().Rand()
+
+  xR := R.MulScalarZn(pairing, x)
+
+
+  ret := true
+  for i := 0; i < R.rows; i++ {
+    for j := 0; j < R.cols; j++ {
+      tmp := pairing.NewZr().Mul(R.mat[i][j], x)
+      ret = tmp.Equals(xR.mat[i][j]) && ret
+    }
+  }
+
+  return ret
+}
 
 /*
  Run all Matrix Tests
  */
 func RunAllRTests(verbose bool) {
-  fmt.Println("RMatrix Generator   ", TestRMatrixGen(verbose))
+  fmt.Println("RMatrix Generator          ", TestRMatrixGen(verbose))
+  fmt.Println("RMatrix Scalar Mul 1x1     ", TestRMatrixMulSclarInZn(true, 1, 1))
+  fmt.Println("RMatrix Scalar Mul 10x1    ", TestRMatrixMulSclarInZn(true, 10, 1))
+  fmt.Println("RMatrix Scalar Mul 10x10   ", TestRMatrixMulSclarInZn(true, 10, 10))
 }
 
 /*
