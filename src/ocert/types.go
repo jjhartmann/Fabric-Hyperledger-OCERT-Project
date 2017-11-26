@@ -312,13 +312,13 @@ func (l BPair) SubinG1(pairing *pbc.Pairing, r *BPair) *BPair{
   ret := new(BPair)
 
   // Convert to Groups
-  lb1 := pairing.NewG1().SetBytes(l.b1)
-  lb2 := pairing.NewG1().SetBytes(l.b2)
-  rb1 := pairing.NewG1().SetBytes(r.b1)
-  rb2 := pairing.NewG1().SetBytes(r.b2)
+  Bp1 := pairing.NewG1().Sub(pairing.NewG1().SetBytes(l.b1),
+                            pairing.NewG1().SetBytes(l.b1))
+  Bp2 := pairing.NewG1().Sub(pairing.NewG1().SetBytes(l.b2),
+                             pairing.NewG1().SetBytes(l.b2))
 
-  ret.b1 = pairing.NewG1().Sub(lb1, rb1).Bytes()
-  ret.b2 = pairing.NewG1().Sub(lb2, rb2).Bytes()
+  ret.b1 = Bp1.Bytes()
+  ret.b2 = Bp2.Bytes()
 
   return ret
 }
