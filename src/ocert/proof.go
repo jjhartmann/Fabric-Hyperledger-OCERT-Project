@@ -132,6 +132,40 @@ func CreateCommitmentOnG1(pairing *pbc.Pairing, chi []*pbc.Element, U []Commitme
   return C, Ru, rmat
 }
 
+/*
+ * Create Commitment: Zp -> B1
+ * - Creates a commitment of a variable from Zp to B1
+ *   c := ι'1(X) + Ru
+ *
+ *  x: Is in Zp
+ */
+func CreateCommitmentPrimeOnG1(pairing *pbc.Pairing, x []*pbc.Element, sigma *Sigma) ([]*BPair, []*BPair, *RMatrix){
+
+  // Create RMatrix of random elements
+  rows := len(x)
+  cols := 1
+  rmat := NewRMatrix(pairing, rows, cols)
+
+  // Create pairs in B1
+  Ru := rmat.MulCommitmentKeysG1(pairing, []CommitmentKey{sigma.U[0]})
+
+  // Create Commitment container
+  C := []*BPair{}
+  if (len(Ru) != len(x)){
+    fmt.Errorf("Error in CreateCommitmentOnG1: Ru and X needs to have the same length")
+    return C, Ru, rmat
+  }
+
+  // Build commitments in B1
+  for i:=0; i<len(x); i++ {
+    tmp := IotaPrime1(pairing, x[i], sigma)
+    B := tmp.AddinG1(pairing, Ru[i])
+    C = append(C, B)
+  }
+
+  return C, Ru, rmat
+}
+
 
 /*
   Multi-Scalar Multiplication Mapping for G1

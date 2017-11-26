@@ -16,7 +16,7 @@ func main() {
   fmt.Printf("\nRun RMatrix Tests\n")
   ocert.RunAllRTests(false)
 
-  //fmt.Println(ocert.TestCreateCommitments(true))
+  //fmt.Println(ocert.TestCreateCommitmentPrimeOnG1(true))
 
   // Scrap
   sharedParams := ocert.GenerateSharedParams()
