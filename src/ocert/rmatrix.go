@@ -32,8 +32,7 @@ func NewRMatrix(pairing *pbc.Pairing, rows int, cols int) *RMatrix {
 
 func (rmat *RMatrix) ElementWiseSub(pairing *pbc.Pairing, L *RMatrix) *RMatrix {
   if rmat.cols != L.cols || rmat.rows != L.rows {
-    fmt.Errorf("Rows and Cols need to be equivalent")
-    return nil
+    panic("Rows and Cols need to be equivalent")
   }
 
   R := NewRMatrix(pairing, L.rows, L.cols)
@@ -79,7 +78,7 @@ func (rmat *RMatrix) MulCommitmentKeysG1(pairing *pbc.Pairing, U []CommitmentKey
   cols := len(U)
   Ru := []*BPair{}
   if (rmat.cols != len(U) ){
-    fmt.Errorf("Error Occured in MulCommitmentKeys: CommitmentKeys incompatiable\n%s", U)
+    panic("Error Occured in MulCommitmentKeys: CommitmentKeys incompatiable\n%s", U)
     return Ru
   }
 
@@ -122,7 +121,7 @@ func (rmat *RMatrix) MulCommitmentKeysG2(pairing *pbc.Pairing, V []CommitmentKey
   cols := len(V)
   Rv := []*BPair{}
   if (rmat.cols != len(V) ){
-    fmt.Errorf("Error Occured in MulCommitmentKeys: CommitmentKeys incompatiable\n%s", V)
+    panic("Error Occured in MulCommitmentKeys: CommitmentKeys incompatiable")
     return Rv
   }
 
