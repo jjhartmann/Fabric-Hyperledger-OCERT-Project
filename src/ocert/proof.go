@@ -80,51 +80,52 @@ func ProveEquation1(pairing *pbc.Pairing, xc *pbc.Element, H *pbc.Element, PKc *
   }
 
   /////////////////////////////////////
-  // Pi
+  // Pi: In G2
 
   // Multiply Scalar from Zn on B elements
-  Hir := Hi.MulScalarInG2(pairing, r)
-  PKcirl := PKci.MulScalarInG2(pairing, rlambda)
+  Hir := Hi.MulScalarInG2(pairing, r)            // r*ι_2(H)
+  PKcirl := PKci.MulScalarInG2(pairing, rlambda) // r*lambda*ι_2(PKc)
 
   // Create Phi := (r*lambada*S - T)
   T := NewRMatrix(pairing, 2, 1)
-  Srl := S.MulScalarZn(pairing, rlambda)
-  Ti := T.InvertMatrix()
-  Phi := Srl.ElementWiseSub(pairing, Ti)
+  Srl := S.MulScalarZn(pairing, rlambda)         // r*lambda*S
+  Ti := T.InvertMatrix()                         // T' invert
+  Phi := Srl.ElementWiseSub(pairing, Ti)         // S - T'
 
   // Multiple Phi by commitment keys
-  Vphi := Phi.MulCommitmentKeysG2(pairing, sigma.V)
+  Vphi := Phi.MulCommitmentKeysG2(pairing, sigma.V) // (r*lambda*S - T')V (commitment key in G2)
   if len(Vphi) > 1{
     panic("VPhi Should have len == 1")
   }
 
-  // Construct Pi
+  // Construct Pi (Hir + PKcirl + Vphi)
   HPKcir := Hir.AddinG2(pairing, PKcirl)
   pi := HPKcir.AddinG2(pairing, Vphi[0])
 
 
   ////////////////////////////////////////////
-  // Theta
+  // Theta: In G1
   _ = neg1
   _ = xci
 
-  Sneg := S.MulBScalarinB1(pairing, *neg1)
+  Si := S.InvertMatrix()                        // S Invert = S'
+  Sneg := Si.MulBScalarinB1(pairing, *neg1)     // S'*ι'_1(-1)
   // +
-  Sl := S.MulScalarZn(pairing, lambda)
-  Sxc := Sl.MulBScalarinB1(pairing, *xci)
+  Sl := Si.MulScalarZn(pairing, lambda)         // S'*lambda
+  Sxc := Sl.MulBScalarinB1(pairing, *xci)       // S'*lambda*ι'_1(Xc)
   // +
-  Tu := T.MulCommitmentKeysG2(pairing, []CommitmentKey{sigma.U[0]})
+  Tu := T.MulCommitmentKeysG1(pairing, []CommitmentKey{sigma.U[0]}) // Tu_1
 
-  if len(Sneg[0]) != len(Sxc[0]) && len(Sxc) != len(Tu) {
+  if len(Sneg) != len(Sxc) && len(Sxc) != len(Tu) {
     panic("All section lengths need to be equivalent")
   }
 
   // Construct theta
   theta := []*BPair{}
 
-  for i := 0; i < len(Sneg[0]); i++ {
-    Snegxc := Sneg[0][i].AddinG2(pairing, Sxc[0][i])
-    tmpB := Snegxc.AddinG2(pairing, Tu[i])
+  for i := 0; i < len(Sneg); i++ {
+    Snegxc := Sneg[i][0].AddinG1(pairing, Sxc[i][0])
+    tmpB := Snegxc.AddinG1(pairing, Tu[i])
     theta = append(theta, tmpB)
   }
 

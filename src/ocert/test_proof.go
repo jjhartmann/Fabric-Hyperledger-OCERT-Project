@@ -797,7 +797,9 @@ func TestEquation1ProofGen(verbose bool) bool {
     }
   }
 
-return true
+return len(proof.Theta) == 2 && len(proof.Pi) == 1 &&
+       len(proof.d) == 1 && len(proof.cprime) == 1 &&
+       len(proof.c) == 0 && len(proof.dprime) == 0
 }
 
 /*
@@ -815,14 +817,15 @@ func RunPTest(b int) {
  * Run all Tests
  */
 func RunAllPTests(verbose bool) {
-  fmt.Println("Iota and Rho:       ", TestIotaRho(verbose))
-  fmt.Println("Iota and Rho Prime: ", TestIotaRhoPrime(verbose))
-  fmt.Println("Iota Hat:           ", TestIotaHat(verbose))
-  fmt.Println("F function Map:     ", TestFMap(verbose))
-  fmt.Println("Matrix Map:         ", TestCompleteMatrixMapping(verbose))
-  fmt.Println("Simple Commitment   ", TestSimpleCommitment(verbose))
-  fmt.Println("Commitment: G1->B1  ", TestCreateCommitmentsG1(verbose))
-  fmt.Println("Commitment: Zp->B1  ", TestCreateCommitmentPrimeOnG1(verbose))
-  fmt.Println("Commitment: G2->B2  ", TestCreateCommitmentsG2(verbose))
-  fmt.Println("Commitment: Zp->B2  ", TestCreateCommitmentPrimeOnG2(verbose))
+  fmt.Println("Iota and Rho:         ", TestIotaRho(verbose))
+  fmt.Println("Iota and Rho Prime:   ", TestIotaRhoPrime(verbose))
+  fmt.Println("Iota Hat:             ", TestIotaHat(verbose))
+  fmt.Println("F function Map:       ", TestFMap(verbose))
+  fmt.Println("Matrix Map:           ", TestCompleteMatrixMapping(verbose))
+  fmt.Println("Simple Commitment     ", TestSimpleCommitment(verbose))
+  fmt.Println("Commitment: G1->B1    ", TestCreateCommitmentsG1(verbose))
+  fmt.Println("Commitment: Zp->B1    ", TestCreateCommitmentPrimeOnG1(verbose))
+  fmt.Println("Commitment: G2->B2    ", TestCreateCommitmentsG2(verbose))
+  fmt.Println("Commitment: Zp->B2    ", TestCreateCommitmentPrimeOnG2(verbose))
+  fmt.Println("Proof Generation EQ1  ", TestEquation1ProofGen(verbose))
 }
