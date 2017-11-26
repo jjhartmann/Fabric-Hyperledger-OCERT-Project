@@ -30,6 +30,21 @@ func NewRMatrix(pairing *pbc.Pairing, rows int, cols int) *RMatrix {
   return rmat
 }
 
+func (rmat *RMatrix) ElementWiseSub(pairing *pbc.Pairing, L *RMatrix) *RMatrix {
+  if rmat.cols != L.cols || rmat.rows != L.rows {
+    fmt.Errorf("Rows and Cols need to be equivalent")
+    return nil
+  }
+
+  R := NewRMatrix(pairing, L.rows, L.cols)
+  for i := 0; i < L.rows; i++{
+    for j := 0; j < L.cols; j++ {
+      R.mat[i][j] = pairing.NewZr().Sub(rmat.mat[i][j], L.mat[i][j])
+    }
+  }
+  return R
+}
+
 func (rmat *RMatrix) MulScalarZn(pairing *pbc.Pairing, r *pbc.Element) *RMatrix {
   R := new(RMatrix)
   for i := 0; i < rmat.rows; i++ {
