@@ -771,7 +771,30 @@ func TestEquation1ProofGen(verbose bool) bool {
   proof := ProveEquation1(pairing, Xc, H, PKc, sigma)
 
   if verbose {
-    fmt.Println(proof)
+    fmt.Println("P.Theta -------------------- ", proof.Theta)
+    for i := 0; i < len(proof.Theta); i++ {
+      fmt.Println("\tEl:", i, proof.Theta[i])
+    }
+    fmt.Println("P.Pi ----------------------- ", proof.Pi)
+    for i := 0; i < len(proof.Pi); i++ {
+      fmt.Println("\tEl:", i, proof.Pi[i])
+    }
+    fmt.Println("P.c ------------------------ ", proof.c)
+    for i := 0; i < len(proof.c); i++ {
+      fmt.Println("\tEl:", i, proof.c[i])
+    }
+    fmt.Println("P.d ------------------------ ", proof.d)
+    for i := 0; i < len(proof.d); i++ {
+      fmt.Println("\tEl:", i, proof.d[i])
+    }
+    fmt.Println("P.cprime ------------------- ", proof.cprime)
+    for i := 0; i < len(proof.cprime); i++ {
+      fmt.Println("\tEl:", i, proof.cprime[i])
+    }
+    fmt.Println("P.dprime ------------------- ", proof.dprime)
+    for i := 0; i < len(proof.dprime); i++ {
+      fmt.Println("\tEl:", i, proof.dprime[i])
+    }
   }
 
 return true

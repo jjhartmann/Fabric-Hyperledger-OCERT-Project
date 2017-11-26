@@ -41,6 +41,102 @@ func PProve(sharedParams *SharedParams, pi *ProofOfKnowledge, consts *ProofConst
 	return false
 }
 
+
+/*
+ * Create proof for equation: xc * H + (-1)PKc = 0
+ *   Multi-Scalar Multiplication in G2
+ *   xc, (-1) from group Zp: Zp -> B1
+ *   H, PKc from group G2:
+ *
+ * Proof:
+ *    Pi     := r*ι_2(H) + r*lambda*ι_2(PKc)  + (r*lambda*S - T')*V
+ *    Theta  := S'*ι'_1(-1) + S*lambda*ι'_1(xc) + Tu_1
+ */
+func ProveEquation1(pairing *pbc.Pairing, xc *pbc.Element, H *pbc.Element, PKc *pbc.Element, sigma *Sigma) *ProofOfEquation{
+  proof := new(ProofOfEquation)
+
+  // Create commitment in B1 for Xc
+  cprime, _, R := CreateCommitmentPrimeOnG1(pairing, []*pbc.Element{xc}, sigma)
+
+  // Create commitment in B2 for PKc
+  d, _, S := CreateCommitmentOnG2(pairing, []*pbc.Element{PKc}, sigma)
+
+  // Convert parameters to B groups
+  Hi := Iota2(pairing, H)
+  PKci := Iota2(pairing, PKc)
+  neg1 := IotaPrime1(pairing, pairing.NewZr().SetInt32(-1), sigma)
+  xci := IotaPrime1(pairing, xc, sigma)
+
+  // Random samples from Zp
+  if R.cols != 1 && R.rows != 1 {
+    panic("Issues in conversion and creation of samples in Zp for R")
+  }
+  r := R.mat[0][0]
+  lambda := pairing.NewZr().Rand()
+  rlambda := pairing.NewZr().Mul(r, lambda)
+
+  if S.rows != 1 && S.cols != 2 {
+    panic("Issues in conversion and creation of samples in Zp for S")
+  }
+
+  /////////////////////////////////////
+  // Pi
+
+  // Multiply Scalar from Zn on B elements
+  Hir := Hi.MulScalarInG2(pairing, r)
+  PKcirl := PKci.MulScalarInG2(pairing, rlambda)
+
+  // Create Phi := (r*lambada*S - T)
+  T := NewRMatrix(pairing, 2, 1)
+  Srl := S.MulScalarZn(pairing, rlambda)
+  Ti := T.InvertMatrix()
+  Phi := Srl.ElementWiseSub(pairing, Ti)
+
+  // Multiple Phi by commitment keys
+  Vphi := Phi.MulCommitmentKeysG2(pairing, sigma.V)
+  if len(Vphi) > 1{
+    panic("VPhi Should have len == 1")
+  }
+
+  // Construct Pi
+  HPKcir := Hir.AddinG2(pairing, PKcirl)
+  pi := HPKcir.AddinG2(pairing, Vphi[0])
+
+
+  ////////////////////////////////////////////
+  // Theta
+  _ = neg1
+  _ = xci
+
+  Sneg := S.MulBScalarinB1(pairing, *neg1)
+  // +
+  Sl := S.MulScalarZn(pairing, lambda)
+  Sxc := Sl.MulBScalarinB1(pairing, *xci)
+  // +
+  Tu := T.MulCommitmentKeysG2(pairing, []CommitmentKey{sigma.U[0]})
+
+  if len(Sneg[0]) != len(Sxc[0]) && len(Sxc) != len(Tu) {
+    panic("All section lengths need to be equivalent")
+  }
+
+  // Construct theta
+  theta := []*BPair{}
+
+  for i := 0; i < len(Sneg[0]); i++ {
+    Snegxc := Sneg[0][i].AddinG2(pairing, Sxc[0][i])
+    tmpB := Snegxc.AddinG2(pairing, Tu[i])
+    theta = append(theta, tmpB)
+  }
+
+  // Collect elements
+  proof.Theta = theta
+  proof.Pi = []*BPair{pi}
+  proof.cprime = cprime
+  proof.d = d
+
+  return proof
+}
+
 /*
  * Create Common refernce string sigma.
  * sigma = (u1, u2, v1, v2)
