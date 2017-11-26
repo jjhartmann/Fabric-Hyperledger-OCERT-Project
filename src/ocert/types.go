@@ -322,6 +322,28 @@ func (l BPair) SubinG1(pairing *pbc.Pairing, r *BPair) *BPair{
 
   return ret
 }
+func (l BPair) MulScalarInG1(pairing *pbc.Pairing, r *pbc.Element) *BPair {
+  pair := new (BPair)
+
+  lb1 := pairing.NewG1().SetBytes(l.b1)
+  lb2 := pairing.NewG1().SetBytes(l.b2)
+
+  pair.b1 = pairing.NewG1().MulZn(lb1, r).Bytes()
+  pair.b2 = pairing.NewG1().MulZn(lb2, r).Bytes()
+
+  return pair
+}
+func (l BPair) MulScalarInG2(pairing *pbc.Pairing, r *pbc.Element) *BPair {
+  pair := new (BPair)
+
+  lb1 := pairing.NewG2().SetBytes(l.b1)
+  lb2 := pairing.NewG2().SetBytes(l.b2)
+
+  pair.b1 = pairing.NewG2().MulZn(lb1, r).Bytes()
+  pair.b2 = pairing.NewG2().MulZn(lb2, r).Bytes()
+
+  return pair
+}
 
 // Row x Col
 type BTMat struct {
@@ -362,19 +384,13 @@ type C struct {
 type D struct {
 }
 
-type Pi struct {
-}
-
-type Theta struct {
-}
-
 type ProofOfEquation struct {
-	C      *C
-	D      *D
-	CPrime *C
-	DPrime *D
-	Pi     *Pi
-	Theta  *Theta
+	Pi     []*BPair
+	Theta  []*BPair
+  c      []*BPair
+  d      []*BPair
+  cprime []*BPair
+  dprime []*BPair
 }
 
 type ProofOfKnowledge struct {
