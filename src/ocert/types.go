@@ -391,6 +391,7 @@ type ProofOfEquation struct {
   d      []*BPair
   cprime []*BPair
   dprime []*BPair
+  Gamma  *RMatrix
 }
 
 type ProofOfKnowledge struct {

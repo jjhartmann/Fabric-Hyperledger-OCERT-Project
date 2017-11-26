@@ -72,8 +72,9 @@ func ProveEquation1(pairing *pbc.Pairing, xc *pbc.Element, H *pbc.Element, PKc *
     panic("Issues in conversion and creation of samples in Zp for R")
   }
   r := R.mat[0][0]
-  lambda := pairing.NewZr().Rand()
-  rlambda := pairing.NewZr().Mul(r, lambda)
+  gammaMat := NewRMatrix(pairing, 1, 1)
+  gamma := gammaMat.mat[0][0]
+  rgamma := pairing.NewZr().Mul(r, gamma)
 
   if S.rows != 1 && S.cols != 2 {
     panic("Issues in conversion and creation of samples in Zp for S")
@@ -83,17 +84,17 @@ func ProveEquation1(pairing *pbc.Pairing, xc *pbc.Element, H *pbc.Element, PKc *
   // Pi: In G2
 
   // Multiply Scalar from Zn on B elements
-  Hir := Hi.MulScalarInG2(pairing, r)            // r*ι_2(H)
-  PKcirl := PKci.MulScalarInG2(pairing, rlambda) // r*lambda*ι_2(PKc)
+  Hir := Hi.MulScalarInG2(pairing, r)           // r*ι_2(H)
+  PKcirl := PKci.MulScalarInG2(pairing, rgamma) // r*gamma*ι_2(PKc)
 
   // Create Phi := (r*lambada*S - T)
   T := NewRMatrix(pairing, 2, 1)
-  Srl := S.MulScalarZn(pairing, rlambda)         // r*lambda*S
-  Ti := T.InvertMatrix()                         // T' invert
-  Phi := Srl.ElementWiseSub(pairing, Ti)         // S - T'
+  Srl := S.MulScalarZn(pairing, rgamma)  // r*gamma*S
+  Ti := T.InvertMatrix()                 // T' invert
+  Phi := Srl.ElementWiseSub(pairing, Ti) // S - T'
 
   // Multiple Phi by commitment keys
-  Vphi := Phi.MulCommitmentKeysG2(pairing, sigma.V) // (r*lambda*S - T')V (commitment key in G2)
+  Vphi := Phi.MulCommitmentKeysG2(pairing, sigma.V) // (r*gamma*S - T')V (commitment key in G2)
   if len(Vphi) > 1{
     panic("VPhi Should have len == 1")
   }
@@ -111,8 +112,8 @@ func ProveEquation1(pairing *pbc.Pairing, xc *pbc.Element, H *pbc.Element, PKc *
   Si := S.InvertMatrix()                        // S Invert = S'
   Sneg := Si.MulBScalarinB1(pairing, *neg1)     // S'*ι'_1(-1)
   // +
-  Sl := Si.MulScalarZn(pairing, lambda)         // S'*lambda
-  Sxc := Sl.MulBScalarinB1(pairing, *xci)       // S'*lambda*ι'_1(Xc)
+  Sl := Si.MulScalarZn(pairing, gamma)    // S'*gamma
+  Sxc := Sl.MulBScalarinB1(pairing, *xci) // S'*gamma*ι'_1(Xc)
   // +
   Tu := T.MulCommitmentKeysG1(pairing, []CommitmentKey{sigma.U[0]}) // Tu_1
 
@@ -130,6 +131,7 @@ func ProveEquation1(pairing *pbc.Pairing, xc *pbc.Element, H *pbc.Element, PKc *
   }
 
   // Collect elements
+  proof.Gamma = gammaMat
   proof.Theta = theta
   proof.Pi = []*BPair{pi}
   proof.cprime = cprime
@@ -137,6 +139,18 @@ func ProveEquation1(pairing *pbc.Pairing, xc *pbc.Element, H *pbc.Element, PKc *
 
   return proof
 }
+
+
+/*
+ * Verifiy Equation 1
+ *
+ */
+func VerifyEquation1(pairing *pbc.Pairing, proof *ProofOfEquation, H *pbc.Element, PKc *pbc.Element, sigma *Sigma) bool {
+
+
+  return false
+}
+
 
 /*
  * Create Common refernce string sigma.
