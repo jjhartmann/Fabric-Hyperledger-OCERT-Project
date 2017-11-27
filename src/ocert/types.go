@@ -8,6 +8,7 @@ import (
 	// "github.com/Nik-U/pbc"
  	"encoding/json"
  	// "bytes"
+	"github.com/Nik-U/pbc"
 )
 
 /*
@@ -278,18 +279,75 @@ type BPair struct {
 	b2 []byte
 }
 
+// BPair Helper function to add elements
+func (l BPair) AddinG1(pairing *pbc.Pairing, r *BPair) *BPair{
+  ret := new(BPair)
+
+	// Convert to Groups
+  lb1 := pairing.NewG1().SetBytes(l.b1)
+  lb2 := pairing.NewG1().SetBytes(l.b2)
+  rb1 := pairing.NewG1().SetBytes(r.b1)
+  rb2 := pairing.NewG1().SetBytes(r.b2)
+
+  ret.b1 = pairing.NewG1().Add(lb1, rb1).Bytes()
+  ret.b2 = pairing.NewG1().Add(lb2, rb2).Bytes()
+
+  return ret
+}
+func (l BPair) AddinG2(pairing *pbc.Pairing, r *BPair) *BPair{
+  ret := new(BPair)
+
+  // Convert to Groups
+  lb1 := pairing.NewG2().SetBytes(l.b1)
+  lb2 := pairing.NewG2().SetBytes(l.b2)
+  rb1 := pairing.NewG2().SetBytes(r.b1)
+  rb2 := pairing.NewG2().SetBytes(r.b2)
+
+  ret.b1 = pairing.NewG2().Add(lb1, rb1).Bytes()
+  ret.b2 = pairing.NewG2().Add(lb2, rb2).Bytes()
+
+  return ret
+}
+func (l BPair) SubinG1(pairing *pbc.Pairing, r *BPair) *BPair{
+  ret := new(BPair)
+
+  // Convert to Groups
+  lb1 := pairing.NewG1().SetBytes(l.b1)
+  lb2 := pairing.NewG1().SetBytes(l.b2)
+  rb1 := pairing.NewG1().SetBytes(r.b1)
+  rb2 := pairing.NewG1().SetBytes(r.b2)
+
+  ret.b1 = pairing.NewG1().Sub(lb1, rb1).Bytes()
+  ret.b2 = pairing.NewG1().Sub(lb2, rb2).Bytes()
+
+  return ret
+}
+
+// Row x Col
+type BTMat struct {
+	el11 []byte
+	el12 []byte
+	el21 []byte
+	el22 []byte
+}
+
 /*
  * Sigma: the common reference string (CRS) for NIWI ProofOfEquation
  */
 type Sigma struct {
-	U []CommitmentKey
-	V []CommitmentKey
+	U []CommitmentKey // U[0].u1 holds generator G1
+	V []CommitmentKey // V[0].u1 holds generator G2
+	u CommitmentKey // For group G1 (used in Iota Prime)
+	v CommitmentKey // For group G2
 }
 
 type CommitmentKey struct {
 	u1 []byte
 	u2 []byte
 }
+
+
+
 
 type ProofString struct {
 	U1 []byte
