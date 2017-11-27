@@ -1,14 +1,22 @@
 /*
+ * Version 1.0 Prototype for benchmark
  * The main ocert scheme, it contains three protocl
  *  - Setup
  *  - GenECert
  *  - GenOCert
+ * It contains the following helper functions
+ *  - Get
+ *  - GetSharedParams
  */
 
 package ocert
 
 import (
  	"fmt"
+ 	"crypto"
+ 	"crypto/rsa"
+ 	"crypto/rand"
+ 	"crypto/sha256"
 )
 
 // TODO delete
@@ -47,11 +55,22 @@ func Get(stub Wrapper, args []string) ([]byte, error) {
  */
 var sharedParams *SharedParams
 var SSK *SSigningKey
+var rsaPrivateKey *rsa.PrivateKey
+
+func GetSharedParams(stub Wrapper, args []string) ([]byte, error) {
+	if len(args) != 0 {
+		return nil, fmt.Errorf("Incorrect arguments. Expecting no arguments")
+	}
+	value, err := sharedParams.Bytes()
+	if err != nil {
+		return nil, err
+	}
+	return value, nil
+}
 
 /*
  * Setup is called by chaincode Init.
- * It takes the auditor id(public key?) as input and stored in blockchain and 
- * generates 3 keypairs.
+ * It generates 3 keypairs.
  *  1. Auditor's key pair (from rerandomization scheme)
  *  2. Key pair to generate ecert (from structure preserving scheme)
  *  3. Key pair to generate ocert (from RSA)
@@ -59,44 +78,44 @@ var SSK *SSigningKey
  * keys are in memory. It returns the Auditor's keypair to the auditor
  */
 func Setup(stub Wrapper, args [][]byte) ([]byte, error) {
-	if len(args) != 1 {
-		return nil, fmt.Errorf("Incorrect arguments. Expecting the id of an auditor")
-	}
-
-	// TODO verify auditor
-	err := stub.PutState("auditor_id", args[0])
-	if err != nil {
-		return nil, fmt.Errorf("Failed to set auditor_id")
+	if len(args) != 0 {
+		return nil, fmt.Errorf("Incorrect arguments. Expecting no arguments")
 	}
 
 	sharedParams = GenerateSharedParams()
 	// Generate auditor's keypair
 	PKa, SKa := EKeyGen(sharedParams)
-	err = stub.PutState("auditor_pk", PKa.PK)
+	err := stub.PutState("auditor_pk", PKa.PK)
 	KPa := new(AuditorKeypair)
 	KPa.PK = PKa.PK
 	KPa.SK = SKa.SK
 
-	// TODO Generate RSA keypair
+	// Generate RSA keypair
+	rsaPrivateKey, err = rsa.GenerateKey(rand.Reader, 2048)
+	if err != nil {
+		return nil, err
+	}
 
 	// Generate structure preserving keypair
 	VKei, SKei := SKeyGen(sharedParams)
 	SSK = SKei
 	SVKb, err := VKei.Bytes()
 	if err != nil {
-		return nil, fmt.Errorf("Failed to generate structure preserving keypair")
+		return nil, err
 	}
 	err = stub.PutState("structure_preserving_vk", SVKb)
 	if err != nil {
-		return nil, fmt.Errorf("Failed to set structure_preserving_vk")
+		return nil, err
 	}
 
 	// TODO ?PSetup
 
+	// TODO generate certificate of CA
+
 	// Return keypair to the auditor
 	KPab, err := KPa.Bytes()
 	if err != nil {
-		return nil, fmt.Errorf("Failed to get auditor's keypair")
+		return nil, err
 	}
 	return KPab, nil
 }
@@ -148,6 +167,36 @@ func GenECert(stub Wrapper, args [][]byte) ([]byte, error) {
 	return replyBytes, nil
 }
 
+/*
+ * GenOCert is used to generate an ocert of a client
+ * It takes a client's public key, a client's pseudonym and the 
+ * proof of knowledge, and returns the ocert to the client 
+ */
 func GenOCert(stub Wrapper, args [][]byte) ([]byte, error) {
-	return nil, nil
+	if len(args) != 3 {
+		return nil, fmt.Errorf("Incorrect arguments. Expecting the PK, P, and PoK of client")
+	}
+
+	PKc := new(ClientPublicKey)
+	PKc.PK = args[0]
+	P := new(Pseudonym)
+	err := P.SetBytes(args[1])
+	if err != nil {
+		return nil, err
+	}
+
+	// TODO verify proof of knowledge
+
+	// TODO generate X.509 certificate
+	msg, err := OCertSingedBytes(PKc, P)
+	if err != nil {
+		return nil, err
+	}
+	hashed := sha256.Sum256(msg)
+	signature, err := rsa.SignPKCS1v15(rand.Reader, rsaPrivateKey, crypto.SHA256, hashed[:])
+	if err != nil {
+		return nil, err
+	}
+
+	return signature, nil
 }
