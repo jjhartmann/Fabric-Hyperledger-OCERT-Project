@@ -6,7 +6,6 @@ package ocert
 
 import (
   "github.com/Nik-U/pbc"
-  "fmt"
   "reflect"
 )
 
@@ -263,8 +262,7 @@ func CreateCommitmentOnG1(pairing *pbc.Pairing, chi []*pbc.Element, sigma *Sigma
   // Create Commitment container
   C := []*BPair{}
   if (len(Ru) != len(chi)){
-    fmt.Errorf("Error in CreateCommitmentOnG1: Ru and X needs to have the same length")
-    return C, Ru, rmat
+    panic("Error in CreateCommitmentOnG1: Ru and X needs to have the same length")
   }
 
   // Build commitments in B1
@@ -297,8 +295,7 @@ func CreateCommitmentPrimeOnG1(pairing *pbc.Pairing, x []*pbc.Element, sigma *Si
   // Create Commitment container
   C := []*BPair{}
   if (len(Ru) != len(x)){
-    fmt.Errorf("Error in CreateCommitmentOnG1: Ru and X needs to have the same length")
-    return C, Ru, rmat
+    panic("Error in CreateCommitmentOnG1: Ru and X needs to have the same length")
   }
 
   // Build commitments in B1
@@ -329,8 +326,7 @@ func CreateCommitmentOnG2(pairing *pbc.Pairing, Y []*pbc.Element, sigma *Sigma) 
   // Create Commitment container
   C := []*BPair{}
   if (len(Su) != len(Y)){
-    fmt.Errorf("Error in CreateCommitmentOnG1: Ru and X needs to have the same length")
-    return C, Su, rmat
+    panic("Error in CreateCommitmentOnG1: Ru and X needs to have the same length")
   }
 
   // Build commitments in B1
@@ -363,8 +359,7 @@ func CreateCommitmentPrimeOnG2(pairing *pbc.Pairing, y []*pbc.Element, sigma *Si
   // Create Commitment container
   C := []*BPair{}
   if (len(Su) != len(y)){
-    fmt.Errorf("Error in CreateCommitmentOnG1: Ru and X needs to have the same length")
-    return C, Su, rmat
+    panic("Error in CreateCommitmentOnG1: Ru and X needs to have the same length")
   }
 
   // Build commitments in B1
