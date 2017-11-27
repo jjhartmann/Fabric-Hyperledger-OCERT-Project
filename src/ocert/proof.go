@@ -7,6 +7,7 @@ package ocert
 import (
   "github.com/Nik-U/pbc"
   "fmt"
+  "reflect"
 )
 
 /*
@@ -40,6 +41,150 @@ func PProve(sharedParams *SharedParams, pi *ProofOfKnowledge, consts *ProofConst
 
 	return false
 }
+
+
+/*
+ * Create proof for equation: xc * H + (-1)PKc = 0
+ *   Multi-Scalar Multiplication in G2
+ *   xc, (-1) from group Zp: Zp -> B1
+ *   H, PKc from group G2:
+ *
+ * Proof:
+ *    Pi     := r*ι_2(H) + r*lambda*ι_2(PKc)  + (r*lambda*S - T')*V
+ *    Theta  := S'*ι'_1(-1) + S*lambda*ι'_1(xc) + Tu_1
+ */
+func ProveEquation1(pairing *pbc.Pairing, xc *pbc.Element, H *pbc.Element, PKc *pbc.Element, sigma *Sigma) *ProofOfEquation{
+  proof := new(ProofOfEquation)
+
+  // Create commitment in B1 for Xc
+  cprime, _, R := CreateCommitmentPrimeOnG1(pairing, []*pbc.Element{xc}, sigma)
+
+  // Create commitment in B2 for PKc
+  d, _, S := CreateCommitmentOnG2(pairing, []*pbc.Element{PKc}, sigma)
+
+  // Convert parameters to B groups
+  Hi := Iota2(pairing, H)
+  PKci := Iota2(pairing, PKc)
+  neg1 := IotaPrime1(pairing, pairing.NewZr().SetInt32(-1), sigma)
+  xci := IotaPrime1(pairing, xc, sigma)
+
+  // Random samples from Zp
+  if R.cols != 1 && R.rows != 1 {
+    panic("Issues in conversion and creation of samples in Zp for R")
+  }
+  r := R.mat[0][0]
+  gammaMat := NewRMatrix(pairing, 1, 1)
+  gamma := gammaMat.mat[0][0]
+  rgamma := pairing.NewZr().Mul(r, gamma)
+
+  if S.rows != 1 && S.cols != 2 {
+    panic("Issues in conversion and creation of samples in Zp for S")
+  }
+
+  /////////////////////////////////////
+  // Pi: In G2
+
+  // Multiply Scalar from Zn on B elements
+  Hir := Hi.MulScalarInG2(pairing, r)           // r*ι_2(H)
+  PKcirl := PKci.MulScalarInG2(pairing, rgamma) // r*gamma*ι_2(PKc)
+
+  // Create Phi := (r*lambada*S - T)
+  T := NewRMatrix(pairing, 2, 1)
+  Srl := S.MulScalarZn(pairing, rgamma)  // r*gamma*S
+  Ti := T.InvertMatrix()                 // T' invert
+  Phi := Srl.ElementWiseSub(pairing, Ti) // S - T'
+
+  // Multiple Phi by commitment keys
+  Vphi := Phi.MulCommitmentKeysG2(pairing, sigma.V) // (r*gamma*S - T')V (commitment key in G2)
+  if len(Vphi) > 1{
+    panic("VPhi Should have len == 1")
+  }
+
+  // Construct Pi (Hir + PKcirl + Vphi)
+  HPKcir := Hir.AddinG2(pairing, PKcirl)
+  pi := HPKcir.AddinG2(pairing, Vphi[0])
+
+
+  ////////////////////////////////////////////
+  // Theta: In G1
+  _ = neg1
+  _ = xci
+
+  Si := S.InvertMatrix()                        // S Invert = S'
+  Sneg := Si.MulBScalarinB1(pairing, *neg1)     // S'*ι'_1(-1)
+  // +
+  Sl := Si.MulScalarZn(pairing, gamma)    // S'*gamma
+  Sxc := Sl.MulBScalarinB1(pairing, *xci) // S'*gamma*ι'_1(Xc)
+  // +
+  Tu := T.MulCommitmentKeysG1(pairing, []CommitmentKey{sigma.U[0]}) // Tu_1
+
+  if len(Sneg) != len(Sxc) && len(Sxc) != len(Tu) {
+    panic("All section lengths need to be equivalent")
+  }
+
+  // Construct theta
+  theta := []*BPair{}
+
+  for i := 0; i < len(Sneg); i++ {
+    Snegxc := Sneg[i][0].AddinG1(pairing, Sxc[i][0])
+    tmpB := Snegxc.AddinG1(pairing, Tu[i])
+    theta = append(theta, tmpB)
+  }
+
+  // Collect elements
+  proof.Gamma = gammaMat
+  proof.Theta = theta
+  proof.Pi = []*BPair{pi}
+  proof.cprime = cprime
+  proof.d = d
+
+  return proof
+}
+
+
+/*
+ * Verifiy Equation 1
+ *
+ */
+func VerifyEquation1(pairing *pbc.Pairing, proof *ProofOfEquation, H *pbc.Element, tau *pbc.Element, sigma *Sigma) bool {
+
+  // Construct LHS
+  neg1 := IotaPrime1(pairing, pairing.NewZr().SetInt32(-1), sigma)
+  Fid := FMap(pairing, neg1, proof.d[0])
+  // +
+  Hi := Iota2(pairing, H)
+  FcH := FMap(pairing, proof.cprime[0], Hi)
+  // +
+  gamma := proof.Gamma.mat[0][0]
+  dgamma := proof.d[0].MulScalarInG2(pairing, gamma)
+  Fcd := FMap(pairing, proof.cprime[0], dgamma)
+  // =
+  tmp1 := Fid.AddinGT(pairing, FcH)
+  LHS := tmp1.AddinGT(pairing, Fcd)
+
+
+  // Construct RHS
+  taui := IotaHat(pairing, tau, sigma)
+  // +
+  u := sigma.U[0].ConvertToBPair()
+  Fup := FMap(pairing, u, proof.Pi[0])
+  // +
+  v1 := sigma.V[0].ConvertToBPair()
+  Fsv1 := FMap(pairing, proof.Theta[0], v1)
+  //+
+  v2 := sigma.V[1].ConvertToBPair()
+  Fsv2 := FMap(pairing, proof.Theta[1], v2)
+  //=
+  tmp2 := taui.AddinGT(pairing, Fup)
+  tmp2 = tmp2.AddinGT(pairing, Fsv1)
+  RHS := tmp2.AddinGT(pairing, Fsv2)
+
+
+  // Perform Equality //TODO: Test for nil == nill
+  ret := reflect.DeepEqual(LHS, RHS)
+  return ret
+}
+
 
 /*
  * Create Common refernce string sigma.

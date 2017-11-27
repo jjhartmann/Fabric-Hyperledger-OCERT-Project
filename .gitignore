@@ -2,3 +2,4 @@ pkg/darwin_amd64/ocert.a
 src/chaincode-docker-devmode/myc.block
 src/chaincode/ocert/ocert
 src/chaincode/sacc/sacc
+.idea/*

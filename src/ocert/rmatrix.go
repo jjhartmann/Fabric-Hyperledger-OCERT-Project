@@ -2,7 +2,6 @@ package ocert
 
 import (
   "github.com/Nik-U/pbc"
-  "fmt"
 )
 
 /*
@@ -13,6 +12,7 @@ type RMatrix struct {
   mat [][]*pbc.Element
   rows int
   cols int
+  invert bool
 }
 
 func NewRMatrix(pairing *pbc.Pairing, rows int, cols int) *RMatrix {
@@ -27,8 +27,69 @@ func NewRMatrix(pairing *pbc.Pairing, rows int, cols int) *RMatrix {
     }
     rmat.mat = append(rmat.mat, elementRow)
   }
-
   return rmat
+}
+
+// TODO: A lot of these fucntions could be optimised!
+func (rmat *RMatrix) InvertMatrix() *RMatrix{
+  R := new(RMatrix)
+  R.rows = rmat.cols
+  R.cols = rmat.rows
+
+  for j := 0; j < rmat.cols; j++{
+    elrow := []*pbc.Element{}
+    for i := 0; i < rmat.rows; i++ {
+      elrow = append(elrow, rmat.mat[i][j])
+    }
+    R.mat = append(R.mat, elrow)
+  }
+  return R
+}
+
+func (rmat *RMatrix) ElementWiseSub(pairing *pbc.Pairing, L *RMatrix) *RMatrix {
+  if rmat.cols != L.cols || rmat.rows != L.rows {
+    panic("Rows and Cols need to be equivalent")
+  }
+
+  R := NewRMatrix(pairing, L.rows, L.cols)
+  for i := 0; i < L.rows; i++{
+    for j := 0; j < L.cols; j++ {
+      R.mat[i][j] = pairing.NewZr().Sub(rmat.mat[i][j], L.mat[i][j])
+    }
+  }
+  return R
+}
+
+func (rmat *RMatrix) MulBScalarinB1(pairing *pbc.Pairing, B BPair) [][]*BPair {
+  Rb := [][]*BPair{}
+
+  for i := 0; i < rmat.rows; i++ {
+    pairRow := []*BPair{}
+    for j := 0; j < rmat.cols; j++ {
+      pair := new(BPair)
+      pair.b1 = pairing.NewG1().MulZn(pairing.NewG1().SetBytes(B.b1), rmat.mat[i][j]).Bytes()
+      pair.b2 = pairing.NewG1().MulZn(pairing.NewG1().SetBytes(B.b2), rmat.mat[i][j]).Bytes()
+      pairRow = append(pairRow, pair)
+    }
+    Rb = append(Rb, pairRow)
+  }
+  return Rb
+}
+
+func (rmat *RMatrix) MulScalarZn(pairing *pbc.Pairing, r *pbc.Element) *RMatrix {
+  R := new(RMatrix)
+  R.rows = rmat.rows
+  R.cols = rmat.cols
+
+  for i := 0; i < rmat.rows; i++ {
+    elementRow := []*pbc.Element{}
+    for j := 0; j < rmat.cols; j++ {
+      el := pairing.NewZr().Mul(rmat.mat[i][j], r)
+      elementRow = append(elementRow, el)
+    }
+    R.mat = append(R.mat, elementRow)
+  }
+  return R
 }
 
 func (rmat *RMatrix) MulCommitmentKeysG1(pairing *pbc.Pairing, U []CommitmentKey) []*BPair {
@@ -36,7 +97,7 @@ func (rmat *RMatrix) MulCommitmentKeysG1(pairing *pbc.Pairing, U []CommitmentKey
   cols := len(U)
   Ru := []*BPair{}
   if (rmat.cols != len(U) ){
-    fmt.Errorf("Error Occured in MulCommitmentKeys: CommitmentKeys incompatiable\n%s", U)
+    panic("Error Occured in MulCommitmentKeys: CommitmentKeys incompatiable")
     return Ru
   }
 
@@ -79,7 +140,7 @@ func (rmat *RMatrix) MulCommitmentKeysG2(pairing *pbc.Pairing, V []CommitmentKey
   cols := len(V)
   Rv := []*BPair{}
   if (rmat.cols != len(V) ){
-    fmt.Errorf("Error Occured in MulCommitmentKeys: CommitmentKeys incompatiable\n%s", V)
+    panic("Error Occured in MulCommitmentKeys: CommitmentKeys incompatiable")
     return Rv
   }
 
