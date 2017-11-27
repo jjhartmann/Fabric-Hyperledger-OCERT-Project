@@ -17,6 +17,7 @@ import (
  	"crypto/rsa"
  	"crypto/rand"
  	"crypto/sha256"
+ 	"math/big"
 )
 
 // TODO delete
@@ -54,10 +55,17 @@ func Get(stub Wrapper, args [][]byte) ([]byte, error) {
  * not publicly on blockchain.
  */
 var sharedParams *SharedParams
-var SSK *SSigningKey
+var sSigningKey *SSigningKey
 var rsaPrivateKey *rsa.PrivateKey
+var serialNumber *big.Int
+var auditorKeypair []byte
 
-func GetSharedParams(stub Wrapper, args []string) ([]byte, error) {
+func getSerialNumber() (*big.Int) {
+	serialNumber.Add(serialNumber, big.NewInt(1))
+	return serialNumber
+}
+
+func GetSharedParams(stub Wrapper, args [][]byte) ([]byte, error) {
 	if len(args) != 0 {
 		return nil, fmt.Errorf("Incorrect arguments. Expecting no arguments")
 	}
@@ -66,6 +74,15 @@ func GetSharedParams(stub Wrapper, args []string) ([]byte, error) {
 		return nil, err
 	}
 	return value, nil
+}
+
+func GetAuditorKeypair(stub Wrapper, args [][]byte)([]byte, error) {
+	// TODO We are cheat here, we should verify the request is from the 
+	// auditor
+	if string(auditorKeypair) == "NoAuditorKeyPair" {
+		return nil, fmt.Errorf("NoAuditorKeyPair")
+	}
+	return auditorKeypair, nil
 }
 
 /*
@@ -83,7 +100,10 @@ func Setup(stub Wrapper, args [][]byte) ([]byte, error) {
 		return nil, fmt.Errorf("Incorrect arguments. Expecting no arguments")
 	}
 
+	auditorKeypair = []byte("NoAuditorKeyPair")
+	serialNumber = big.NewInt(0)
 	sharedParams = GenerateSharedParams()
+	fmt.Println(sharedParams)
 	// Generate auditor's keypair
 	PKa, SKa := EKeyGen(sharedParams)
 	err := stub.PutState("auditor_pk", PKa.PK)
@@ -99,7 +119,7 @@ func Setup(stub Wrapper, args [][]byte) ([]byte, error) {
 
 	// Generate structure preserving keypair
 	VKei, SKei := SKeyGen(sharedParams)
-	SSK = SKei
+	sSigningKey = SKei
 	SVKb, err := VKei.Bytes()
 	if err != nil {
 		return nil, err
@@ -118,6 +138,7 @@ func Setup(stub Wrapper, args [][]byte) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+	auditorKeypair = KPab
 	return KPab, nil
 }
 
@@ -150,7 +171,7 @@ func GenECert(stub Wrapper, args [][]byte) ([]byte, error) {
 	P := EEnc(sharedParams, PKa, IDc)
 
 	// Generate ecert
-	ecert := SSign(sharedParams, SSK, P, PKc)
+	ecert := SSign(sharedParams, sSigningKey, P, PKc)
 
 	reply := new(GenECertReply)
 	reply.P, err = P.Bytes()

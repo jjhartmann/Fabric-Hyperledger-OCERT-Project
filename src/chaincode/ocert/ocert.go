@@ -53,6 +53,8 @@ func (t *OcertAsset) Invoke(stub shim.ChaincodeStubInterface) peer.Response {
 		result, err = ocert.Get(stub, args)
 	} else if fn == "put" {
 		result, err = ocert.Put(stub, args)
+	} else if fn == "sharedParams" {
+		result, err = ocert.GetSharedParams(stub, args)
 	} else {
 		return shim.Error("Unknown functions")
 	}

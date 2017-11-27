@@ -68,6 +68,7 @@ services:
         - ./../chaincode:/opt/gopath/src/chaincodedev/chaincode
         - ./:/opt/gopath/src/chaincodedev/
         - ./../ocert/:/opt/gopath/src/ocert/
+        - ./../benchmark/:/opt/gopath/src/benchmark/
     depends_on:
       - build_cli
       - orderer
