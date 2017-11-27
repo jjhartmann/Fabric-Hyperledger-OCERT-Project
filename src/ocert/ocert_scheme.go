@@ -20,12 +20,12 @@ import (
 )
 
 // TODO delete
-func Put(stub Wrapper, args []string) ([]byte, error) {
+func Put(stub Wrapper, args [][]byte) ([]byte, error) {
 	if len(args) != 2 {
 		return nil, fmt.Errorf("Incorrect arguments. Expecting a key and a value")
 	}
 
-	err := stub.PutState(args[0], []byte(args[1]))
+	err := stub.PutState(string(args[0]), args[1])
 	if err != nil {
 		return nil, fmt.Errorf("Failed to set asset: %s", args[0])
 	}
@@ -34,12 +34,12 @@ func Put(stub Wrapper, args []string) ([]byte, error) {
 }
 
 // TODO delete
-func Get(stub Wrapper, args []string) ([]byte, error) {
+func Get(stub Wrapper, args [][]byte) ([]byte, error) {
 	if len(args) != 1 {
 		return nil, fmt.Errorf("Incorrect arguments. Expecting a key")
 	}
 
-	value, err := stub.GetState(args[0])
+	value, err := stub.GetState(string(args[0]))
 	if err != nil {
 		return nil, fmt.Errorf("Failed to get asset: %s with error: %s", args[0], err)
 	}
@@ -78,6 +78,7 @@ func GetSharedParams(stub Wrapper, args []string) ([]byte, error) {
  * keys are in memory. It returns the Auditor's keypair to the auditor
  */
 func Setup(stub Wrapper, args [][]byte) ([]byte, error) {
+	fmt.Println("Setup")
 	if len(args) != 0 {
 		return nil, fmt.Errorf("Incorrect arguments. Expecting no arguments")
 	}
