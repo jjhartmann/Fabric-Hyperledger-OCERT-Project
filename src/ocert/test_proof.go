@@ -802,6 +802,51 @@ return len(proof.Theta) == 2 && len(proof.Pi) == 1 &&
        len(proof.c) == 0 && len(proof.dprime) == 0
 }
 
+func TestEquation1Verify(verbose bool) bool {
+  sharedParams := GenerateSharedParams()
+  pairing, _ := pbc.NewPairingFromString(sharedParams.Params)
+  g1 := pairing.NewG1().Rand()
+  g2 := pairing.NewG2().Rand()
+  gt := pairing.NewGT().Pair(g1, g2)
+  _ = gt
+
+  if verbose {fmt.Println("Test Proof Generation for Eq1")}
+
+  Xc := pairing.NewZr().Rand() // Client Secret Key (variable)
+  H  := pairing.NewG2().SetBytes(sharedParams.G2) // Shared Generator ??
+  PKc := pairing.NewG2().Rand() // Public Key (variable
+
+  if verbose {fmt.Println("Creating CRS Sigma")}
+  alpha := pairing.NewZr().Rand() // Another Secret Key..
+  sigma := CreateCommonReferenceString(sharedParams, alpha) // CRS
+
+  if verbose {fmt.Println("Generate Proof")}
+  proof := ProveEquation1(pairing, Xc, H, PKc, sigma)
+
+  if verbose {fmt.Println("Tetsting Initital Euqation: XcH + (-1)PKc = 0")}
+  neg1 := pairing.NewZr().SetInt32(-1)
+  XcH := pairing.NewG2().MulZn(H, Xc)
+  // +
+  PkcNeg := pairing.NewG2().MulZn(PKc, neg1)
+  // +
+  gPKc := pairing.NewG2().MulZn(PKc, proof.Gamma.mat[0][0])
+  XcPkcg := pairing.NewG2().MulZn(gPKc, Xc)
+  // =
+  tau := pairing.NewG2().Add(XcH, PkcNeg)
+  tau = pairing.NewG2().Add(tau, XcPkcg)
+  if verbose {fmt.Println(tau)}
+
+
+  if verbose {fmt.Println("Verify Proof")}
+  ret := VerifyEquation1(pairing, proof, H, tau, sigma)
+
+  if verbose {
+    fmt.Println("Verify Restul: ", ret)
+  }
+
+  return ret
+}
+
 /*
  * Run test b times
  */
@@ -828,4 +873,5 @@ func RunAllPTests(verbose bool) {
   fmt.Println("Commitment: G2->B2    ", TestCreateCommitmentsG2(verbose))
   fmt.Println("Commitment: Zp->B2    ", TestCreateCommitmentPrimeOnG2(verbose))
   fmt.Println("Proof Generation EQ1  ", TestEquation1ProofGen(verbose))
+  fmt.Println("Proof Verify EQ1      ", TestEquation1Verify(verbose))
 }
