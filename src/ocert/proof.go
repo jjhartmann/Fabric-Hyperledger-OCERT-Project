@@ -7,6 +7,7 @@ package ocert
 import (
   "github.com/Nik-U/pbc"
   "fmt"
+  "reflect"
 )
 
 /*
@@ -145,10 +146,43 @@ func ProveEquation1(pairing *pbc.Pairing, xc *pbc.Element, H *pbc.Element, PKc *
  * Verifiy Equation 1
  *
  */
-func VerifyEquation1(pairing *pbc.Pairing, proof *ProofOfEquation, H *pbc.Element, PKc *pbc.Element, sigma *Sigma) bool {
+func VerifyEquation1(pairing *pbc.Pairing, proof *ProofOfEquation, H *pbc.Element, tau *pbc.Element, sigma *Sigma) bool {
+
+  // Construct LHS
+  neg1 := IotaPrime1(pairing, pairing.NewZr().SetInt32(-1), sigma)
+  Fid := FMap(pairing, neg1, proof.d[0])
+  // +
+  Hi := Iota2(pairing, H)
+  FcH := FMap(pairing, proof.cprime[0], Hi)
+  // +
+  gamma := proof.Gamma.mat[0][0]
+  dgamma := proof.d[0].MulScalarInG2(pairing, gamma)
+  Fcd := FMap(pairing, proof.cprime[0], dgamma)
+  // =
+  tmp1 := Fid.AddinGT(pairing, FcH)
+  LHS := tmp1.AddinGT(pairing, Fcd)
 
 
-  return false
+  // Construct RHS
+  taui := IotaHat(pairing, tau, sigma)
+  // +
+  u := sigma.U[0].ConvertToBPair()
+  Fup := FMap(pairing, u, proof.Pi[0])
+  // +
+  v1 := sigma.V[0].ConvertToBPair()
+  Fsv1 := FMap(pairing, proof.Theta[0], v1)
+  //+
+  v2 := sigma.V[1].ConvertToBPair()
+  Fsv2 := FMap(pairing, proof.Theta[1], v2)
+  //=
+  tmp2 := taui.AddinGT(pairing, Fup)
+  tmp2 = tmp2.AddinGT(pairing, Fsv1)
+  RHS := tmp2.AddinGT(pairing, Fsv2)
+
+
+  // Perform Equality //TODO: Test for nil == nill
+  ret := reflect.DeepEqual(LHS, RHS)
+  return ret
 }
 
 
