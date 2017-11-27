@@ -25,6 +25,16 @@ type SharedParams struct {
 	G2     []byte
 }
 
+func (s *SharedParams) Bytes() ([]byte, error) {
+	msg, err := json.Marshal(s)
+	return msg, err
+}
+
+func (s *SharedParams) SetBytes(msg []byte) error {
+	err := json.Unmarshal(msg, s)
+	return err
+}
+
 /*****************************************************************/
 
 // TODO Based on PBC library we choose, we need to modify following
