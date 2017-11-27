@@ -69,6 +69,7 @@ services:
         - ./:/opt/gopath/src/chaincodedev/
         - ./../ocert/:/opt/gopath/src/ocert/
         - ./../benchmark/:/opt/gopath/src/benchmark/
+        - ./../benchmark/benchmarkcc.go:/opt/gopath/src/chaincodedev/benchmarkcc.go
     depends_on:
       - build_cli
       - orderer

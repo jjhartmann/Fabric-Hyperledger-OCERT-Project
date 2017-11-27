@@ -1,3 +1,7 @@
+/*
+ * Used to benchmark ocert_scheme
+ */
+
 package main
 
 import (
