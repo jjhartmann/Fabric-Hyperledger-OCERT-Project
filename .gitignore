@@ -3,3 +3,4 @@ src/chaincode-docker-devmode/myc.block
 src/chaincode/ocert/ocert
 src/chaincode/sacc/sacc
 .idea/*
+Analysis/.ipynb*
