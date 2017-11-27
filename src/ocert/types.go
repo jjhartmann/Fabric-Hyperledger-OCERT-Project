@@ -352,7 +352,7 @@ type ProofConstants struct {
 
 /*****************************************************************/
 /*
- * Result from main scheme(chaincode)
+ * Request to and reply from main scheme (chaincode)
  */
 
 type GenECertReply struct {
