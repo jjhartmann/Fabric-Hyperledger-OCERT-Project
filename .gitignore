@@ -4,3 +4,4 @@ src/chaincode/ocert/ocert
 src/chaincode/sacc/sacc
 .idea/*
 src/benchmark/benchmarkcc
+Analysis/.ipynb*
