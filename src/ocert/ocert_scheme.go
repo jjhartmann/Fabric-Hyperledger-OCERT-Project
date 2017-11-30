@@ -148,19 +148,29 @@ func Setup(stub Wrapper, args [][]byte) ([]byte, error) {
  * psudonym P and ecert to the client.
  */
 func GenECert(stub Wrapper, args [][]byte) ([]byte, error) {
-	if len(args) != 2 {
-		return nil, fmt.Errorf("Incorrect arguments. Expecting the id and the PK of client")
+	if len(args) != 1 {
+		return nil, fmt.Errorf("Incorrect arguments.")
+	}
+
+	request := new(GenECertRequest)
+	err := request.SetBytes(args[0])
+	if err != nil {
+		return nil, err
 	}
 
 	IDc := new(ClientID)
-	IDc.ID = args[0]
+	IDc.ID = request.IDc
 	PKc := new(ClientPublicKey)
-	PKc.PK = args[1]
+	PKc.PK = request.PKc
+
+	fmt.Println("GenECert")
+	fmt.Println(IDc)
+	fmt.Println(PKc)
 
 	// Generate pseudonym P
 	valuePKa, err := stub.GetState("auditor_pk")
 	if err != nil {
-		return nil, fmt.Errorf("Failed to get auditor_pk")
+		return nil, err
 	}
 	if valuePKa == nil {
 		return nil, fmt.Errorf("Asset not found: auditor_pk")
@@ -176,15 +186,15 @@ func GenECert(stub Wrapper, args [][]byte) ([]byte, error) {
 	reply := new(GenECertReply)
 	reply.P, err = P.Bytes()
 	if err != nil {
-		return nil, fmt.Errorf("Failed to generate pesudonym")
+		return nil, err
 	}
 	reply.ecert, err = ecert.Bytes()
 	if err != nil {
-		return nil, fmt.Errorf("Failed to generate ecert")
+		return nil, err
 	}
 	replyBytes, err := reply.Bytes()
-		if err != nil {
-		return nil, fmt.Errorf("Failed to generate GenECertReply")
+	if err != nil {
+		return nil, err
 	}
 	return replyBytes, nil
 }

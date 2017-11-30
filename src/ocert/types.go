@@ -465,6 +465,21 @@ type ProofConstants struct {
  * Request to and reply from main scheme (chaincode)
  */
 
+type GenECertRequest struct {
+	IDc []byte
+	PKc []byte
+}
+
+func (request *GenECertRequest) Bytes() ([]byte, error) {
+	msg, err := json.Marshal(request)
+	return msg, err
+}
+
+func (request *GenECertRequest) SetBytes(msg []byte) error {
+	err := json.Unmarshal(msg, request)
+	return err
+}
+
 type GenECertReply struct {
 	P []byte
 	ecert []byte

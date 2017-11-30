@@ -55,6 +55,10 @@ func (t *OcertAsset) Invoke(stub shim.ChaincodeStubInterface) peer.Response {
 		result, err = ocert.Put(stub, args)
 	} else if fn == "sharedParams" {
 		result, err = ocert.GetSharedParams(stub, args)
+	} else if fn == "genECert" {
+		result, err = ocert.GenECert(stub, args)
+	} else if fn == "genOCert" {
+		result, err = ocert.GenOCert(stub, args)
 	} else {
 		return shim.Error("Unknown functions")
 	}
