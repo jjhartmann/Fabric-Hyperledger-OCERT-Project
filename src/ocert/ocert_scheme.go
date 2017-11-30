@@ -20,36 +20,6 @@ import (
  	"math/big"
 )
 
-// TODO delete
-func Put(stub Wrapper, args [][]byte) ([]byte, error) {
-	if len(args) != 2 {
-		return nil, fmt.Errorf("Incorrect arguments. Expecting a key and a value")
-	}
-
-	err := stub.PutState(string(args[0]), args[1])
-	if err != nil {
-		return nil, fmt.Errorf("Failed to set asset: %s", args[0])
-	}
-	return []byte(args[1]), nil
-
-}
-
-// TODO delete
-func Get(stub Wrapper, args [][]byte) ([]byte, error) {
-	if len(args) != 1 {
-		return nil, fmt.Errorf("Incorrect arguments. Expecting a key")
-	}
-
-	value, err := stub.GetState(string(args[0]))
-	if err != nil {
-		return nil, fmt.Errorf("Failed to get asset: %s with error: %s", args[0], err)
-	}
-	if value == nil {
-		return nil, fmt.Errorf("Asset not found: %s", args[0])
-	}
-	return value, nil
-}
-
 /*
  * The private key used in structure preserving scheme should keep in memory,
  * not publicly on blockchain.
