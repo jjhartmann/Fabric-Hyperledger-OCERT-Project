@@ -10,6 +10,7 @@ import (
 	"ocert"
 	"github.com/Nik-U/pbc"
 	"strings"
+	"time"
 )
 
 func parseOut(out []byte) []byte {
@@ -127,7 +128,12 @@ func genOCert(pkc *ocert.ClientPublicKey, p *ocert.Pseudonym) {
 
 	return
 
+	start := time.Now()
 	out, err := exec.Command("sh","-c", queryCmd).Output()
+	end := time.Now()
+	elapsed := end.Sub(start)
+	fmt.Println("genOCert: ")
+	fmt.Println(elapsed)
 
 	if err != nil {
 		fmt.Println(err)
@@ -154,4 +160,10 @@ func main () {
 	PKc := new(ocert.ClientPublicKey)
 	PKc.PK = pairing.NewG1().Rand().Bytes()
 	genECert(IDc, PKc)
+
+	start := time.Now()
+	end := time.Now()
+	elapsed := end.Sub(start)
+	fmt.Println("proof generation: ")
+	fmt.Println(elapsed)
 }

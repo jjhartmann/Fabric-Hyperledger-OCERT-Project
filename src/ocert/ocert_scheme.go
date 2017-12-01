@@ -18,6 +18,7 @@ import (
  	"crypto/rand"
  	"crypto/sha256"
  	"math/big"
+ 	"time"
 )
 
 /*
@@ -197,6 +198,11 @@ func GenOCert(stub Wrapper, args [][]byte) ([]byte, error) {
 	// TODO get proof
 
 	// TODO verify proof of knowledge
+	start := time.Now()
+	end := time.Now()
+	elapsed := end.Sub(start)
+	fmt.Println("proof verfication: ")
+	fmt.Println(elapsed)
 
 	// TODO generate X.509 certificate
 	msg, err := OCertSingedBytes(PKc, P)
