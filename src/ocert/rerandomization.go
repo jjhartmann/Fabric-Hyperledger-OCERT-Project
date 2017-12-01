@@ -38,6 +38,25 @@ func EKeyGen(sharedParams *SharedParams) (*AuditorPublicKey, *AuditorSecretKey) 
 func EEnc(sharedParams *SharedParams, PKa *AuditorPublicKey, id *ClientID) *Pseudonym {
 	P := new(Pseudonym)
 
+	pairing, _ := pbc.NewPairingFromString(sharedParams.Params)
+	g1 := pairing.NewG1().SetBytes(sharedParams.G1)
+	r:=pairing.NewZr().Rand()
+
+	C:=pairing.NewG1().MulZn(g1,r)
+
+  PK:=pairing.NewG1().SetBytes(PKa.PK)
+  D:=pairing.NewG1().MulZn(PK,r)
+
+	//Convert the id into an element in G1
+	Cid:=pairing.NewG1().SetBytes(id.ID)
+
+	//Add the id value to D
+
+	D=pairing.NewG1().Add(D,Cid)
+
+	P.C=C.Bytes()
+	P.D=D.Bytes()
+
 	return P
 }
 
