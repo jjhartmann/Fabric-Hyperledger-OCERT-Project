@@ -157,7 +157,7 @@ func ProveEquation2(pairing *pbc.Pairing, rprime *pbc.Element, G *pbc.Element, C
 	// Create commitment in B1 for C
 	c, _, R := CreateCommitmentOnG1(pairing, []*pbc.Element{C}, sigma)
 
-	// Create commitment in B1 for r'
+	// Create commitment in B1 for r' TODO: This should be in B2
 	d, _, S := CreateCommitmentPrimeOnG1(pairing, []*pbc.Element{rprime}, sigma)
 
 	// Convert parameters to B groups
@@ -193,7 +193,7 @@ func ProveEquation2(pairing *pbc.Pairing, rprime *pbc.Element, G *pbc.Element, C
 
 	T := NewRMatrix(pairing, 1, 2)
 	Ti := T.InvertMatrix()                 // T' invert
-	Rls := Rl.MulScalarZn(pairing, s)      // R'*gamma*s
+	Rls := Rl.MulScalarZn(pairing, s)      // R'*gamma*s TODO: this should be gamma*s
 	RTSub := Rls.ElementWiseSub(pairing, Ti) // R - T'
 	Tv := RTSub.MulCommitmentKeysG1(pairing, []CommitmentKey{sigma.V[0]})
 
@@ -223,9 +223,10 @@ func ProveEquation2(pairing *pbc.Pairing, rprime *pbc.Element, G *pbc.Element, C
 		panic("Thetai Should have len == 1")
 	}
 
-	// Construct Pi (Gir + Cir + Thetai)
+	// Construct Pi (Gir + Cir + Thetai) TODO: G is the constant and C is the variable, these should be reversed
 	CGir := Cir.AddinG1(pairing, Gir)
 	theta := CGir.AddinG1(pairing, Thetai[0])
+  // TODO: Need to multiple T by u (commitkeys in B1)
 
 	// Collect elements
 	proof.Gamma = gammaMat
