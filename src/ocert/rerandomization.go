@@ -18,7 +18,6 @@ func EKeyGen(sharedParams *SharedParams) (*AuditorPublicKey, *AuditorSecretKey) 
 	// Generators g1 & g2 are generated from the groups G1 & G2
 	pairing, _ := pbc.NewPairingFromString(sharedParams.Params)
 	g1 := pairing.NewG1().SetBytes(sharedParams.G1)
-	g2 := pairing.NewG2().SetBytes(sharedParams.G2)
 
 
 	xa :=pairing.NewZr().Rand()

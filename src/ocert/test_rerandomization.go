@@ -43,7 +43,6 @@ func EGenKeyTest() bool{
 
 	pairing, _ := pbc.NewPairingFromString(sharedParams.Params)
 	g1 := pairing.NewG1().SetBytes(sharedParams.G1)
-	g2 := pairing.NewG2().SetBytes(sharedParams.G2)
 
 	SKa:=pairing.NewZr().SetBytes(SK.SK)
   PKa:=pairing.NewG1().MulZn(g1,SKa)
