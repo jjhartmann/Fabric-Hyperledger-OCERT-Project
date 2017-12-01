@@ -158,7 +158,7 @@ func GenECert(stub Wrapper, args [][]byte) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	reply.ecert, err = ecert.Bytes()
+	reply.Ecert, err = ecert.Bytes()
 	if err != nil {
 		return nil, err
 	}

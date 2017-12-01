@@ -482,7 +482,7 @@ func (request *GenECertRequest) SetBytes(msg []byte) error {
 
 type GenECertReply struct {
 	P []byte
-	ecert []byte
+	Ecert []byte
 }
 
 func (reply *GenECertReply) Bytes() ([]byte, error) {
