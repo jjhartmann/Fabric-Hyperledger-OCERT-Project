@@ -17,9 +17,11 @@ func main() {
   //fmt.Printf("\nRun Proof Tests\n")
   //ocert.RunAllPTests(false)
   //
-  fmt.Printf("\nRun RMatrix Tests\n")
-  ocert.RunAllRTests(false)
+  // fmt.Printf("\nRun RMatrix Tests\n")
+  // ocert.RunAllRTests(false)
 
+  //Test Key generation from rerandomization
+  fmt.Println(ocert.EGenKeyTest())
   // Benchmark
   //ConstructMetricsForProofVerifyEq1(100)
 
