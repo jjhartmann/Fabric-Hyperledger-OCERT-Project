@@ -17,6 +17,7 @@ import (
  	"crypto/rsa"
  	"crypto/rand"
  	"crypto/sha256"
+ 	"crypto/x509"
  	"math/big"
  	"time"
 )
@@ -48,12 +49,35 @@ func GetSharedParams(stub Wrapper, args [][]byte) ([]byte, error) {
 }
 
 func GetAuditorKeypair(stub Wrapper, args [][]byte)([]byte, error) {
+	if len(args) != 0 {
+		return nil, fmt.Errorf("Incorrect arguments. Expecting no arguments")
+	}
+
 	// TODO We are cheat here, we should verify the request is from the 
 	// auditor
 	if string(auditorKeypair) == "NoAuditorKeyPair" {
 		return nil, fmt.Errorf("NoAuditorKeyPair")
 	}
 	return auditorKeypair, nil
+}
+
+func GetRSAPublicKey(stub Wrapper, args [][]byte)([]byte, error) {
+	if len(args) != 0 {
+		return nil, fmt.Errorf("Incorrect arguments. Expecting no arguments")
+	}
+
+	pk, err := x509.MarshalPKIXPublicKey(&rsaPrivateKey.PublicKey)
+	if err != nil {
+		return nil, err
+	}
+
+	reply := new(RSAPK)
+	reply.PK = pk
+	replyBytes, err := reply.Bytes()
+	if err != nil {
+		return nil, err
+	}
+	return replyBytes, nil
 }
 
 /*

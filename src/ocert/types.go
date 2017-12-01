@@ -524,3 +524,17 @@ func (reply *GenOCertReply) SetBytes(msg []byte) error {
 	err := json.Unmarshal(msg, reply)
 	return err
 }
+
+type RSAPK struct {
+	PK []byte
+}
+
+func (pk *RSAPK) Bytes() ([]byte, error) {
+	msg, err := json.Marshal(pk)
+	return msg, err
+}
+
+func (pk *RSAPK) SetBytes(msg []byte) error {
+	err := json.Unmarshal(msg, pk)
+	return err
+}
