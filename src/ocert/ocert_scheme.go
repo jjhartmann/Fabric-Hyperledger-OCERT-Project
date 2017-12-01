@@ -175,17 +175,26 @@ func GenECert(stub Wrapper, args [][]byte) ([]byte, error) {
  * proof of knowledge, and returns the ocert to the client 
  */
 func GenOCert(stub Wrapper, args [][]byte) ([]byte, error) {
-	if len(args) != 3 {
-		return nil, fmt.Errorf("Incorrect arguments. Expecting the PK, P, and PoK of client")
+	if len(args) != 1 {
+		return nil, fmt.Errorf("Incorrect arguments.")
 	}
 
-	PKc := new(ClientPublicKey)
-	PKc.PK = args[0]
-	P := new(Pseudonym)
-	err := P.SetBytes(args[1])
+	request := new(GenOCertRequest)
+	err := request.SetBytes(args[0])
 	if err != nil {
 		return nil, err
 	}
+
+
+	PKc := new(ClientPublicKey)
+	PKc.PK = request.PKc
+	P := new(Pseudonym)
+	err = P.SetBytes(request.P)
+	if err != nil {
+		return nil, err
+	}
+
+	// TODO get proof
 
 	// TODO verify proof of knowledge
 
@@ -200,5 +209,11 @@ func GenOCert(stub Wrapper, args [][]byte) ([]byte, error) {
 		return nil, err
 	}
 
-	return signature, nil
+	reply := new(GenOCertReply)
+	reply.sig = signature
+	replyBytes, err := reply.Bytes()
+	if err != nil {
+		return nil, err
+	}
+	return replyBytes, nil
 }
