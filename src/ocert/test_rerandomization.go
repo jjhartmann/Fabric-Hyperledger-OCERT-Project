@@ -2,6 +2,7 @@ package ocert
 
 import (
 	"os"
+	"github.com/Nik-U/pbc"
 )
 
 /*
