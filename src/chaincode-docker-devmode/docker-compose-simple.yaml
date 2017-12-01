@@ -2,10 +2,10 @@ version: '2'
 
 services:
   build_chaincode:
-    build: /Users/shikewei/Desktop/Fabric-Hyperledger-OCERT-Project/src/docker/chaincode
+    build: ./../docker/chaincode
     image: ocert/chaincode
   build_cli:
-    build: /Users/shikewei/Desktop/Fabric-Hyperledger-OCERT-Project/src/docker/cli
+    build: ./../docker/cli
     image: ocert/cli
   orderer:
     container_name: orderer
