@@ -61,25 +61,6 @@ func GetAuditorKeypair(stub Wrapper, args [][]byte)([]byte, error) {
 	return auditorKeypair, nil
 }
 
-func GetRSAPublicKey(stub Wrapper, args [][]byte)([]byte, error) {
-	if len(args) != 0 {
-		return nil, fmt.Errorf("Incorrect arguments. Expecting no arguments")
-	}
-
-	pk, err := x509.MarshalPKIXPublicKey(&rsaPrivateKey.PublicKey)
-	if err != nil {
-		return nil, err
-	}
-
-	reply := new(RSAPK)
-	reply.PK = pk
-	replyBytes, err := reply.Bytes()
-	if err != nil {
-		return nil, err
-	}
-	return replyBytes, nil
-}
-
 /*
  * Setup is called by chaincode Init.
  * It generates 3 keypairs.
@@ -98,16 +79,37 @@ func Setup(stub Wrapper, args [][]byte) ([]byte, error) {
 	auditorKeypair = []byte("NoAuditorKeyPair")
 	serialNumber = big.NewInt(0)
 	sharedParams = GenerateSharedParams()
+	fmt.Printf("sharedParams: ")
 	fmt.Println(sharedParams)
 	// Generate auditor's keypair
 	PKa, SKa := EKeyGen(sharedParams)
 	err := stub.PutState("auditor_pk", PKa.PK)
+	if err != nil {
+		return nil, err
+	}
 	KPa := new(AuditorKeypair)
 	KPa.PK = PKa.PK
 	KPa.SK = SKa.SK
 
 	// Generate RSA keypair
 	rsaPrivateKey, err = rsa.GenerateKey(rand.Reader, 2048)
+	if err != nil {
+		return nil, err
+	}
+	fmt.Printf("rsa pk: ")
+	fmt.Println(&rsaPrivateKey.PublicKey)
+
+	rsaPublicKeyBytes, err := x509.MarshalPKIXPublicKey(&rsaPrivateKey.PublicKey)
+	if err != nil {
+		return nil, err
+	}
+	rsaPK := new(RSAPK)
+	rsaPK.PK = rsaPublicKeyBytes
+	rsaPKBytes, err := rsaPK.Bytes()
+	if err != nil {
+		return nil, err
+	}
+	err = stub.PutState("rsa_pk", rsaPKBytes)
 	if err != nil {
 		return nil, err
 	}

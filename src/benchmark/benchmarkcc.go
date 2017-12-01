@@ -11,6 +11,7 @@ import (
 	"github.com/Nik-U/pbc"
 	"strings"
 	"time"
+	"crypto/x509"
 )
 
 func parseOut(out []byte) []byte {
@@ -53,6 +54,31 @@ func sharedParams() *ocert.SharedParams {
 	}
 
 	return sharedParams
+}
+
+func rsaPK() (interface{}) {
+	queryCmd := "peer chaincode query -n mycc -c '{\"Args\":[\"get\",\"rsa_pk\"]}' -C myc"
+	out, err := exec.Command("sh","-c", queryCmd).Output()
+
+	if err != nil {
+		fmt.Println(err)
+		panic(err.Error())
+	}
+
+	rsaPK := new(ocert.RSAPK)
+	err = rsaPK.SetBytes(parseOut(out))
+
+	if err != nil {
+		fmt.Println(err)
+		panic(err.Error())
+	}
+
+	pk, err := x509.ParsePKIXPublicKey(rsaPK.PK)
+	if err != nil {
+		fmt.Println(err)
+		panic(err.Error())
+	}
+	return pk
 }
 
 func genECert(id *ocert.ClientID, pkc *ocert.ClientPublicKey) {
@@ -159,11 +185,14 @@ func main () {
 	IDc.ID = pairing.NewG1().Rand().Bytes()
 	PKc := new(ocert.ClientPublicKey)
 	PKc.PK = pairing.NewG1().Rand().Bytes()
-	genECert(IDc, PKc)
+	// genECert(IDc, PKc)
 
 	start := time.Now()
 	end := time.Now()
 	elapsed := end.Sub(start)
 	fmt.Println("proof generation: ")
 	fmt.Println(elapsed)
+
+	fmt.Printf("rsa pk: ")
+	fmt.Println(rsaPK())
 }
