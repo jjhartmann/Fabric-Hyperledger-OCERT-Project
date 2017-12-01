@@ -33,5 +33,20 @@ func RunETest(b int) {
 		if !Etest() {
 			os.Exit(1)
 		}
-	} 
+	}
+}
+
+func EGenKeyTest() bool{
+	sharedParams := GenerateSharedParams()
+	PK, SK := EKeyGen(sharedParams)
+
+	pairing, _ := pbc.NewPairingFromString(sharedParams.Params)
+	g1 := pairing.NewG1().SetBytes(sharedParams.G1)
+	g2 := pairing.NewG2().SetBytes(sharedParams.G2)
+
+	SKa:=pairing.NewZr().SetBytes(SK.SK)
+  PKa:=pairing.NewG1().MulZn(g1,SKa)
+
+	return PKa.Equals(pairing.NewG1().SetBytes(PK.PK))
+
 }

@@ -5,6 +5,7 @@
 package ocert
 
 import (
+	"github.com/Nik-U/pbc"
 )
 
 /*
@@ -14,11 +15,24 @@ func EKeyGen(sharedParams *SharedParams) (*AuditorPublicKey, *AuditorSecretKey) 
 	PKa := new(AuditorPublicKey)
 	SKa := new(AuditorSecretKey)
 
+	// Generators g1 & g2 are generated from the groups G1 & G2
+	pairing, _ := pbc.NewPairingFromString(sharedParams.Params)
+	g1 := pairing.NewG1().SetBytes(sharedParams.G1)
+	g2 := pairing.NewG2().SetBytes(sharedParams.G2)
+
+
+	xa :=pairing.NewZr().Rand()
+  SKa.SK=xa.Bytes()
+
+	//produce the public key
+	PublicKa :=pairing.NewG1().MulZn(g1,xa)
+  PKa.PK=PublicKa.Bytes()
+
 	return PKa, SKa
 }
 
 /*
- * Encrypt the client id based on the auditor's public key, the 
+ * Encrypt the client id based on the auditor's public key, the
  * result is the pseudonym of a client, where pseudonym of a client
  * has form (C, D), where both C and D are in G1
  */
@@ -49,7 +63,7 @@ func ERerand(sharedParams *SharedParams, P *Pseudonym) *Pseudonym {
 
 /*
  * Given two pseudonyms P and P', validate whether P' is rerandomized
- * from P 
+ * from P
  */
 // TODO This function may take extra information to do verification
 func ERerandVerify(sharedParams *SharedParams, P *Pseudonym, PPrime *Pseudonym) bool {
