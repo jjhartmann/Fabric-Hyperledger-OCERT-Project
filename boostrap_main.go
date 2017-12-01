@@ -14,14 +14,14 @@ func main() {
   //fmt.Printf("\nRun Structure Perserving Tests\n")
   //fmt.Println(ocert.Stest())
   //
-  //fmt.Printf("\nRun Proof Tests\n")
-  //ocert.RunAllPTests(false)
+  fmt.Printf("\nRun Proof Tests\n")
+  ocert.RunAllPTests(false)
   //
   //fmt.Printf("\nRun RMatrix Tests\n")
   //ocert.RunAllRTests(false)
 
   // Benchmark
-  ConstructMetricsForProofVerifyEq1(100)
+  //ConstructMetricsForProofVerifyEq1(100)
 
   // Scrap
   //sharedParams := ocert.GenerateSharedParams()
