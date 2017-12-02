@@ -1,9 +1,9 @@
 package ocert
 
 import (
-	"os"
-	"fmt"
-	"github.com/Nik-U/pbc"
+  "os"
+  "fmt"
+  "github.com/Nik-U/pbc"
   "reflect"
 )
 
@@ -11,13 +11,13 @@ import (
  * Run a single test
  */
 func Ptest() bool {
-	sharedParams := GenerateSharedParams()
-	eqs := new(SystemOfEquations)
-	vars := new(ProofVariables)
-	pi := PSetup(sharedParams, eqs, vars)
+  sharedParams := GenerateSharedParams()
+  eqs := new(SystemOfEquations)
+  vars := new(ProofVariables)
+  pi := PSetup(sharedParams, eqs, vars)
 
-	consts := new(ProofConstants)
-	return PProve(sharedParams, pi, consts)
+  consts := new(ProofConstants)
+  return PProve(sharedParams, pi, consts)
 }
 
 // Test mapping between G and B
@@ -25,49 +25,49 @@ func TestIotaRho(verbose bool) bool {
 
   if (verbose) {fmt.Println("Testing Iota1 and Iota2 Conversion B")}
   sharedParams := GenerateSharedParams()
-	pairing, _ := pbc.NewPairingFromString(sharedParams.Params)
+  pairing, _ := pbc.NewPairingFromString(sharedParams.Params)
 
-	// Generate element to test on conversion
-	Z1 := pairing.NewG1().Rand()
-	b1pair := Iota1(pairing, Z1)
+  // Generate element to test on conversion
+  Z1 := pairing.NewG1().Rand()
+  b1pair := Iota1(pairing, Z1)
 
-	Z2 := pairing.NewG2().Rand()
-	b2pair := Iota2(pairing, Z2)
+  Z2 := pairing.NewG2().Rand()
+  b2pair := Iota2(pairing, Z2)
 
-	tb1 := pairing.NewG1().SetBytes(b1pair.b1)
-	tb2 := pairing.NewG1().SetBytes(b1pair.b2)
+  tb1 := pairing.NewG1().SetBytes(b1pair.b1)
+  tb2 := pairing.NewG1().SetBytes(b1pair.b2)
   tb3 := pairing.NewG2().SetBytes(b2pair.b1)
   tb4 := pairing.NewG2().SetBytes(b2pair.b2)
 
 
-	if (verbose) {
-	  fmt.Println("Iota1")
+  if (verbose) {
+    fmt.Println("Iota1")
     fmt.Printf("Z1 = %s\n", Z1)
-		fmt.Printf("B1.b1 = %s\n", tb1)
-		fmt.Printf("B1.b1 = %s\n", tb2)
+    fmt.Printf("B1.b1 = %s\n", tb1)
+    fmt.Printf("B1.b1 = %s\n", tb2)
 
     fmt.Println("Iota2")
     fmt.Printf("Z2 = %s\n", Z2)
     fmt.Printf("B2.b1 = %s\n", tb3)
     fmt.Printf("B2.b1 = %s\n", tb4)
-	}
+  }
 
-	// Alpha is a random integer of order prime (Secret Key)
+  // Alpha is a random integer of order prime (Secret Key)
   if (verbose) {fmt.Println("Testing Rho1 and Rho2 Conversion to G")}
-	alpha := pairing.NewZr().Rand()
-	Zprime1 := Rho1(pairing, b1pair, alpha)
-	ret1 := Zprime1.Equals(Z1)
+  alpha := pairing.NewZr().Rand()
+  Zprime1 := Rho1(pairing, b1pair, alpha)
+  ret1 := Zprime1.Equals(Z1)
   Zprime2 := Rho2(pairing, b2pair, alpha)
   ret2 := Zprime2.Equals(Z2)
 
-	if (verbose) {
+  if (verbose) {
     fmt.Printf("Zprime1 = %s\n", Zprime1)
     fmt.Printf("Zprime2 = %s\n", Zprime2)
     fmt.Println("Test1 ==", ret1)
     fmt.Println("Test2 ==", ret2)
-	}
+  }
 
-	return ret1 && ret2
+  return ret1 && ret2
 }
 
 
@@ -304,7 +304,7 @@ func TestCompleteMatrixMapping(verbose bool) bool {
   if (verbose) {
     fmt.Println()
     fmt.Println("Testing Pairing Product Mapping Matrix")
-    }
+  }
   PPX := pairing.NewG1().Rand()
   PPY := pairing.NewG2().Rand()
   PPgt := ProductPairing_e_GT_map(pairing, PPX, PPY)
@@ -470,7 +470,7 @@ func TestCreateCommitmentsG1(verbose bool) bool {
     pairing.NewG1().Rand(),
     pairing.NewG1().Rand(),
     pairing.NewG1().Rand(),
-    }
+  }
   C, Ru, _ := CreateCommitmentOnG1(pairing, chi, sigma)
   ret1 := (len(chi) == len(C) && len(C) == len(Ru))
 
@@ -490,9 +490,9 @@ func TestCreateCommitmentsG1(verbose bool) bool {
   for i:=0; i<len(C); i++ {
     //Bc := C[i] // Pair b1 and b2 in B1
     Bp1 := pairing.NewG1().Sub(pairing.NewG1().SetBytes(C[i].b1),
-                              pairing.NewG1().SetBytes(Ru[i].b1))
+      pairing.NewG1().SetBytes(Ru[i].b1))
     Bp2 := pairing.NewG1().Sub(pairing.NewG1().SetBytes(C[i].b2),
-                               pairing.NewG1().SetBytes(Ru[i].b2))
+      pairing.NewG1().SetBytes(Ru[i].b2))
 
     //Cp := C[i].SubinG1(pairing, Ru[i])
     //Bp1 := pairing.NewG1().SetBytes(Cp.b1)
@@ -797,9 +797,9 @@ func TestEquation1ProofGen(verbose bool) bool {
     }
   }
 
-return len(proof.Theta) == 2 && len(proof.Pi) == 1 &&
-       len(proof.d) == 1 && len(proof.cprime) == 1 &&
-       len(proof.c) == 0 && len(proof.dprime) == 0
+  return len(proof.Theta) == 2 && len(proof.Pi) == 1 &&
+      len(proof.d) == 1 && len(proof.cprime) == 1 &&
+      len(proof.c) == 0 && len(proof.dprime) == 0
 }
 
 func TestEquation2ProofGen(verbose bool) bool {
@@ -851,8 +851,8 @@ func TestEquation2ProofGen(verbose bool) bool {
   }
 
   return len(proof.Theta) == 1 && len(proof.Pi) == 2 &&
-      len(proof.d) == 1 && len(proof.cprime) == 0 &&
-      len(proof.c) == 1 && len(proof.dprime) == 0
+      len(proof.d) == 0 && len(proof.cprime) == 0 &&
+      len(proof.c) == 1 && len(proof.dprime) == 1
 }
 
 func TestEquation1Verify(verbose bool) bool {
@@ -900,15 +900,64 @@ func TestEquation1Verify(verbose bool) bool {
   return ret
 }
 
+func TestEquation2Verify(verbose bool) bool {
+  sharedParams := GenerateSharedParams()
+  pairing, _ := pbc.NewPairingFromString(sharedParams.Params)
+  g1 := pairing.NewG1().Rand()
+  g2 := pairing.NewG2().Rand()
+  gt := pairing.NewGT().Pair(g1, g2)
+  _ = gt
+
+  if verbose {fmt.Println("Test Proof Generation for Eq2")}
+
+  rprime := pairing.NewZr().Rand() // Client Secret Key (variable)
+  C  := pairing.NewG1().Rand()
+  G  := pairing.NewG1().SetBytes(sharedParams.G1) // Shared Generator ??
+  //r := pairing.NewZr().Rand()
+  //rprime := pairing.NewG2().Rand() // Public Key (variable
+
+  if verbose {fmt.Println("Creating CRS Sigma")}
+  alpha := pairing.NewZr().Rand() // Another Secret Key..
+  sigma := CreateCommonReferenceString(sharedParams, alpha) // CRS
+
+  if verbose {fmt.Println("Generating proof:")}
+  proof := ProveEquation2(pairing, rprime, G, C, sigma)
+
+  if verbose {fmt.Println("Testing second Equation: C + rprime * G = Cprime")}
+  pos1 := pairing.NewZr().SetInt32(1)
+  Gi := pairing.NewG1().MulZn(G, rprime)
+  //CPRIME := pairing.NewG1().MulZn(rprime, G)
+  //CPRIMEi := pairing.NewG1().Add(r, CPRIME)
+  // +
+  Cpos := pairing.NewG1().MulZn(C, pos1)
+  // +
+  gammar := pairing.NewZr().MulZn(proof.Gamma.mat[0][0], rprime)
+  Cgammar := pairing.NewG1().MulZn(C, gammar)
+  // =
+  tau := pairing.NewG1().Add(Cpos, Gi)
+  taui := pairing.NewG1().Add(tau, Cgammar)
+  if verbose {fmt.Println(taui)}
+
+
+  if verbose {fmt.Println("Verify Proof")}
+  ret := VerifyEquation2(pairing, proof, G, taui, sigma)
+
+  if verbose {
+    fmt.Println("Verify Result: ", ret)
+  }
+
+  return ret
+}
+
 /*
  * Run test b times
  */
 func RunPTest(b int) {
-	for i := 0; i < b; i++ {
-		if !Ptest() {
-			os.Exit(1)
-		}
-	} 
+  for i := 0; i < b; i++ {
+    if !Ptest() {
+      os.Exit(1)
+    }
+  }
 }
 
 /*
@@ -928,4 +977,5 @@ func RunAllPTests(verbose bool) {
   fmt.Println("Proof Generation EQ1  ", TestEquation1ProofGen(verbose))
   fmt.Println("Proof Generation EQ2  ", TestEquation2ProofGen(verbose))
   fmt.Println("Proof Verify EQ1      ", TestEquation1Verify(verbose))
+  fmt.Println("Proof Verify EQ2      ", TestEquation2Verify(verbose))
 }
