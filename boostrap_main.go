@@ -15,7 +15,7 @@ func main() {
   //fmt.Println(ocert.Stest())
   //
   fmt.Printf("\nRun Proof Tests\n")
-  ocert.RunAllPTests(false)
+  ocert.RunAllPTests(true)
   //
   //fmt.Printf("\nRun RMatrix Tests\n")
   //ocert.RunAllRTests(false)
