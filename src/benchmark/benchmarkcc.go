@@ -12,6 +12,7 @@ import (
 	"strings"
 	"time"
 	"crypto/x509"
+	"os"
 )
 
 func parseOut(out []byte) []byte {
@@ -176,7 +177,22 @@ func genOCert(pkc *ocert.ClientPublicKey, p *ocert.Pseudonym) {
 	}
 }
 
+var genOCertLog *os.File
+var genProofLog *os.File
+
 func main () {
+	var err error
+	genOCertLog, err = os.Create("/data/genOCertLog.txt")
+	if err != nil {
+		fmt.Println(err)
+		panic(err.Error())
+	}
+	genProofLog, err = os.Create("/data/genProofLog.txt")
+	if err != nil {
+		fmt.Println(err)
+		panic(err.Error())
+	}
+
 	// setup()
 	sharedParams := sharedParams()
 	fmt.Println(sharedParams)
@@ -195,4 +211,7 @@ func main () {
 
 	fmt.Printf("rsa pk: ")
 	fmt.Println(rsaPK())
+
+	genOCertLog.WriteString("genOCert: " + elapsed.String() + "\n")
+	genProofLog.WriteString("genProof: " + elapsed.String() + "\n")
 }

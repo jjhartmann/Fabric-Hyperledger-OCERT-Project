@@ -20,6 +20,7 @@ import (
  	"crypto/x509"
  	"math/big"
  	"time"
+ 	"os"
 )
 
 /*
@@ -31,6 +32,8 @@ var sSigningKey *SSigningKey
 var rsaPrivateKey *rsa.PrivateKey
 var serialNumber *big.Int
 var auditorKeypair []byte
+
+var verifyProofLog *os.File
 
 func getSerialNumber() (*big.Int) {
 	serialNumber.Add(serialNumber, big.NewInt(1))
@@ -76,6 +79,13 @@ func Setup(stub Wrapper, args [][]byte) ([]byte, error) {
 		return nil, fmt.Errorf("Incorrect arguments. Expecting no arguments")
 	}
 
+	var err error;
+	verifyProofLog, err = os.Create("/data/verifyProofLog.txt")
+	if err != nil {
+		fmt.Println(err)
+		panic(err.Error())
+	}
+
 	auditorKeypair = []byte("NoAuditorKeyPair")
 	serialNumber = big.NewInt(0)
 	sharedParams = GenerateSharedParams()
@@ -83,7 +93,7 @@ func Setup(stub Wrapper, args [][]byte) ([]byte, error) {
 	fmt.Println(sharedParams)
 	// Generate auditor's keypair
 	PKa, SKa := EKeyGen(sharedParams)
-	err := stub.PutState("auditor_pk", PKa.PK)
+	err = stub.PutState("auditor_pk", PKa.PK)
 	if err != nil {
 		return nil, err
 	}
@@ -229,6 +239,7 @@ func GenOCert(stub Wrapper, args [][]byte) ([]byte, error) {
 	elapsed := end.Sub(start)
 	fmt.Println("proof verfication: ")
 	fmt.Println(elapsed)
+	verifyProofLog.WriteString("verifyProof: " + elapsed.String() + "\n")
 
 	// TODO generate X.509 certificate
 	msg, err := OCertSingedBytes(PKc, P)
