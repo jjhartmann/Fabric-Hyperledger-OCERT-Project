@@ -32,7 +32,7 @@ func EKeyGen(sharedParams *SharedParams) (*AuditorPublicKey, *AuditorSecretKey) 
 
 /*
  * Encrypt the client id based on the auditor's public key, the
- * result is the pseudonym of a client, where pseudonym of a client
+  * result is the pseudonym of a client, where pseudonym of a client
  * has form (C, D), where both C and D are in G1
  */
 func EEnc(sharedParams *SharedParams, PKa *AuditorPublicKey, id *ClientID) *Pseudonym {
@@ -76,6 +76,29 @@ func EDec(sharedParams *SharedParams, SKa *AuditorSecretKey, P *Pseudonym) *Clie
 // TODO This function may also return the extra information used in validation
 func ERerand(sharedParams *SharedParams, P *Pseudonym) *Pseudonym {
 	// TODO rerandomize P
+	pairing, _ := pbc.NewPairingFromString(sharedParams.Params)
+	g1 := pairing.NewG1().SetBytes(sharedParams.G1)
+
+  //Generate rprime
+	rprime:=pairing.NewZr().Rand()
+
+  //Getting C & D from the Pseudonym P that has been passed
+	C:=pairing.NewG1().SetBytes(P.C)
+	D:=pairing.NewG1().SetBytes(P.D)
+
+  //Multiplying rprime with the generator g1
+	tempC:=pairing.NewG1().MulZn(g1,rprime)
+
+	//Adding the product of rprime & g1 and C (from Pseudonym P) to Cprime
+	Cprime:= pairing.NewG1().Add(C,tempC)
+
+  //To find Dprime, using D from Pseudonym & product of rprime & Public Key
+	PK:=pairing.NewG1().SetBytes(PKa.PK)
+  tempD:=pairing.NewG1().MulZn(PK,rprime)
+	Dprime:=pairing.NewG1().Add(D,tempD)
+
+  P.Cprime=Cprime.Bytes()
+  P.Dprime=Dprime.Bytes()
 	return P
 }
 
