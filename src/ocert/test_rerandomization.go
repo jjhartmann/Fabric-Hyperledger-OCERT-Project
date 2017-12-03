@@ -3,6 +3,8 @@ package ocert
 import (
 	"os"
 	"github.com/Nik-U/pbc"
+  "reflect"
+  "fmt"
 )
 
 /*
@@ -22,7 +24,7 @@ func Etest() bool {
 		return false
 	}
 
-	PPrime := ERerand(sharedParams, P)
+	PPrime := ERerand(sharedParams, PK, P)
 	return ERerandVerify(sharedParams, P, PPrime)
 }
 
@@ -50,3 +52,34 @@ func EGenKeyTest() bool{
 	return PKa.Equals(pairing.NewG1().SetBytes(PK.PK))
 
 }
+
+func  ETestEncDec(verbose bool) bool {
+  sharedParams := GenerateSharedParams()
+  pairing, _ := pbc.NewPairingFromString(sharedParams.Params)
+  PK, SK := EKeyGen(sharedParams)
+
+  // Random id in G1 (will be calcualted from hyperledger)
+  if verbose {fmt.Println("Generate Client ID")}
+  id := new(ClientID)
+  id.ID = pairing.NewG1().Rand().Bytes()
+  if verbose {fmt.Println(id)}
+
+
+  // Generate pseudonym
+  if verbose { fmt.Println("Generate Pseudonym")}
+  P := EEnc(sharedParams, PK, id)
+  if verbose {fmt.Println(P)}
+
+  // Decrypt client id
+  if verbose { fmt.Println("Decrypt id")}
+  id2 := EDec(sharedParams, SK, P)
+  if verbose {fmt.Println(id2)}
+
+
+  return reflect.DeepEqual(id, id2)
+
+}
+
+
+
+

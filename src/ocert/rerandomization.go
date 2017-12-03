@@ -65,6 +65,14 @@ func EEnc(sharedParams *SharedParams, PKa *AuditorPublicKey, id *ClientID) *Pseu
  */
 func EDec(sharedParams *SharedParams, SKa *AuditorSecretKey, P *Pseudonym) *ClientID {
 	id := new(ClientID)
+	pairing, _ := pbc.NewPairingFromString(sharedParams.Params)
+
+	C := pairing.NewG1().SetBytes(P.C)
+	D := pairing.NewG1().SetBytes(P.D)
+	x := pairing.NewZr().SetBytes(SKa.SK)
+
+	xC := pairing.NewG1().MulZn(C, x)
+	id.ID = pairing.NewG1().Sub(D, xC).Bytes()
 	return id
 }
 
@@ -74,7 +82,7 @@ func EDec(sharedParams *SharedParams, SKa *AuditorSecretKey, P *Pseudonym) *Clie
  * P' = (C', D'), where P' is also in G1 * G1.
  */
 // TODO This function may also return the extra information used in validation
-func ERerand(sharedParams *SharedParams, P *Pseudonym) *Pseudonym {
+func ERerand(sharedParams *SharedParams, PKa *AuditorPublicKey, P *Pseudonym) *Pseudonym {
 	// TODO rerandomize P
 	pairing, _ := pbc.NewPairingFromString(sharedParams.Params)
 	g1 := pairing.NewG1().SetBytes(sharedParams.G1)
