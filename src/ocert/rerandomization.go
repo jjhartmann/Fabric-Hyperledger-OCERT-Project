@@ -115,6 +115,20 @@ func ERerand(sharedParams *SharedParams, PKa *AuditorPublicKey, P *Pseudonym) *P
  * from P
  */
 // TODO This function may take extra information to do verification
-func ERerandVerify(sharedParams *SharedParams, P *Pseudonym, PPrime *Pseudonym) bool {
-	return false
+func ERerandVerify(sharedParams *SharedParams, SKa *AuditorSecretKey, P *Pseudonym, PPrime *Pseudonym) bool {
+  pairing, _ := pbc.NewPairingFromString(sharedParams.Params)
+
+  // Retrieve Original P
+  C := pairing.NewG1().SetBytes(P.C)
+  D := pairing.NewG1().SetBytes(P.D)
+  x := pairing.NewZr().SetBytes(SKa.SK)
+
+  // Retrieve P prime
+  Cprime := pairing.NewG1().SetBytes(PPrime.C)
+  Dprime := pairing.NewG1().SetBytes(PPrime.D)
+
+  rG := pairing.NewG1().Sub(Cprime, C)
+  xrG := pairing.NewG1().MulZn(rG, x)
+
+	return xrG.Equals(pairing.NewG1().Sub(Dprime, D))
 }

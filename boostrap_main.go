@@ -21,7 +21,7 @@ func main() {
   // ocert.RunAllRTests(false)
 
   //Test Key generation from rerandomization
-  fmt.Println(ocert.ETestEncDec(true))
+  fmt.Println(ocert.Etest(true))
 
   // Benchmark
   //ConstructMetricsForProofVerifyEq1(100)
