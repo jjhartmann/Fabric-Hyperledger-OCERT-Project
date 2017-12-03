@@ -97,8 +97,8 @@ func ERerand(sharedParams *SharedParams, P *Pseudonym) *Pseudonym {
   tempD:=pairing.NewG1().MulZn(PK,rprime)
 	Dprime:=pairing.NewG1().Add(D,tempD)
 
-  P.Cprime=Cprime.Bytes()
-  P.Dprime=Dprime.Bytes()
+  P.C=Cprime.Bytes()
+  P.D=Dprime.Bytes()
 	return P
 }
 
