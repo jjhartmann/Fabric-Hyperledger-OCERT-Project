@@ -46,6 +46,21 @@ func NewRMatrixinG2(pairing *pbc.Pairing, rows int, cols int) *RMatrix {
   return rmat
 }
 
+func NewRMatrixinG1(pairing *pbc.Pairing, rows int, cols int) *RMatrix {
+  rmat := new(RMatrix)
+  rmat.rows = rows
+  rmat.cols = cols
+  for i := 0; i < rows; i++ {
+    elementRow := []*pbc.Element{}
+    for j := 0; j < cols; j++ {
+      el := pairing.NewG1().Rand()
+      elementRow = append(elementRow, el)
+    }
+    rmat.mat = append(rmat.mat, elementRow)
+  }
+  return rmat
+}
+
 func NewOnesMatrix(pairing *pbc.Pairing, rows int, cols int) *RMatrix {
   rmat := new(RMatrix)
   rmat.rows = rows
@@ -95,6 +110,31 @@ func (rmat *RMatrix) MultElementArrayG2(pairing *pbc.Pairing, X [][]*pbc.Element
       for k := 0; k < len(X); k++ {
         tmp := pairing.NewG2().MulZn(X[k][j], rmat.mat[i][k])
         el = pairing.NewG2().Add(el, tmp)
+      }
+      elementRow = append(elementRow, el)
+    }
+    retMat.mat = append(retMat.mat, elementRow)
+  }
+  return retMat
+}
+
+
+func (rmat *RMatrix) MultElementArrayG1(pairing *pbc.Pairing, X [][]*pbc.Element) *RMatrix {
+  if len(X) != len(rmat.mat[0]) {
+    panic("Matrix elements need to be compatiable")
+  }
+
+  retMat := new(RMatrix)
+  retMat.rows = len(rmat.mat)
+  retMat.cols = len(X[0])
+
+  for i := 0; i < rmat.rows; i++ {
+    elementRow := []*pbc.Element{}
+    for j := 0; j < len(X[0]); j++ {
+      el := pairing.NewG1().Set1()
+      for k := 0; k < len(X); k++ {
+        tmp := pairing.NewG1().MulZn(X[k][j], rmat.mat[i][k])
+        el = pairing.NewG1().Add(el, tmp)
       }
       elementRow = append(elementRow, el)
     }
