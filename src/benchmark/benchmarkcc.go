@@ -10,7 +10,7 @@ import (
 	"ocert"
 	"github.com/Nik-U/pbc"
 	"strings"
-	// "time"
+	"time"
 	"crypto"
 	"crypto/x509"
 	"crypto/sha256"
@@ -194,19 +194,12 @@ func genOCert(sharedParams *ocert.SharedParams, p *ocert.Pseudonym, auditorPK *o
 	queryCmd := "peer chaincode query -n mycc -c '{\"Args\":[\"genOCert\" ,\"" +
 				requestStr + "\"]}' -C myc"
 
-	// start := time.Now()
 	out, err := exec.Command("sh","-c", queryCmd).Output()
-	// end := time.Now()
-	// elapsed := end.Sub(start)
-	// fmt.Println("genOCert: ")
-	// fmt.Println(elapsed)
-	// genOCertLog.WriteString("genOCert: " + elapsed.String() + "\n")
 
 	if err != nil {
 		fmt.Println(err)
 		panic(err.Error())
 	}
-	fmt.Println(out)
 
 	out = parseOut(out)
 	reply := new(ocert.GenOCertReply)
@@ -268,23 +261,34 @@ func main () {
 	fmt.Printf("[Benchmarkcc] ecert: ")
 	fmt.Println(ecert)
 
-	// GenOCert
-	newPKc, newP, signature := genOCert(sharedParams, P, auditorPK)
-	fmt.Printf("[Benchmarkcc] signature: ")
-	fmt.Println(signature)
+	for i := 0; i < 10; i++ {
+		// GenOCert
+		start := time.Now()
+		
+		newPKc, newP, signature := genOCert(sharedParams, P, auditorPK)
+		
+		end := time.Now()
+		elapsed := end.Sub(start)
+		fmt.Printf("[Benchmarkcc] genOCert: ")
+		fmt.Println(elapsed)
+		genOCertLog.WriteString("genOCert: " + elapsed.String() + "\n")
+		
+		fmt.Printf("[Benchmarkcc] signature: ")
+		fmt.Println(signature)
 
-	// Verify signature
-	msg, err := ocert.OCertSingedBytes(newPKc, newP)
-	if err != nil {
-		fmt.Println(err)
-		panic(err.Error())
-	}
-	hashed := sha256.Sum256(msg)
-	err = rsa.VerifyPKCS1v15(rsaPK.(*rsa.PublicKey), crypto.SHA256, hashed[:], signature)
-	if err != nil {
-		fmt.Println(err)
-		panic(err.Error())
-	} else {
-		fmt.Println("[Benchmarkcc] ocert verified")
+		// Verify signature
+		msg, err := ocert.OCertSingedBytes(newPKc, newP)
+		if err != nil {
+			fmt.Println(err)
+			panic(err.Error())
+		}
+		hashed := sha256.Sum256(msg)
+		err = rsa.VerifyPKCS1v15(rsaPK.(*rsa.PublicKey), crypto.SHA256, hashed[:], signature)
+		if err != nil {
+			fmt.Println(err)
+			panic(err.Error())
+		} else {
+			fmt.Println("[Benchmarkcc] ocert verified")
+		}
 	}
 }
