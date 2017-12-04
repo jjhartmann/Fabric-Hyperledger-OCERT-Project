@@ -80,7 +80,8 @@ func EDec(sharedParams *SharedParams, SKa *AuditorSecretKey, P *Pseudonym) *Clie
   temp:=pairing.NewG1().MulZn(D,xa)
 
 	//To get the decrypted message, add temp to C of Pseudonym
-	id:=pairing.NewG1().Add(temp,C)
+	idMessage:=pairing.NewG1().Add(temp,C)
+	id.ID=idMessage.Bytes()
 
 	return id
 }
