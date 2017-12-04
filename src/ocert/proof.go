@@ -7,7 +7,7 @@ package ocert
 import (
 	"github.com/Nik-U/pbc"
 	"reflect"
-	"fmt"
+	_ "fmt"
 )
 
 /*
@@ -58,81 +58,63 @@ func ProveEquation1(pairing *pbc.Pairing, xc *pbc.Element, H *pbc.Element, PKc *
 
 	// Create commitment in B1 for Xc
 	cprime, _, R := CreateCommitmentPrimeOnG1(pairing, []*pbc.Element{xc}, sigma)
+  if R.cols != 1 && R.rows != 1 {
+    panic("Issues in conversion and creation of samples in Zp for R")
+  }
+  r := R.mat[0][0]
 
 	// Create commitment in B2 for PKc
 	d, _, S := CreateCommitmentOnG2(pairing, []*pbc.Element{PKc}, sigma)
-
-	// Convert parameters to B groups
-	Hi := Iota2(pairing, H)
-	PKci := Iota2(pairing, PKc)
-	neg1 := IotaPrime1(pairing, pairing.NewZr().SetInt32(-1), sigma)
-	xci := IotaPrime1(pairing, xc, sigma)
-
-	// Random samples from Zp
-	if R.cols != 1 && R.rows != 1 {
-		panic("Issues in conversion and creation of samples in Zp for R")
-	}
-	r := R.mat[0][0]
-	gammaMat := NewRMatrix(pairing, 1, 1)
-	gamma := gammaMat.mat[0][0]
-	rgamma := pairing.NewZr().Mul(r, gamma)
-
-	if S.rows != 1 && S.cols != 2 {
-		panic("Issues in conversion and creation of samples in Zp for S")
-	}
+  if S.rows != 1 && S.cols != 2 {
+    panic("Issues in conversion and creation of samples in Zp for S")
+  }
 
 	/////////////////////////////////////
 	// Pi: In G2
+  /////////////////////////////////////
 
 	// Multiply Scalar from Zn on B elements
+  Hi := Iota2(pairing, H)
 	Hir := Hi.MulScalarInG2(pairing, r)           // r*ι_2(H)
-	PKcirl := PKci.MulScalarInG2(pairing, rgamma) // r*gamma*ι_2(PKc)
-
+  // +
 	// Create Phi := (r*lambada*S - T)
 	T := NewRMatrix(pairing, 2, 1)
-	Srl := S.MulScalarZn(pairing, rgamma)  // r*gamma*S
 	Ti := T.InvertMatrix()                 // T' invert
-	Phi := Srl.ElementWiseSub(pairing, Ti) // S - T'
-
-	// Multiple Phi by commitment keys
-	Vphi := Phi.MulCommitmentKeysG2(pairing, sigma.V) // (r*gamma*S - T')V (commitment key in G2)
+	Vphi := Ti.MulCommitmentKeysG2(pairing, sigma.V) // (r*gamma*S - T')V (commitment key in G2)
 	if len(Vphi) > 1{
 		panic("VPhi Should have len == 1")
 	}
-
-	// Construct Pi (Hir + PKcirl + Vphi)
-	HPKcir := Hir.AddinG2(pairing, PKcirl)
-	pi := HPKcir.AddinG2(pairing, Vphi[0])
-
+  //=
+	// Construct Pi (Hir - Vphi)
+	Tv := Vphi[0]
+	pi := new(BPair)
+	pi.b1 = pairing.NewG2().Sub(pairing.NewG2().SetBytes(Hir.b1),
+	  pairing.NewG2().SetBytes(Tv.b1)).Bytes()
+	pi.b2 = pairing.NewG2().Sub(pairing.NewG2().SetBytes(Hir.b2),
+    pairing.NewG2().SetBytes(Tv.b2)).Bytes()
 
 	////////////////////////////////////////////
 	// Theta: In G1
-	_ = neg1
-	_ = xci
-
+  ////////////////////////////////////////////
 	Si := S.InvertMatrix()                        // S Invert = S'
-	Sneg := Si.MulBScalarinB1(pairing, *neg1)     // S'*ι'_1(-1)
-	// +
-	Sl := Si.MulScalarZn(pairing, gamma)    // S'*gamma
-	Sxc := Sl.MulBScalarinB1(pairing, *xci) // S'*gamma*ι'_1(Xc)
+  pos1 := IotaPrime1(pairing, pairing.NewZr().Set1(), sigma)
+	Spos := Si.MulBScalarinB1(pairing, *pos1)     // S'*ι'_1(1)
 	// +
 	Tu := T.MulCommitmentKeysG1(pairing, []CommitmentKey{sigma.U[0]}) // Tu_1
 
-	if len(Sneg) != len(Sxc) && len(Sxc) != len(Tu) {
+	if len(Spos) != len(Tu) {
 		panic("All section lengths need to be equivalent")
 	}
 
 	// Construct theta
 	theta := []*BPair{}
 
-	for i := 0; i < len(Sneg); i++ {
-		Snegxc := Sneg[i][0].AddinG1(pairing, Sxc[i][0])
-		tmpB := Snegxc.AddinG1(pairing, Tu[i])
-		theta = append(theta, tmpB)
+	for i := 0; i < len(Spos); i++ {
+		Snegxc := Spos[i][0].AddinG1(pairing, Tu[i])
+		theta = append(theta, Snegxc)
 	}
 
 	// Collect elements
-	proof.Gamma = gammaMat
 	proof.Theta = theta
 	proof.Pi = []*BPair{pi}
 	proof.cprime = cprime
@@ -157,48 +139,32 @@ func ProveEquation2(pairing *pbc.Pairing, rprime *pbc.Element, G *pbc.Element, C
 
 	// Create commitment in B1 for C
 	c, _, R := CreateCommitmentOnG1(pairing, []*pbc.Element{C}, sigma)
+  if R.rows != 1 && R.cols != 2 {
+    panic("Issues in conversion and creation of samples in Zp for R")
+  }
 
 	// Create commitment in B2 for r' TODO: This should be in B2 - Done : Check?
 	dprime, _, S := CreateCommitmentPrimeOnG2(pairing, []*pbc.Element{rprime}, sigma)
+  if S.cols != 1 && S.rows != 1 {
+    panic("Issues in conversion and creation of samples in Zp for S")
+  }
+  s := S.mat[0][0]
 
 	// Convert parameters to B groups
-	Gi := Iota1(pairing, G)
-	Ci := Iota1(pairing, C)
-	pos1 := IotaPrime2(pairing, pairing.NewZr().SetInt32(1), sigma)
-	rprimei := IotaPrime2(pairing, rprime, sigma)
-
-	// Random samples from Zp
-	if S.cols != 1 && S.rows != 1 {
-		panic("Issues in conversion and creation of samples in Zp for S")
-	}
-	s := S.mat[0][0]
-	gammaMat := NewRMatrix(pairing, 1, 1)
-	gamma := gammaMat.mat[0][0]
-	sgamma := pairing.NewZr().Mul(s, gamma)
-	gammas := pairing.NewZr().Mul(gamma, s)
-
-	if R.rows != 1 && R.cols != 2 {
-		panic("Issues in conversion and creation of samples in Zp for R")
-	}
 
 	////////////////////////////////////////////
-	// Pi: In G1
-	_ = pos1
-	_ = rprime
+	// Pi: In G2
+  ////////////////////////////////////////////
 
-	Ri := R.InvertMatrix()                        // R Invert = R'
-	Rpos := Ri.MulBScalarinB2(pairing, *pos1)     // R'*ι'_2(1)
+  Ri := R.InvertMatrix()                        // R Invert = R'
+  pos1 := IotaPrime2(pairing, pairing.NewZr().Set1(), sigma)
+  Rpos := Ri.MulBScalarinB2(pairing, *pos1)     // R'*ι'_2(1)
 	// +
-	Rl := Ri.MulScalarZn(pairing, gamma)    // R'*gamma
-	Rprime := Rl.MulBScalarinB2(pairing, *rprimei) // R'*gamma*ι'_2(rprime)
-
 	T := NewRMatrix(pairing, 1, 2)
 	Ti := T.InvertMatrix()                 // T' invert
-	Rls := Ri.MulScalarZn(pairing, gammas)      // R'*gamma*s TODO: this should be gamma*s - Done : Check?
-	RTSub := Rls.ElementWiseSub(pairing, Ti) // R - T'
-	Tv := RTSub.MulCommitmentKeysG1(pairing, []CommitmentKey{sigma.V[0]})
+	Tv := Ti.MulCommitmentKeysG2(pairing, []CommitmentKey{sigma.V[0]})
 
-	if len(Rpos) != len(Rprime) && len(Rprime) != len(Tv) {
+	if len(Rpos) != len(Tv) {
 		panic("All section lengths need to be equivalent")
 	}
 
@@ -206,17 +172,28 @@ func ProveEquation2(pairing *pbc.Pairing, rprime *pbc.Element, G *pbc.Element, C
 	pi := []*BPair{}
 
 	for i := 0; i < len(Rpos); i++ {
-		Rposrp := Rpos[i][0].AddinG2(pairing, Rprime[i][0])
-		tmpB := Rposrp.AddinG2(pairing, Tv[i])
-		pi = append(pi, tmpB)
+	  r_tmp := Rpos[i][0]
+	  tv_tmp := Tv[i]
+
+    Bp1 := pairing.NewG2().Sub(pairing.NewG2().SetBytes(r_tmp.b1),
+      pairing.NewG2().SetBytes(tv_tmp.b1))
+    Bp2 := pairing.NewG2().Sub(pairing.NewG2().SetBytes(r_tmp.b2),
+      pairing.NewG2().SetBytes(tv_tmp.b2))
+
+    Bpair_tmp := new(BPair)
+    Bpair_tmp.b1 = Bp1.Bytes()
+    Bpair_tmp.b2 = Bp2.Bytes()
+
+		pi = append(pi, Bpair_tmp)
 	}
 
 	/////////////////////////////////////
 	// Theta: In G1
+  /////////////////////////////////////
 
 	// Multiply Scalar from Zn on B elements
-	Gir := Gi.MulScalarInG1(pairing, s)           // s*ι_1(C)
-	Cir := Ci.MulScalarInG1(pairing, sgamma) // s*gamma*ι_1(G)
+  Gi := Iota1(pairing, G)
+  Gir := Gi.MulScalarInG1(pairing, s)           // s*ι_1(C)
 
 	// Multiple Phi by commitment keys
 	Thetai := T.MulCommitmentKeysG1(pairing, sigma.U) // TU (commitment key in G1)
@@ -224,13 +201,10 @@ func ProveEquation2(pairing *pbc.Pairing, rprime *pbc.Element, G *pbc.Element, C
 		panic("Thetai Should have len == 1")
 	}
 
-	// Construct theta (Gir + Cir + Thetai) TODO: G is the constant and C is the variable, these should be reversed : Done : Check?
-	CGir := Gir.AddinG1(pairing, Cir)
-	theta := CGir.AddinG1(pairing, Thetai[0])
-	// TODO: Need to multiple T by u (commitkeys in B1)
+	// Construct theta (Gir + Cir + Thetai)
+	theta := Gir.AddinG1(pairing, Thetai[0])
 
 	// Collect elements
-	proof.Gamma = gammaMat
 	proof.Theta = []*BPair {theta}
 	proof.Pi = pi
 	proof.c = c
@@ -247,19 +221,13 @@ func ProveEquation2(pairing *pbc.Pairing, rprime *pbc.Element, G *pbc.Element, C
 func VerifyEquation1(pairing *pbc.Pairing, proof *ProofOfEquation, H *pbc.Element, tau *pbc.Element, sigma *Sigma) bool {
 
 	// Construct LHS
-	neg1 := IotaPrime1(pairing, pairing.NewZr().SetInt32(-1), sigma)
-	Fid := FMap(pairing, neg1, proof.d[0])
+	pos1 := IotaPrime1(pairing, pairing.NewZr().Set1(), sigma)
+	Fid := FMap(pairing, pos1, proof.d[0])
 	// +
 	Hi := Iota2(pairing, H)
 	FcH := FMap(pairing, proof.cprime[0], Hi)
-	// +
-	gamma := proof.Gamma.mat[0][0]
-	dgamma := proof.d[0].MulScalarInG2(pairing, gamma)
-	Fcd := FMap(pairing, proof.cprime[0], dgamma)
 	// =
-	tmp1 := Fid.AddinGT(pairing, FcH)
-	LHS := tmp1.AddinGT(pairing, Fcd)
-
+	LHS := Fid.AddinGT(pairing, FcH)
 
 	// Construct RHS
 	taui := IotaHat(pairing, tau, sigma)
@@ -277,7 +245,6 @@ func VerifyEquation1(pairing *pbc.Pairing, proof *ProofOfEquation, H *pbc.Elemen
 	tmp2 = tmp2.AddinGT(pairing, Fsv1)
 	RHS := tmp2.AddinGT(pairing, Fsv2)
 
-
 	// Perform Equality //TODO: Test for nil == nill
 	ret := reflect.DeepEqual(LHS, RHS)
 	return ret
@@ -292,24 +259,14 @@ func VerifyEquation2(pairing *pbc.Pairing, proof *ProofOfEquation, G *pbc.Elemen
 	// Construct LHS
 	Gi := Iota1(pairing, G)
 	FiGdp := FMap(pairing, Gi, proof.dprime[0])
-
 	//+
-	pos1 := IotaPrime2(pairing, pairing.NewZr().SetInt32(1), sigma)
+	pos1 := IotaPrime2(pairing, pairing.NewZr().Set1(), sigma)
 	Fcpos := FMap(pairing, proof.c[0], pos1)
-
-	// +
-	gamma := proof.Gamma.mat[0][0]
-	dpgamma := proof.dprime[0].MulScalarInG2(pairing, gamma)
-	Fcdp := FMap(pairing, proof.c[0], dpgamma)
 	// =
-	tmp1 := FiGdp.AddinGT(pairing, Fcpos)
-	LHS := tmp1.AddinGT(pairing, Fcdp)
-	fmt.Println("LHS",LHS)
-
+  LHS := FiGdp.AddinGT(pairing, Fcpos)
 
 	// Construct RHS
 	taui := IotaHat2(pairing, tau, sigma)
-	fmt.Println("taui:", taui)
 	// +
 	v := sigma.V[0].ConvertToBPair()
 	Fvp := FMap(pairing, proof.Theta[0], v)
@@ -322,12 +279,9 @@ func VerifyEquation2(pairing *pbc.Pairing, proof *ProofOfEquation, G *pbc.Elemen
 	//=
 	tmp2 := taui.AddinGT(pairing, Fup1)
 	tmp2 = tmp2.AddinGT(pairing, Fup2)
-
 	RHS := tmp2.AddinGT(pairing, Fvp)
-	fmt.Println("RHS:", RHS)
 
-
-	// Perform Equality //TODO: Test for nil == nill
+  // Perform Equality //TODO: Test for nil == nill
 	ret := reflect.DeepEqual(LHS, RHS)
 	return ret
 }

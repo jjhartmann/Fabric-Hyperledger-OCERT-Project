@@ -494,7 +494,7 @@ func TestCreateCommitmentsG1(verbose bool) bool {
     Bp2 := pairing.NewG1().Sub(pairing.NewG1().SetBytes(C[i].b2),
       pairing.NewG1().SetBytes(Ru[i].b2))
 
-    //Cp := C[i].SubinG1(pairing, Ru[i])
+    //Cp := C[i].SubinG1(pairing, C[i], Ru[i])
     //Bp1 := pairing.NewG1().SetBytes(Cp.b1)
     //Bp2 := pairing.NewG1().SetBytes(Cp.b2)
 
@@ -867,26 +867,18 @@ func TestEquation1Verify(verbose bool) bool {
 
   Xc := pairing.NewZr().Rand() // Client Secret Key (variable)
   H  := pairing.NewG2().SetBytes(sharedParams.G2) // Shared Generator ??
-  PKc := pairing.NewG2().Rand() // Public Key (variable
+  PKc := pairing.NewG2().MulZn(H, Xc) // Public Key (variable
+  negPKc := pairing.NewG2().Neg(PKc)
 
   if verbose {fmt.Println("Creating CRS Sigma")}
   alpha := pairing.NewZr().Rand() // Another Secret Key..
   sigma := CreateCommonReferenceString(sharedParams, alpha) // CRS
 
   if verbose {fmt.Println("Generate Proof")}
-  proof := ProveEquation1(pairing, Xc, H, PKc, sigma)
+  proof := ProveEquation1(pairing, Xc, H, negPKc, sigma)
 
   if verbose {fmt.Println("Tetsting Initital Euqation: XcH + (-1)PKc = 0")}
-  neg1 := pairing.NewZr().SetInt32(-1)
-  XcH := pairing.NewG2().MulZn(H, Xc)
-  // +
-  PkcNeg := pairing.NewG2().MulZn(PKc, neg1)
-  // +
-  gPKc := pairing.NewG2().MulZn(PKc, proof.Gamma.mat[0][0])
-  XcPkcg := pairing.NewG2().MulZn(gPKc, Xc)
-  // =
-  tau := pairing.NewG2().Add(XcH, PkcNeg)
-  tau = pairing.NewG2().Add(tau, XcPkcg)
+  tau := pairing.NewG2().Add(PKc, negPKc)
   if verbose {fmt.Println(tau)}
 
 
@@ -896,6 +888,8 @@ func TestEquation1Verify(verbose bool) bool {
   if verbose {
     fmt.Println("Verify Restul: ", ret)
   }
+
+
 
   return ret
 }
@@ -924,23 +918,12 @@ func TestEquation2Verify(verbose bool) bool {
   proof := ProveEquation2(pairing, rprime, G, C, sigma)
 
   if verbose {fmt.Println("Testing second Equation: C + rprime * G = Cprime")}
-  pos1 := pairing.NewZr().SetInt32(1)
-  Gi := pairing.NewG1().MulZn(G, rprime)
-  //CPRIME := pairing.NewG1().MulZn(rprime, G)
-  //CPRIMEi := pairing.NewG1().Add(r, CPRIME)
-  // +
-  Cpos := pairing.NewG1().MulZn(C, pos1)
-  // +
-  gammar := pairing.NewZr().MulZn(proof.Gamma.mat[0][0], rprime)
-  Cgammar := pairing.NewG1().MulZn(C, gammar)
-  // =
-  tau := pairing.NewG1().Add(Cpos, Gi)
-  taui := pairing.NewG1().Add(tau, Cgammar)
-  if verbose {fmt.Println(taui)}
-
+  Gr := pairing.NewG1().MulZn(G, rprime)
+  tau := pairing.NewG1().Add(C, Gr)
+  if verbose {fmt.Println(tau)}
 
   if verbose {fmt.Println("Verify Proof")}
-  ret := VerifyEquation2(pairing, proof, G, taui, sigma)
+  ret := VerifyEquation2(pairing, proof, G, tau, sigma)
 
   if verbose {
     fmt.Println("Verify Result: ", ret)
