@@ -855,6 +855,83 @@ func TestEquation2ProofGen(verbose bool) bool {
       len(proof.c) == 1 && len(proof.dprime) == 1
 }
 
+func TestEquation4ProofGen(verbose bool) bool {
+  sharedParams := GenerateSharedParams()
+  pairing, _ := pbc.NewPairingFromString(sharedParams.Params)
+  g1 := pairing.NewG1().Rand()
+  g2 := pairing.NewG2().Rand()
+  gt := pairing.NewGT().Pair(g1, g2)
+  _ = gt
+
+  //VK, SK := SKeyGen(sharedParams)
+  //P := new(Pseudonym)
+  //pairing, _ := pbc.NewPairingFromString(sharedParams.Params)
+  //P.C = pairing.NewG1().Rand().Bytes()
+  //P.D = pairing.NewG1().Rand().Bytes()
+  //PKc := new(ClientPublicKey)
+  //PKc.PK = pairing.NewG2().Rand().Bytes()
+  //pairing, _ := pbc.NewPairingFromString(sharedParams.Params)
+  //g1 := pairing.NewG1().Rand()
+  //g2 := pairing.NewG2().Rand()
+  //gt := pairing.NewGT().Pair(g1, g2)
+  //_ = gt
+
+  //ecert := SSign(sharedParams, SK, P, PKc)
+
+
+  if verbose {
+    fmt.Println("Test Proof Generation for Eq1")
+  }
+
+  R  := pairing.NewG1().SetBytes(sharedParams.G1)
+  S  := pairing.NewG1().SetBytes(sharedParams.G1)
+  C  := pairing.NewG1().SetBytes(sharedParams.G1)
+  D  := pairing.NewG1().SetBytes(sharedParams.G1)
+
+  V  := pairing.NewG2().SetBytes(sharedParams.G2)
+  H  := pairing.NewG2().SetBytes(sharedParams.G2)
+  W1  := pairing.NewG2().SetBytes(sharedParams.G2)
+  W2  := pairing.NewG2().SetBytes(sharedParams.G2)
+
+  if verbose {fmt.Println("Creating CRS Sigma")}
+  alpha := pairing.NewZr().Rand() // Another Secret Key..
+  sigma := CreateCommonReferenceString(sharedParams, alpha) // CRS
+
+  proof := ProveEquation4(pairing, R, S, C, D, V, H, W1, W2, sigma)
+
+  if verbose {
+    fmt.Println("P.Theta -------------------- ", proof.Theta)
+    for i := 0; i < len(proof.Theta); i++ {
+      fmt.Println("\tEl:", i, proof.Theta[i])
+    }
+    fmt.Println("P.Pi ----------------------- ", proof.Pi)
+    for i := 0; i < len(proof.Pi); i++ {
+      fmt.Println("\tEl:", i, proof.Pi[i])
+    }
+    fmt.Println("P.c ------------------------ ", proof.c)
+    for i := 0; i < len(proof.c); i++ {
+      fmt.Println("\tEl:", i, proof.c[i])
+    }
+    fmt.Println("P.d ------------------------ ", proof.d)
+    for i := 0; i < len(proof.d); i++ {
+      fmt.Println("\tEl:", i, proof.d[i])
+    }
+    fmt.Println("P.cprime ------------------- ", proof.cprime)
+    for i := 0; i < len(proof.cprime); i++ {
+      fmt.Println("\tEl:", i, proof.cprime[i])
+    }
+    fmt.Println("P.dprime ------------------- ", proof.dprime)
+    for i := 0; i < len(proof.dprime); i++ {
+      fmt.Println("\tEl:", i, proof.dprime[i])
+    }
+  }
+
+  return len(proof.Theta) == 1 && len(proof.Pi) == 2 &&
+      len(proof.d) == 0 && len(proof.cprime) == 0 &&
+      len(proof.c) == 1 && len(proof.dprime) == 1
+
+}
+
 func TestEquation1Verify(verbose bool) bool {
   sharedParams := GenerateSharedParams()
   pairing, _ := pbc.NewPairingFromString(sharedParams.Params)

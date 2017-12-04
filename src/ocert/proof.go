@@ -213,6 +213,69 @@ func ProveEquation2(pairing *pbc.Pairing, rprime *pbc.Element, G *pbc.Element, C
 	return proof
 }
 
+/*
+ * Create proof for equation: e(R, V) * e(S, H) * e(C, W1) * e(D, W2) = e(G, Z)
+ *   Pairing Product Equation : Variables in G1, Constants in G2
+ *   R, S, C, D from group G1 : Variables
+ *   V, H, W1, W2 from group G2: Constants
+ *
+ * Proof:
+R>◆2(B~)+R> ◆2(Y~)+(R> S T>)~v
+ *    Pi     := R'*ι_2(V) * ι_2(H) * ι_2(W1) * ι_2(W2) + (R'*lambda*S - T')*V
+ *    Theta  := S'*lambda'*ι_1(R) *ι_1(S) *ι_1(C) *ι_1(D) + T*U
+ */
+func ProveEquation4(pairing *pbc.Pairing, R *pbc.Element, S *pbc.Element, C *pbc.Element, D *pbc.Element, V *pbc.Element, H *pbc.Element, W1 *pbc.Element, W2 *pbc.Element, sigma *Sigma) *ProofOfEquation {
+	proof := new(ProofOfEquation)
+
+	// Create commitment in B1 for R
+	c1, _, R1 := CreateCommitmentOnG1(pairing, []*pbc.Element{R}, sigma)
+	if R1.cols != 1 && R1.rows != 1 {
+		panic("Issues in conversion and creation of samples in G1 for R1")
+	}
+
+	// Create commitment in B1 for S
+	c2, _, R2 := CreateCommitmentOnG1(pairing, []*pbc.Element{S}, sigma)
+	if R2.cols != 1 && R2.rows != 1 {
+		panic("Issues in conversion and creation of samples in G1 for R1")
+	}
+
+	// Create commitment in B1 for C
+	c3, _, R3 := CreateCommitmentOnG1(pairing, []*pbc.Element{C}, sigma)
+	if R3.cols != 1 && R3.rows != 1 {
+		panic("Issues in conversion and creation of samples in G1 for R1")
+	}
+
+	// Create commitment in B1 for D
+	c4, _, R4 := CreateCommitmentOnG1(pairing, []*pbc.Element{D}, sigma)
+	if R4.cols != 1 && R4.rows != 1 {
+		panic("Issues in conversion and creation of samples in G1 for R1")
+	}
+
+	// Create commitment in B2 for V
+	d1, _, S1 := CreateCommitmentOnG1(pairing, []*pbc.Element{V}, sigma)
+	if S1.cols != 1 && S1.rows != 1 {
+		panic("Issues in conversion and creation of samples in G1 for R1")
+	}
+
+	// Create commitment in B2 for H
+	d2, _, S2 := CreateCommitmentOnG1(pairing, []*pbc.Element{H}, sigma)
+	if S2.cols != 1 && S2.rows != 1 {
+		panic("Issues in conversion and creation of samples in G1 for R1")
+	}
+
+	// Create commitment in B2 for W1
+	d3, _, S3 := CreateCommitmentOnG1(pairing, []*pbc.Element{W1}, sigma)
+	if S3.cols != 1 && S3.rows != 1 {
+		panic("Issues in conversion and creation of samples in G1 for R1")
+	}
+
+	// Create commitment in B2 for W2
+	d4, _, S4 := CreateCommitmentOnG1(pairing, []*pbc.Element{W2}, sigma)
+	if S4.cols != 1 && S4.rows != 1 {
+		panic("Issues in conversion and creation of samples in G1 for R1")
+	}
+}
+
 
 /*
  * Verifiy Equation 1
