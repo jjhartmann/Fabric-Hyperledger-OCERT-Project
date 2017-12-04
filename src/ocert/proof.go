@@ -214,7 +214,6 @@ func ProveEquation2(pairing *pbc.Pairing, rprime *pbc.Element, G *pbc.Element, C
 }
 
 
-
 /*
  * Proof Equation 5
  */
@@ -428,6 +427,16 @@ func VerifyEquation2(pairing *pbc.Pairing, proof *ProofOfEquation, G *pbc.Elemen
   // Perform Equality //TODO: Test for nil == nill
 	ret := reflect.DeepEqual(LHS, RHS)
 	return ret
+}
+
+/*
+ * Verify Equation 5
+ */
+func VerifyEquation5(pairing *pbc.Pairing, proof *ProofOfEquation, U *pbc.Element, tau *pbc.Element, sigma *Sigma) bool {
+
+
+
+  return false
 }
 
 /*

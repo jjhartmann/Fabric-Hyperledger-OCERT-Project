@@ -991,6 +991,77 @@ func TestEquation2Verify(verbose bool) bool {
   return ret
 }
 
+
+
+func TestEquation5Verify(verbose bool) bool {
+  sharedParams := GenerateSharedParams()
+  VK, SK := SKeyGen(sharedParams)
+  _ = VK
+
+  P := new(Pseudonym)
+  pairing, _ := pbc.NewPairingFromString(sharedParams.Params)
+  P.C = pairing.NewG1().Rand().Bytes()
+  P.D = pairing.NewG1().Rand().Bytes()
+  PKc := new(ClientPublicKey)
+  PKc.PK = pairing.NewG2().Rand().Bytes()
+  ecert := SSign(sharedParams, SK, P, PKc)
+
+  eRT := pairing.NewGT().Pair(pairing.NewG1().SetBytes(ecert.R),
+    pairing.NewG2().SetBytes(ecert.T))
+  if verbose {fmt.Println("eRT:", eRT)}
+
+  eUPKc := pairing.NewGT().Pair(pairing.NewG1().SetBytes(VK.U),
+    pairing.NewG2().SetBytes(PKc.PK))
+  if verbose {fmt.Println("eUPKc:", eUPKc)}
+
+  eGH := pairing.NewGT().Pair(pairing.NewG1().SetBytes(sharedParams.G1),
+    pairing.NewG2().SetBytes(sharedParams.G2))
+  if verbose {fmt.Println("eGH:", eGH)}
+
+  // Test Revised
+  eR1 := pairing.NewGT().Pair(pairing.NewG1().SetBytes(ecert.R),
+    pairing.NewG2().Set1())
+  if verbose {fmt.Println("eR1:", eR1)}
+
+  e1T := pairing.NewGT().Pair(pairing.NewG1().Set1(),
+    pairing.NewG2().SetBytes(ecert.T))
+  if verbose {fmt.Println("e1T:", e1T)}
+
+  res := pairing.NewGT().Mul(eRT, eUPKc)
+  res = pairing.NewGT().Mul(res, eR1)
+  res = pairing.NewGT().Mul(res, e1T)
+  if verbose {fmt.Println("Res:", res)}
+
+  //////////////////////////////////////////////////////////////
+
+  if verbose {fmt.Println("Test Proof Generation for Eq1")}
+  R := pairing.NewG1().SetBytes(ecert.R)
+  T := pairing.NewG2().SetBytes(ecert.T)
+  PK := pairing.NewG2().SetBytes(PKc.PK)
+  U := pairing.NewG1().SetBytes(VK.U)
+
+  if verbose {fmt.Println("Creating CRS Sigma")}
+  alpha := pairing.NewZr().Rand() // Another Secret Key..
+  sigma := CreateCommonReferenceString(sharedParams, alpha) // CRS
+
+  if verbose {fmt.Println("Generate Proof")}
+  proof := ProveEquation5(pairing, R, T, PK, U, sigma)
+
+  if verbose {fmt.Println("Tetsting Initital Euqation: XcH + (-1)PKc = 0")}
+  tau := eGH
+  if verbose {fmt.Println(tau)}
+
+
+  if verbose {fmt.Println("Verify Proof")}
+  ret := VerifyEquation5(pairing, proof, U, tau, sigma)
+
+  if verbose {
+    fmt.Println("Verify Restul: ", ret)
+  }
+
+  return ret
+}
+
 /*
  * Run test b times
  */
