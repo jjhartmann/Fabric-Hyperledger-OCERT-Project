@@ -163,19 +163,14 @@ func ProveEquation2(pairing *pbc.Pairing, rprime *pbc.Element, G *pbc.Element, C
 
 	// Convert parameters to B groups
 	Gi := Iota1(pairing, G)
-	Ci := Iota1(pairing, C)
 	pos1 := IotaPrime2(pairing, pairing.NewZr().SetInt32(1), sigma)
-	rprimei := IotaPrime2(pairing, rprime, sigma)
 
 	// Random samples from Zp
 	if S.cols != 1 && S.rows != 1 {
 		panic("Issues in conversion and creation of samples in Zp for S")
 	}
+
 	s := S.mat[0][0]
-	gammaMat := NewRMatrix(pairing, 1, 1)
-	gamma := gammaMat.mat[0][0]
-	sgamma := pairing.NewZr().Mul(s, gamma)
-	gammas := pairing.NewZr().Mul(gamma, s)
 
 	if R.rows != 1 && R.cols != 2 {
 		panic("Issues in conversion and creation of samples in Zp for R")
@@ -189,16 +184,12 @@ func ProveEquation2(pairing *pbc.Pairing, rprime *pbc.Element, G *pbc.Element, C
 	Ri := R.InvertMatrix()                        // R Invert = R'
 	Rpos := Ri.MulBScalarinB2(pairing, *pos1)     // R'*ι'_2(1)
 	// +
-	Rl := Ri.MulScalarZn(pairing, gamma)    // R'*gamma
-	Rprime := Rl.MulBScalarinB2(pairing, *rprimei) // R'*gamma*ι'_2(rprime)
 
 	T := NewRMatrix(pairing, 1, 2)
 	Ti := T.InvertMatrix()                 // T' invert
-	Rls := Ri.MulScalarZn(pairing, gammas)      // R'*gamma*s TODO: this should be gamma*s - Done : Check?
-	RTSub := Rls.ElementWiseSub(pairing, Ti) // R - T'
-	Tv := RTSub.MulCommitmentKeysG1(pairing, []CommitmentKey{sigma.V[0]})
+	Tv := Ti.MulCommitmentKeysG1(pairing, []CommitmentKey{sigma.V[0]})
 
-	if len(Rpos) != len(Rprime) && len(Rprime) != len(Tv) {
+	if len(Rpos) != len(Tv) {
 		panic("All section lengths need to be equivalent")
 	}
 
@@ -206,9 +197,19 @@ func ProveEquation2(pairing *pbc.Pairing, rprime *pbc.Element, G *pbc.Element, C
 	pi := []*BPair{}
 
 	for i := 0; i < len(Rpos); i++ {
-		Rposrp := Rpos[i][0].AddinG2(pairing, Rprime[i][0])
-		tmpB := Rposrp.AddinG2(pairing, Tv[i])
-		pi = append(pi, tmpB)
+	  r_tmp := Rpos[i][0]
+	  tv_tmp := Tv[i]
+
+    Bp1 := pairing.NewG2().Sub(pairing.NewG2().SetBytes(r_tmp.b1),
+      pairing.NewG2().SetBytes(tv_tmp.b1))
+    Bp2 := pairing.NewG2().Sub(pairing.NewG2().SetBytes(r_tmp.b2),
+      pairing.NewG2().SetBytes(tv_tmp.b2))
+
+    Bpair_tmp := new(BPair)
+    Bpair_tmp.b1 = Bp1.Bytes()
+    Bpair_tmp.b2 = Bp2.Bytes()
+
+		pi = append(pi, Bpair_tmp)
 	}
 
 	/////////////////////////////////////
@@ -216,21 +217,18 @@ func ProveEquation2(pairing *pbc.Pairing, rprime *pbc.Element, G *pbc.Element, C
 
 	// Multiply Scalar from Zn on B elements
 	Gir := Gi.MulScalarInG1(pairing, s)           // s*ι_1(C)
-	Cir := Ci.MulScalarInG1(pairing, sgamma) // s*gamma*ι_1(G)
 
 	// Multiple Phi by commitment keys
 	Thetai := T.MulCommitmentKeysG1(pairing, sigma.U) // TU (commitment key in G1)
+
 	if len(Thetai) > 1{
 		panic("Thetai Should have len == 1")
 	}
 
-	// Construct theta (Gir + Cir + Thetai) TODO: G is the constant and C is the variable, these should be reversed : Done : Check?
-	CGir := Gir.AddinG1(pairing, Cir)
-	theta := CGir.AddinG1(pairing, Thetai[0])
-	// TODO: Need to multiple T by u (commitkeys in B1)
+	// Construct theta (Gir + Cir + Thetai)
+	theta := Gir.AddinG1(pairing, Thetai[0])
 
 	// Collect elements
-	proof.Gamma = gammaMat
 	proof.Theta = []*BPair {theta}
 	proof.Pi = pi
 	proof.c = c
@@ -304,7 +302,7 @@ func VerifyEquation2(pairing *pbc.Pairing, proof *ProofOfEquation, G *pbc.Elemen
 	// =
 	tmp1 := FiGdp.AddinGT(pairing, Fcpos)
 	LHS := tmp1.AddinGT(pairing, Fcdp)
-	fmt.Println("LHS",LHS)
+	fmt.Println("LHS:",LHS)
 
 
 	// Construct RHS
