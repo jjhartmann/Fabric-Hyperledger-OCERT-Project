@@ -19,7 +19,7 @@ import (
  	"crypto/sha256"
  	"crypto/x509"
  	"math/big"
- 	"time"
+ 	// "time"
  	"os"
 )
 
@@ -249,12 +249,18 @@ func GenOCert(stub Wrapper, args [][]byte) ([]byte, error) {
 
 	// TODO get proof
 
+	fmt.Println("[Ocert Scheme] [GenOCert]")
+	fmt.Printf("[Ocert Scheme] [GenOert] arg0: ")
+	fmt.Println(PKc)
+	fmt.Printf("[Ocert Scheme] [GenOCert] arg1: ")
+	fmt.Println(P)
+
 	// TODO verify proof of knowledge
-	start := time.Now()
-	end := time.Now()
-	elapsed := end.Sub(start)
-	fmt.Println("proof verfication: ")
-	fmt.Println(elapsed)
+	// start := time.Now()
+	// end := time.Now()
+	// elapsed := end.Sub(start)
+	// fmt.Println("proof verfication: ")
+	// fmt.Println(elapsed)
 	// verifyProofLog.WriteString("verifyProof: " + elapsed.String() + "\n")
 
 	// TODO generate X.509 certificate
@@ -267,9 +273,11 @@ func GenOCert(stub Wrapper, args [][]byte) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+	fmt.Printf("[Ocert Scheme] [GenOCert] signature: ")
+	fmt.Println(signature)
 
 	reply := new(GenOCertReply)
-	reply.sig = signature
+	reply.Sig = signature
 	replyBytes, err := reply.Bytes()
 	if err != nil {
 		return nil, err

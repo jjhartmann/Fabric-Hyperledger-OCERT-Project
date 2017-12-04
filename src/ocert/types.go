@@ -502,7 +502,7 @@ func (request *GenOCertRequest) SetBytes(msg []byte) error {
 }
 
 type GenOCertReply struct {
-	sig []byte
+	Sig []byte
 }
 
 func (reply *GenOCertReply) Bytes() ([]byte, error) {
