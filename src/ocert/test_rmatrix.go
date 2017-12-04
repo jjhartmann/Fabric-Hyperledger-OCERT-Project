@@ -310,7 +310,7 @@ func TestRMatrixMultiplicationforBPairMatrixinG2(verbose bool, r_rows int, r_col
     fmt.Println("RET:")
     for i := 0; i < len(BMat.mat); i++ {
       for j := 0; j < len(BMat.mat[0]); j++ {
-        fmt.Printf("[%d, %d]: %v, ", BMat.mat[i][j])
+        fmt.Printf("[%d, %d]: %v, ", i, j, BMat.mat[i][j])
       }
       fmt.Println()
     }
@@ -320,6 +320,57 @@ func TestRMatrixMultiplicationforBPairMatrixinG2(verbose bool, r_rows int, r_col
   return ret1 && TestBMatrixStructure(verbose, BMat)
 
 }
+
+
+
+func TestRMatrixMultiplicationforBPairMatrixinG1(verbose bool, r_rows int, r_cols int, x_rows int, x_cols int) bool {
+  sharedParams := GenerateSharedParams()
+  pairing, _ := pbc.NewPairingFromString(sharedParams.Params)
+  g1 := pairing.NewG1().Rand()
+  g2 := pairing.NewG2().Rand()
+  gt := pairing.NewGT().Pair(g1, g2)
+  _ = gt
+
+  ones := NewOnesMatrix(pairing, r_rows, r_cols)
+  X := new(BMatrix)
+
+  for i := 0; i < x_rows; i++ {
+    elementRow := []*BPair{}
+    for j := 0; j < x_cols; j++ {
+      el := new(BPair)
+      el.b1 = pairing.NewG1().Rand().Bytes()
+      el.b2 =  pairing.NewG1().Rand().Bytes()
+      elementRow = append(elementRow, el)
+    }
+    X.mat = append(X.mat, elementRow)
+  }
+
+  if verbose {
+    fmt.Println("X:")
+    for i := 0; i < len(X.mat); i++ {
+      for j := 0; j < len(X.mat[0]); j++ {
+        fmt.Printf("[%d, %d]: %v, ",i, j, X.mat[i][j])
+      }
+      fmt.Println()
+    }
+  }
+
+  BMat := ones.MultBPairMatrixG1(pairing, X)
+  if verbose {
+    fmt.Println("RET:")
+    for i := 0; i < len(BMat.mat); i++ {
+      for j := 0; j < len(BMat.mat[0]); j++ {
+        fmt.Printf("[%d, %d]: %v, ", i, j, BMat.mat[i][j])
+      }
+      fmt.Println()
+    }
+  }
+
+  ret1 := len(BMat.mat) == len(ones.mat) && len(BMat.mat[0]) == len(X.mat[0])
+  return ret1 && TestBMatrixStructure(verbose, BMat)
+
+}
+
 
 func TestRMatrixStructure(verbose bool, R *RMatrix) bool{
    if (verbose) {fmt.Println("Testing R Matrix Structure")}
@@ -385,6 +436,13 @@ func RunAllRTests(verbose bool) {
   fmt.Println("RMatrix Mult BPair Mat G2 1x2 2x2     ", TestRMatrixMultiplicationforBPairMatrixinG2(false,1, 2, 2, 2))
   fmt.Println("RMatrix Mult BPair Mat G2 2x2 2x2     ", TestRMatrixMultiplicationforBPairMatrixinG2(false,2, 2, 2, 2))
   fmt.Println("RMatrix Mult BPair Mat G2 2x2 2x2     ", TestRMatrixMultiplicationforBPairMatrixinG2(false,2, 2, 2, 2))
+  fmt.Println("RMatrix Mult BPair Mat G1 1x1 1x1     ", TestRMatrixMultiplicationforBPairMatrixinG1(false,1, 1, 1, 1))
+  fmt.Println("RMatrix Mult BPair Mat G1 2x1 1x2     ", TestRMatrixMultiplicationforBPairMatrixinG1(false,2, 1, 1, 2))
+  fmt.Println("RMatrix Mult BPair Mat G1 1x2 2x1     ", TestRMatrixMultiplicationforBPairMatrixinG1(false,1, 2, 2, 1))
+  fmt.Println("RMatrix Mult BPair Mat G1 2x2 2x1     ", TestRMatrixMultiplicationforBPairMatrixinG1(false,2, 2, 2, 1))
+  fmt.Println("RMatrix Mult BPair Mat G1 1x2 2x2     ", TestRMatrixMultiplicationforBPairMatrixinG1(false,1, 2, 2, 2))
+  fmt.Println("RMatrix Mult BPair Mat G1 2x2 2x2     ", TestRMatrixMultiplicationforBPairMatrixinG1(false,2, 2, 2, 2))
+  fmt.Println("RMatrix Mult BPair Mat G1 2x2 2x2     ", TestRMatrixMultiplicationforBPairMatrixinG1(false,2, 2, 2, 2))
 
 }
 
