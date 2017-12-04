@@ -11,17 +11,20 @@ import (
 )
 
 func main() {
-  //fmt.Printf("\nRun Structure Perserving Tests\n")
-  //fmt.Println(ocert.Stest())
-  //
-  //fmt.Printf("\nRun Proof Tests\n")
-  //ocert.RunAllPTests(false)
-  //
-  // fmt.Printf("\nRun RMatrix Tests\n")
-  // ocert.RunAllRTests(false)
+  fmt.Printf("\nRun Structure Perserving Tests\n")
+  fmt.Println(ocert.Stest())
+
+  fmt.Printf("\nRun Proof Tests\n")
+  ocert.RunAllPTests(false)
+
+  fmt.Printf("\nRun RMatrix Tests\n")
+  ocert.RunAllRTests(false)
+
+  fmt.Printf("\nRun ElGamal ReReand Tests\n")
+  ocert.ETestAll(false)
 
   //Test Key generation from rerandomization
-  ocert.ETestAll(false)
+  //ocert.ETestAll(false)
 
   // Benchmark
   //ConstructMetricsForProofVerifyEq1(100)
