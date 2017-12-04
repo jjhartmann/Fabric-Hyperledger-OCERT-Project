@@ -98,7 +98,6 @@ func ERerand(sharedParams *SharedParams,PKa *AuditorPublicKey, P *Pseudonym) *Ps
 	Cprime:= pairing.NewG1().Add(C,tempC)
 
   //To find Dprime, using D from Pseudonym & product of rprime & Public Key
-	PKa := new(AuditorPublicKey)
 	PK:=pairing.NewG1().SetBytes(PKa.PK)
   tempD:=pairing.NewG1().MulZn(PK,rprime)
 	Dprime:=pairing.NewG1().Add(D,tempD)
