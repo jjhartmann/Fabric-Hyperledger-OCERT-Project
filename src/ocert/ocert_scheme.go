@@ -17,38 +17,11 @@ import (
  	"crypto/rsa"
  	"crypto/rand"
  	"crypto/sha256"
+ 	"crypto/x509"
  	"math/big"
+ 	"time"
+ 	"os"
 )
-
-// TODO delete
-func Put(stub Wrapper, args [][]byte) ([]byte, error) {
-	if len(args) != 2 {
-		return nil, fmt.Errorf("Incorrect arguments. Expecting a key and a value")
-	}
-
-	err := stub.PutState(string(args[0]), args[1])
-	if err != nil {
-		return nil, fmt.Errorf("Failed to set asset: %s", args[0])
-	}
-	return []byte(args[1]), nil
-
-}
-
-// TODO delete
-func Get(stub Wrapper, args [][]byte) ([]byte, error) {
-	if len(args) != 1 {
-		return nil, fmt.Errorf("Incorrect arguments. Expecting a key")
-	}
-
-	value, err := stub.GetState(string(args[0]))
-	if err != nil {
-		return nil, fmt.Errorf("Failed to get asset: %s with error: %s", args[0], err)
-	}
-	if value == nil {
-		return nil, fmt.Errorf("Asset not found: %s", args[0])
-	}
-	return value, nil
-}
 
 /*
  * The private key used in structure preserving scheme should keep in memory,
@@ -59,6 +32,8 @@ var sSigningKey *SSigningKey
 var rsaPrivateKey *rsa.PrivateKey
 var serialNumber *big.Int
 var auditorKeypair []byte
+
+var verifyProofLog *os.File
 
 func getSerialNumber() (*big.Int) {
 	serialNumber.Add(serialNumber, big.NewInt(1))
@@ -77,6 +52,10 @@ func GetSharedParams(stub Wrapper, args [][]byte) ([]byte, error) {
 }
 
 func GetAuditorKeypair(stub Wrapper, args [][]byte)([]byte, error) {
+	if len(args) != 0 {
+		return nil, fmt.Errorf("Incorrect arguments. Expecting no arguments")
+	}
+
 	// TODO We are cheat here, we should verify the request is from the 
 	// auditor
 	if string(auditorKeypair) == "NoAuditorKeyPair" {
@@ -100,19 +79,47 @@ func Setup(stub Wrapper, args [][]byte) ([]byte, error) {
 		return nil, fmt.Errorf("Incorrect arguments. Expecting no arguments")
 	}
 
+	var err error;
+	verifyProofLog, err = os.Create("/data/verifyProofLog.txt")
+	if err != nil {
+		fmt.Println(err)
+		panic(err.Error())
+	}
+
 	auditorKeypair = []byte("NoAuditorKeyPair")
 	serialNumber = big.NewInt(0)
 	sharedParams = GenerateSharedParams()
+	fmt.Printf("sharedParams: ")
 	fmt.Println(sharedParams)
 	// Generate auditor's keypair
 	PKa, SKa := EKeyGen(sharedParams)
-	err := stub.PutState("auditor_pk", PKa.PK)
+	err = stub.PutState("auditor_pk", PKa.PK)
+	if err != nil {
+		return nil, err
+	}
 	KPa := new(AuditorKeypair)
 	KPa.PK = PKa.PK
 	KPa.SK = SKa.SK
 
 	// Generate RSA keypair
 	rsaPrivateKey, err = rsa.GenerateKey(rand.Reader, 2048)
+	if err != nil {
+		return nil, err
+	}
+	fmt.Printf("rsa pk: ")
+	fmt.Println(&rsaPrivateKey.PublicKey)
+
+	rsaPublicKeyBytes, err := x509.MarshalPKIXPublicKey(&rsaPrivateKey.PublicKey)
+	if err != nil {
+		return nil, err
+	}
+	rsaPK := new(RSAPK)
+	rsaPK.PK = rsaPublicKeyBytes
+	rsaPKBytes, err := rsaPK.Bytes()
+	if err != nil {
+		return nil, err
+	}
+	err = stub.PutState("rsa_pk", rsaPKBytes)
 	if err != nil {
 		return nil, err
 	}
@@ -148,19 +155,29 @@ func Setup(stub Wrapper, args [][]byte) ([]byte, error) {
  * psudonym P and ecert to the client.
  */
 func GenECert(stub Wrapper, args [][]byte) ([]byte, error) {
-	if len(args) != 2 {
-		return nil, fmt.Errorf("Incorrect arguments. Expecting the id and the PK of client")
+	if len(args) != 1 {
+		return nil, fmt.Errorf("Incorrect arguments.")
+	}
+
+	request := new(GenECertRequest)
+	err := request.SetBytes(args[0])
+	if err != nil {
+		return nil, err
 	}
 
 	IDc := new(ClientID)
-	IDc.ID = args[0]
+	IDc.ID = request.IDc
 	PKc := new(ClientPublicKey)
-	PKc.PK = args[1]
+	PKc.PK = request.PKc
+
+	fmt.Println("GenECert")
+	fmt.Println(IDc)
+	fmt.Println(PKc)
 
 	// Generate pseudonym P
 	valuePKa, err := stub.GetState("auditor_pk")
 	if err != nil {
-		return nil, fmt.Errorf("Failed to get auditor_pk")
+		return nil, err
 	}
 	if valuePKa == nil {
 		return nil, fmt.Errorf("Asset not found: auditor_pk")
@@ -176,15 +193,15 @@ func GenECert(stub Wrapper, args [][]byte) ([]byte, error) {
 	reply := new(GenECertReply)
 	reply.P, err = P.Bytes()
 	if err != nil {
-		return nil, fmt.Errorf("Failed to generate pesudonym")
+		return nil, err
 	}
-	reply.ecert, err = ecert.Bytes()
+	reply.Ecert, err = ecert.Bytes()
 	if err != nil {
-		return nil, fmt.Errorf("Failed to generate ecert")
+		return nil, err
 	}
 	replyBytes, err := reply.Bytes()
-		if err != nil {
-		return nil, fmt.Errorf("Failed to generate GenECertReply")
+	if err != nil {
+		return nil, err
 	}
 	return replyBytes, nil
 }
@@ -195,19 +212,34 @@ func GenECert(stub Wrapper, args [][]byte) ([]byte, error) {
  * proof of knowledge, and returns the ocert to the client 
  */
 func GenOCert(stub Wrapper, args [][]byte) ([]byte, error) {
-	if len(args) != 3 {
-		return nil, fmt.Errorf("Incorrect arguments. Expecting the PK, P, and PoK of client")
+	if len(args) != 1 {
+		return nil, fmt.Errorf("Incorrect arguments.")
 	}
 
-	PKc := new(ClientPublicKey)
-	PKc.PK = args[0]
-	P := new(Pseudonym)
-	err := P.SetBytes(args[1])
+	request := new(GenOCertRequest)
+	err := request.SetBytes(args[0])
 	if err != nil {
 		return nil, err
 	}
 
+
+	PKc := new(ClientPublicKey)
+	PKc.PK = request.PKc
+	P := new(Pseudonym)
+	err = P.SetBytes(request.P)
+	if err != nil {
+		return nil, err
+	}
+
+	// TODO get proof
+
 	// TODO verify proof of knowledge
+	start := time.Now()
+	end := time.Now()
+	elapsed := end.Sub(start)
+	fmt.Println("proof verfication: ")
+	fmt.Println(elapsed)
+	verifyProofLog.WriteString("verifyProof: " + elapsed.String() + "\n")
 
 	// TODO generate X.509 certificate
 	msg, err := OCertSingedBytes(PKc, P)
@@ -220,5 +252,11 @@ func GenOCert(stub Wrapper, args [][]byte) ([]byte, error) {
 		return nil, err
 	}
 
-	return signature, nil
+	reply := new(GenOCertReply)
+	reply.sig = signature
+	replyBytes, err := reply.Bytes()
+	if err != nil {
+		return nil, err
+	}
+	return replyBytes, nil
 }

@@ -140,6 +140,103 @@ func ProveEquation1(pairing *pbc.Pairing, xc *pbc.Element, H *pbc.Element, PKc *
   return proof
 }
 
+/*
+ * Create proof for equation: C + r' * G = C'
+ *   Multi-Scalar Multiplication in G1
+ *   r' from group Zp: Zp -> B1
+ *   C, G from group G1:
+ *	 C' is a Constant
+ *
+ * Proof:
+ *    Pi     := R'*ι'_2(1) + R'*lambda*ι'_2(rprime)  + (R'*lambda*s - T')*v_1
+ *    Theta  := s*ι_1(C) + s*lambda*ι_1(G) + TU
+ */
+func ProveEquation2(pairing *pbc.Pairing, rprime *pbc.Element, G *pbc.Element, C *pbc.Element, sigma *Sigma) *ProofOfEquation{
+	proof := new(ProofOfEquation)
+
+	// Create commitment in B1 for C
+	c, _, R := CreateCommitmentOnG1(pairing, []*pbc.Element{C}, sigma)
+
+	// Create commitment in B1 for r'
+	d, _, S := CreateCommitmentPrimeOnG1(pairing, []*pbc.Element{rprime}, sigma)
+
+	// Convert parameters to B groups
+	Gi := Iota1(pairing, G)
+	Ci := Iota1(pairing, C)
+	pos1 := IotaPrime2(pairing, pairing.NewZr().SetInt32(1), sigma)
+	rprimei := IotaPrime2(pairing, rprime, sigma)
+
+	// Random samples from Zp
+	if S.cols != 1 && S.rows != 1 {
+		panic("Issues in conversion and creation of samples in Zp for S")
+	}
+	s := S.mat[0][0]
+	gammaMat := NewRMatrix(pairing, 1, 1)
+	gamma := gammaMat.mat[0][0]
+	sgamma := pairing.NewZr().Mul(s, gamma)
+
+	if R.rows != 1 && R.cols != 2 {
+		panic("Issues in conversion and creation of samples in Zp for R")
+	}
+
+	////////////////////////////////////////////
+	// Pi: In G1
+	_ = pos1
+	_ = rprime
+
+	Ri := R.InvertMatrix()                        // R Invert = R'
+	Rpos := Ri.MulBScalarinB1(pairing, *pos1)     // R'*ι'_2(1)
+	// +
+	Rl := Ri.MulScalarZn(pairing, gamma)    // R'*gamma
+	Rprime := Rl.MulBScalarinB1(pairing, *rprimei) // R'*gamma*ι'_2(rprime)
+
+
+	T := NewRMatrix(pairing, 1, 2)
+	Ti := T.InvertMatrix()                 // T' invert
+	Rls := Rl.MulScalarZn(pairing, s)      // R'*gamma*s
+	RTSub := Rls.ElementWiseSub(pairing, Ti) // R - T'
+	Tv := RTSub.MulCommitmentKeysG1(pairing, []CommitmentKey{sigma.V[0]})
+
+	if len(Rpos) != len(Rprime) && len(Rprime) != len(Tv) {
+		panic("All section lengths need to be equivalent")
+	}
+
+	// Construct theta
+	pi := []*BPair{}
+
+	for i := 0; i < len(Rpos); i++ {
+		Rposrp := Rpos[i][0].AddinG1(pairing, Rprime[i][0])
+		tmpB := Rposrp.AddinG1(pairing, Tv[i])
+		pi = append(pi, tmpB)
+	}
+
+	/////////////////////////////////////
+	// Theta: In G1
+
+	// Multiply Scalar from Zn on B elements
+	Cir := Ci.MulScalarInG1(pairing, s)           // s*ι_1(C)
+	Gir := Gi.MulScalarInG1(pairing, sgamma) // s*gamma*ι_1(G)
+
+	// Multiple Phi by commitment keys
+	Thetai := T.MulCommitmentKeysG1(pairing, sigma.U) // TU (commitment key in G1)
+	if len(Thetai) > 1{
+		panic("Thetai Should have len == 1")
+	}
+
+	// Construct Pi (Gir + Cir + Thetai)
+	CGir := Cir.AddinG1(pairing, Gir)
+	theta := CGir.AddinG1(pairing, Thetai[0])
+
+	// Collect elements
+	proof.Gamma = gammaMat
+	proof.Theta = []*BPair {theta}
+	proof.Pi = pi
+	proof.c = c
+	proof.d = d
+
+	return proof
+}
+
 
 /*
  * Verifiy Equation 1

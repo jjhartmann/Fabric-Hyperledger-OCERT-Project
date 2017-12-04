@@ -2,10 +2,10 @@ version: '2'
 
 services:
   build_chaincode:
-    build: ../docker/chaincode
+    build: ./../docker/chaincode
     image: ocert/chaincode
   build_cli:
-    build: ../docker/cli
+    build: ./../docker/cli
     image: ocert/cli
   orderer:
     container_name: orderer
@@ -70,6 +70,7 @@ services:
         - ./../ocert/:/opt/gopath/src/ocert/
         - ./../benchmark/:/opt/gopath/src/benchmark/
         - ./../benchmark/benchmarkcc.go:/opt/gopath/src/chaincodedev/benchmarkcc.go
+        - ./../data/:/data/
     depends_on:
       - build_cli
       - orderer
@@ -94,6 +95,7 @@ services:
         - ./msp:/etc/hyperledger/msp
         - ./../chaincode:/opt/gopath/src/chaincode
         - ./../ocert/:/opt/gopath/src/ocert/
+        - ./../data/:/data/
     depends_on:
       - build_chaincode
       - orderer

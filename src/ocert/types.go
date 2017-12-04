@@ -465,9 +465,24 @@ type ProofConstants struct {
  * Request to and reply from main scheme (chaincode)
  */
 
+type GenECertRequest struct {
+	IDc []byte
+	PKc []byte
+}
+
+func (request *GenECertRequest) Bytes() ([]byte, error) {
+	msg, err := json.Marshal(request)
+	return msg, err
+}
+
+func (request *GenECertRequest) SetBytes(msg []byte) error {
+	err := json.Unmarshal(msg, request)
+	return err
+}
+
 type GenECertReply struct {
 	P []byte
-	ecert []byte
+	Ecert []byte
 }
 
 func (reply *GenECertReply) Bytes() ([]byte, error) {
@@ -477,5 +492,49 @@ func (reply *GenECertReply) Bytes() ([]byte, error) {
 
 func (reply *GenECertReply) SetBytes(msg []byte) error {
 	err := json.Unmarshal(msg, reply)
+	return err
+}
+
+type GenOCertRequest struct {
+	PKc []byte
+	P []byte
+	// TODO pi
+}
+
+func (request *GenOCertRequest) Bytes() ([]byte, error) {
+	msg, err := json.Marshal(request)
+	return msg, err
+}
+
+func (request *GenOCertRequest) SetBytes(msg []byte) error {
+	err := json.Unmarshal(msg, request)
+	return err
+}
+
+type GenOCertReply struct {
+	sig []byte
+}
+
+func (reply *GenOCertReply) Bytes() ([]byte, error) {
+	msg, err := json.Marshal(reply)
+	return msg, err
+}
+
+func (reply *GenOCertReply) SetBytes(msg []byte) error {
+	err := json.Unmarshal(msg, reply)
+	return err
+}
+
+type RSAPK struct {
+	PK []byte
+}
+
+func (pk *RSAPK) Bytes() ([]byte, error) {
+	msg, err := json.Marshal(pk)
+	return msg, err
+}
+
+func (pk *RSAPK) SetBytes(msg []byte) error {
+	err := json.Unmarshal(msg, pk)
 	return err
 }
