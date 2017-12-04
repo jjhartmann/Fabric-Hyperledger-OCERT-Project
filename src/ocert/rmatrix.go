@@ -30,6 +30,22 @@ func NewRMatrix(pairing *pbc.Pairing, rows int, cols int) *RMatrix {
   return rmat
 }
 
+
+func NewRMatrixinG2(pairing *pbc.Pairing, rows int, cols int) *RMatrix {
+  rmat := new(RMatrix)
+  rmat.rows = rows
+  rmat.cols = cols
+  for i := 0; i < rows; i++ {
+    elementRow := []*pbc.Element{}
+    for j := 0; j < cols; j++ {
+      el := pairing.NewG2().Rand()
+      elementRow = append(elementRow, el)
+    }
+    rmat.mat = append(rmat.mat, elementRow)
+  }
+  return rmat
+}
+
 func NewOnesMatrix(pairing *pbc.Pairing, rows int, cols int) *RMatrix {
   rmat := new(RMatrix)
   rmat.rows = rows
@@ -69,8 +85,8 @@ func (rmat *RMatrix) MultElementArrayG2(pairing *pbc.Pairing, X [][]*pbc.Element
   }
 
   retMat := new(RMatrix)
-  retMat.cols = len(rmat.mat)
-  retMat.rows = len(X[0])
+  retMat.rows = len(rmat.mat)
+  retMat.cols = len(X[0])
 
   for i := 0; i < rmat.rows; i++ {
     elementRow := []*pbc.Element{}
@@ -85,8 +101,6 @@ func (rmat *RMatrix) MultElementArrayG2(pairing *pbc.Pairing, X [][]*pbc.Element
     retMat.mat = append(retMat.mat, elementRow)
   }
   return retMat
-
-
 }
 
 // TODO: A lot of these fucntions could be optimised!
