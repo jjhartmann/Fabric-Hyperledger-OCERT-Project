@@ -157,6 +157,84 @@ func TestRMatrixInversion(verbose bool, rows int, cols int) bool {
   return ret && TestRMatrixStructure(verbose, R) && TestRMatrixStructure(verbose, Ri)
 }
 
+
+func TestRMatrixMultiplicationforElementinG2(verbose bool, r_rows int, r_cols int, x_rows int, x_cols int) bool {
+  sharedParams := GenerateSharedParams()
+  pairing, _ := pbc.NewPairingFromString(sharedParams.Params)
+  g1 := pairing.NewG1().Rand()
+  g2 := pairing.NewG2().Rand()
+  gt := pairing.NewGT().Pair(g1, g2)
+  _ = gt
+
+  ones := NewOnesMatrix(pairing, r_rows, r_cols)
+  X := NewRMatrixinG2(pairing, x_rows, x_cols)
+
+  if verbose {
+    fmt.Println("X:")
+    for i := 0; i < len(X.mat); i++ {
+      for j := 0; j < len(X.mat[0]); j++ {
+        fmt.Printf("%s", X.mat[i][j])
+      }
+      fmt.Println()
+    }
+  }
+
+  mat := ones.MultElementArrayG2(pairing, X.mat)
+  if verbose {
+    fmt.Println("RET:")
+    for i := 0; i < mat.rows; i++ {
+      for j := 0; j < mat.cols; j++ {
+        fmt.Printf("%s", mat.mat[i][j])
+      }
+      fmt.Println()
+    }
+  }
+
+  ret1 := len(mat.mat) == len(ones.mat) && len(mat.mat[0]) == len(X.mat[0])
+
+  return TestRMatrixStructure(verbose, mat) && ret1
+
+}
+
+func TestRMatrixMultiplicationforElementinG1(verbose bool, r_rows int, r_cols int, x_rows int, x_cols int) bool {
+  sharedParams := GenerateSharedParams()
+  pairing, _ := pbc.NewPairingFromString(sharedParams.Params)
+  g1 := pairing.NewG1().Rand()
+  g2 := pairing.NewG2().Rand()
+  gt := pairing.NewGT().Pair(g1, g2)
+  _ = gt
+
+  ones := NewOnesMatrix(pairing, r_rows, r_cols)
+  X := NewRMatrixinG1(pairing, x_rows, x_cols)
+
+  if verbose {
+    fmt.Println("X:")
+    for i := 0; i < len(X.mat); i++ {
+      for j := 0; j < len(X.mat[0]); j++ {
+        fmt.Printf("%s", X.mat[i][j])
+      }
+      fmt.Println()
+    }
+  }
+
+  mat := ones.MultElementArrayG1(pairing, X.mat)
+  if verbose {
+    fmt.Println("RET:")
+    for i := 0; i < mat.rows; i++ {
+      for j := 0; j < mat.cols; j++ {
+        fmt.Printf("%s", mat.mat[i][j])
+      }
+      fmt.Println()
+    }
+  }
+
+  ret1 := len(mat.mat) == len(ones.mat) && len(mat.mat[0]) == len(X.mat[0])
+
+  return TestRMatrixStructure(verbose, mat) && ret1
+
+}
+
+
 func TestRMatrixStructure(verbose bool, R *RMatrix) bool{
    if (verbose) {fmt.Println("Testing R Matrix Structure")}
    ret1 := R.rows == len(R.mat)
@@ -170,20 +248,35 @@ func TestRMatrixStructure(verbose bool, R *RMatrix) bool{
  Run all Matrix Tests
  */
 func RunAllRTests(verbose bool) {
-  fmt.Println("RMatrix Generator          ", TestRMatrixGen(verbose))
-  fmt.Println("RMatrix Scalar Mul 1x1     ", TestRMatrixMulSclarInZn(false, 1, 1))
-  fmt.Println("RMatrix Scalar Mul 10x1    ", TestRMatrixMulSclarInZn(false, 10, 1))
-  fmt.Println("RMatrix Scalar Mul 10x10   ", TestRMatrixMulSclarInZn(false, 10, 10))
-  fmt.Println("RMatrix EW Subtract 1x1    ", TestElementWiseSubtraction(false, 1, 1))
-  fmt.Println("RMatrix EW Subtract 10x1   ", TestElementWiseSubtraction(false, 10, 1))
-  fmt.Println("RMatrix EW Subtract 10x10  ", TestElementWiseSubtraction(false, 10, 10))
-  fmt.Println("RMatrix BPair Scalar 1x1   ", TestRMatrixBPairScalar(false, 1, 1))
-  fmt.Println("RMatrix BPair Scalar 10x1  ", TestRMatrixBPairScalar(false, 10, 1))
-  fmt.Println("RMatrix BPair Scalar 10x10 ", TestRMatrixBPairScalar(false, 10, 10))
-  fmt.Println("RMatrix Inversion 1x1      ", TestRMatrixInversion(false, 1, 1))
-  fmt.Println("RMatrix Inversion 10x1     ", TestRMatrixInversion(false, 10, 1))
-  fmt.Println("RMatrix Inversion 3x7      ", TestRMatrixInversion(false, 3, 7))
-  fmt.Println("RMatrix Inversion 4x8      ", TestRMatrixInversion(false, 4, 8))
+  fmt.Println("RMatrix Generator              ", TestRMatrixGen(verbose))
+  fmt.Println("RMatrix Scalar Mul 1x1         ", TestRMatrixMulSclarInZn(false, 1, 1))
+  fmt.Println("RMatrix Scalar Mul 10x1        ", TestRMatrixMulSclarInZn(false, 10, 1))
+  fmt.Println("RMatrix Scalar Mul 10x10       ", TestRMatrixMulSclarInZn(false, 10, 10))
+  fmt.Println("RMatrix EW Subtract 1x1        ", TestElementWiseSubtraction(false, 1, 1))
+  fmt.Println("RMatrix EW Subtract 10x1       ", TestElementWiseSubtraction(false, 10, 1))
+  fmt.Println("RMatrix EW Subtract 10x10      ", TestElementWiseSubtraction(false, 10, 10))
+  fmt.Println("RMatrix BPair Scalar 1x1       ", TestRMatrixBPairScalar(false, 1, 1))
+  fmt.Println("RMatrix BPair Scalar 10x1      ", TestRMatrixBPairScalar(false, 10, 1))
+  fmt.Println("RMatrix BPair Scalar 10x10     ", TestRMatrixBPairScalar(false, 10, 10))
+  fmt.Println("RMatrix Inversion 1x1          ", TestRMatrixInversion(false, 1, 1))
+  fmt.Println("RMatrix Inversion 10x1         ", TestRMatrixInversion(false, 10, 1))
+  fmt.Println("RMatrix Inversion 3x7          ", TestRMatrixInversion(false, 3, 7))
+  fmt.Println("RMatrix Inversion 4x8          ", TestRMatrixInversion(false, 4, 8))
+  fmt.Println("RMatrix Mult in G2 1x1 1x1     ", TestRMatrixMultiplicationforElementinG2(false,1, 1, 1, 1))
+  fmt.Println("RMatrix Mult in G2 2x1 1x2     ", TestRMatrixMultiplicationforElementinG2(false,2, 1, 1, 2))
+  fmt.Println("RMatrix Mult in G2 1x2 2x1     ", TestRMatrixMultiplicationforElementinG2(false,1, 2, 2, 1))
+  fmt.Println("RMatrix Mult in G2 2x2 2x1     ", TestRMatrixMultiplicationforElementinG2(false,2, 2, 2, 1))
+  fmt.Println("RMatrix Mult in G2 1x2 2x2     ", TestRMatrixMultiplicationforElementinG2(false,1, 2, 2, 2))
+  fmt.Println("RMatrix Mult in G2 2x2 2x2     ", TestRMatrixMultiplicationforElementinG2(false,2, 2, 2, 2))
+  fmt.Println("RMatrix Mult in G2 2x2 2x2     ", TestRMatrixMultiplicationforElementinG2(false,2, 2, 2, 2))
+  fmt.Println("RMatrix Mult in G1 1x1 1x1     ", TestRMatrixMultiplicationforElementinG1(false,1, 1, 1, 1))
+  fmt.Println("RMatrix Mult in G1 2x1 1x2     ", TestRMatrixMultiplicationforElementinG1(false,2, 1, 1, 2))
+  fmt.Println("RMatrix Mult in G1 1x2 2x1     ", TestRMatrixMultiplicationforElementinG1(false,1, 2, 2, 1))
+  fmt.Println("RMatrix Mult in G1 2x2 2x1     ", TestRMatrixMultiplicationforElementinG1(false,2, 2, 2, 1))
+  fmt.Println("RMatrix Mult in G1 1x2 2x2     ", TestRMatrixMultiplicationforElementinG1(false,1, 2, 2, 2))
+  fmt.Println("RMatrix Mult in G1 2x2 2x2     ", TestRMatrixMultiplicationforElementinG1(false,2, 2, 2, 2))
+  fmt.Println("RMatrix Mult in G1 2x2 2x2     ", TestRMatrixMultiplicationforElementinG1(false,2, 2, 2, 2))
+
 }
 
 /*

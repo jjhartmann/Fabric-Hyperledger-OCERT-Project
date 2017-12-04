@@ -1020,6 +1020,49 @@ func RunPTest(b int) {
   }
 }
 
+func TestEquation5Equality(verbose bool) bool {
+  sharedParams := GenerateSharedParams()
+  VK, SK := SKeyGen(sharedParams)
+  _ = VK
+
+  P := new(Pseudonym)
+  pairing, _ := pbc.NewPairingFromString(sharedParams.Params)
+  P.C = pairing.NewG1().Rand().Bytes()
+  P.D = pairing.NewG1().Rand().Bytes()
+  PKc := new(ClientPublicKey)
+  PKc.PK = pairing.NewG2().Rand().Bytes()
+  ecert := SSign(sharedParams, SK, P, PKc)
+
+  eRT := pairing.NewGT().Pair(pairing.NewG1().SetBytes(ecert.R),
+    pairing.NewG2().SetBytes(ecert.T))
+  if verbose {fmt.Println("eRT:", eRT)}
+
+  eUPKc := pairing.NewGT().Pair(pairing.NewG1().SetBytes(VK.U),
+    pairing.NewG2().SetBytes(PKc.PK))
+  if verbose {fmt.Println("eUPKc:", eUPKc)}
+
+  eGH := pairing.NewGT().Pair(pairing.NewG1().SetBytes(sharedParams.G1),
+    pairing.NewG2().SetBytes(sharedParams.G2))
+  if verbose {fmt.Println("eGH:", eGH)}
+
+  // Test Revised
+  eR1 := pairing.NewGT().Pair(pairing.NewG1().SetBytes(ecert.R),
+    pairing.NewG2().Set1())
+  if verbose {fmt.Println("eR1:", eR1)}
+  e1T := pairing.NewGT().Pair(pairing.NewG1().Set1(),
+    pairing.NewG2().SetBytes(ecert.T))
+  if verbose {fmt.Println("e1T:", e1T)}
+
+  res := pairing.NewGT().Mul(eRT, eUPKc)
+  res = pairing.NewGT().Mul(res, eR1)
+  res = pairing.NewGT().Mul(res, e1T)
+  if verbose {fmt.Println("Res:", res)}
+
+
+
+  return res.Equals(eGH)
+}
+
 /*
  * Run all Tests
  */
