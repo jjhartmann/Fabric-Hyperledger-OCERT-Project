@@ -74,13 +74,13 @@ func GetAuditorKeypair(stub Wrapper, args [][]byte)([]byte, error) {
  * keys are in memory. It returns the Auditor's keypair to the auditor
  */
 func Setup(stub Wrapper, args [][]byte) ([]byte, error) {
-	fmt.Println("Setup")
+	fmt.Println("[Ocert Scheme] [Setup]")
 	if len(args) != 0 {
 		return nil, fmt.Errorf("Incorrect arguments. Expecting no arguments")
 	}
 
 	var err error;
-	verifyProofLog, err = os.Create("/data/verifyProofLog.txt")
+	// verifyProofLog, err = os.Create("/data/verifyProofLog.txt")
 	if err != nil {
 		fmt.Println(err)
 		panic(err.Error())
@@ -89,11 +89,18 @@ func Setup(stub Wrapper, args [][]byte) ([]byte, error) {
 	auditorKeypair = []byte("NoAuditorKeyPair")
 	serialNumber = big.NewInt(0)
 	sharedParams = GenerateSharedParams()
-	fmt.Printf("sharedParams: ")
+	fmt.Printf("[Ocert Scheme] [Setup] sharedParams: ")
 	fmt.Println(sharedParams)
+
 	// Generate auditor's keypair
 	PKa, SKa := EKeyGen(sharedParams)
-	err = stub.PutState("auditor_pk", PKa.PK)
+	fmt.Printf("[Ocert Scheme] [Setup] auditor_pk: ")
+	fmt.Println(PKa)
+	PKaBytes, err := PKa.Bytes()
+	if err != nil {
+		return nil, err
+	}
+	err = stub.PutState("auditor_pk", PKaBytes)
 	if err != nil {
 		return nil, err
 	}
@@ -106,7 +113,7 @@ func Setup(stub Wrapper, args [][]byte) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	fmt.Printf("rsa pk: ")
+	fmt.Printf("[Ocert Scheme] [Setup] rsa pk: ")
 	fmt.Println(&rsaPrivateKey.PublicKey)
 
 	rsaPublicKeyBytes, err := x509.MarshalPKIXPublicKey(&rsaPrivateKey.PublicKey)
@@ -170,8 +177,10 @@ func GenECert(stub Wrapper, args [][]byte) ([]byte, error) {
 	PKc := new(ClientPublicKey)
 	PKc.PK = request.PKc
 
-	fmt.Println("GenECert")
+	fmt.Println("[Ocert Scheme] [GenECert]")
+	fmt.Printf("[Ocert Scheme] [GenECert] arg0: ")
 	fmt.Println(IDc)
+	fmt.Printf("[Ocert Scheme] [GenECert] arg1: ")
 	fmt.Println(PKc)
 
 	// Generate pseudonym P
@@ -183,12 +192,19 @@ func GenECert(stub Wrapper, args [][]byte) ([]byte, error) {
 		return nil, fmt.Errorf("Asset not found: auditor_pk")
 	}
 	PKa := new(AuditorPublicKey)
-	PKa.PK = valuePKa
+	err = PKa.SetBytes(valuePKa)
+	if err != nil {
+		return nil, err
+	}
 
 	P := EEnc(sharedParams, PKa, IDc)
+	fmt.Printf("[Ocert Scheme] [GenECert] P: ")
+	fmt.Println(P)
 
 	// Generate ecert
 	ecert := SSign(sharedParams, sSigningKey, P, PKc)
+	fmt.Printf("[Ocert Scheme] [GenECert] ecert: ")
+	fmt.Println(ecert)
 
 	reply := new(GenECertReply)
 	reply.P, err = P.Bytes()
@@ -239,7 +255,7 @@ func GenOCert(stub Wrapper, args [][]byte) ([]byte, error) {
 	elapsed := end.Sub(start)
 	fmt.Println("proof verfication: ")
 	fmt.Println(elapsed)
-	verifyProofLog.WriteString("verifyProof: " + elapsed.String() + "\n")
+	// verifyProofLog.WriteString("verifyProof: " + elapsed.String() + "\n")
 
 	// TODO generate X.509 certificate
 	msg, err := OCertSingedBytes(PKc, P)

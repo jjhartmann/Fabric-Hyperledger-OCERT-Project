@@ -40,6 +40,22 @@ func main() {
 		panic(err.Error())
 	}
 
+	auditorPKBytesKey := []byte("auditor_pk")
+	getArgs := [][]byte{auditorPKBytesKey}
+	auditorPKBytes, err := ocert.Get(db, getArgs)
+	auditorPK := new(ocert.AuditorPublicKey)
+	err = auditorPK.SetBytes(auditorPKBytes)
+	if err != nil {
+		fmt.Println(err)
+		panic(err.Error())
+	}
+	fmt.Printf("[Benchmark] auditor_pk: ")
+	fmt.Println(auditorPK)
+	if err != nil {
+		fmt.Println(err)
+		panic(err.Error())
+	}
+
 	sharedParamsBytes, err := ocert.GetSharedParams(db, setupArgs)
 	sharedParams := new(ocert.SharedParams)
 	err = sharedParams.SetBytes(sharedParamsBytes)
@@ -47,13 +63,20 @@ func main() {
 		fmt.Println(err)
 		panic(err.Error())
 	}
+	fmt.Printf("[Benchmark] sharedParams: ")
 	fmt.Println(sharedParams)
 	pairing, _ := pbc.NewPairingFromString(sharedParams.Params)
 
 	IDc := new(ocert.ClientID)
 	IDc.ID = pairing.NewG1().Rand().Bytes()
+	fmt.Printf("[Benchmark] IDc: ")
+	fmt.Println(IDc)
+
 	PKc := new(ocert.ClientPublicKey)
 	PKc.PK = pairing.NewG1().Rand().Bytes()
+	fmt.Printf("[Benchmark] PKc: ")
+	fmt.Println(PKc)
+
 	ecertRequest := new(ocert.GenECertRequest)
 	ecertRequest.IDc = IDc.ID
 	ecertRequest.PKc = PKc.PK
@@ -75,4 +98,22 @@ func main() {
 		fmt.Println(err)
 		panic(err.Error())
 	}
+
+	P := new(ocert.Pseudonym)
+	err = P.SetBytes(ecertReply.P)
+	if err != nil {
+		fmt.Println(err)
+		panic(err.Error())
+	}
+	fmt.Printf("[Benchmark] P: ")
+	fmt.Println(P)
+
+	ecert := new(ocert.Ecert)
+	err = ecert.SetBytes(ecertReply.Ecert)
+	if err != nil {
+		fmt.Println(err)
+		panic(err.Error())
+	}
+	fmt.Printf("[Benchmark] ecert: ")
+	fmt.Println(ecert)
 }
