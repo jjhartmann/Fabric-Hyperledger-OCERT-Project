@@ -57,7 +57,7 @@ func RunETest(b int) {
 	}
 }
 
-func EGenKeyTest() bool{
+func EGenKeyTest(verbose bool) bool{
 	sharedParams := GenerateSharedParams()
 	PK, SK := EKeyGen(sharedParams)
 
@@ -123,6 +123,13 @@ func ETestRerandVerify(verbose bool) bool {
 
   if verbose {fmt.Println("Verify Rerand")}
   return ERerandVerify(sharedParams, SK, P, Pprime)
+}
+
+
+func ETestAll(verbose bool) {
+  fmt.Println("KeyGen:         ", EGenKeyTest(verbose))
+  fmt.Println("Enc and Dec:    ", ETestEncDec(verbose))
+  fmt.Println("Rerand Verify:  ", ETestRerandVerify(verbose))
 }
 
 

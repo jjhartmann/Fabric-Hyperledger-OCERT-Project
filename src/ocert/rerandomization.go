@@ -47,6 +47,7 @@ func EEnc(sharedParams *SharedParams, PKa *AuditorPublicKey, id *ClientID) *Pseu
   PK:=pairing.NewG1().SetBytes(PKa.PK)
   D:=pairing.NewG1().MulZn(PK,r)
 
+
 	//Convert the id into an element in G1
 	Cid:=pairing.NewG1().SetBytes(id.ID)
 
