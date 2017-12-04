@@ -924,23 +924,12 @@ func TestEquation2Verify(verbose bool) bool {
   proof := ProveEquation2(pairing, rprime, G, C, sigma)
 
   if verbose {fmt.Println("Testing second Equation: C + rprime * G = Cprime")}
-  pos1 := pairing.NewZr().SetInt32(1)
-  Gi := pairing.NewG1().MulZn(G, rprime)
-  //CPRIME := pairing.NewG1().MulZn(rprime, G)
-  //CPRIMEi := pairing.NewG1().Add(r, CPRIME)
-  // +
-  Cpos := pairing.NewG1().MulZn(C, pos1)
-  // +
-  gammar := pairing.NewZr().MulZn(proof.Gamma.mat[0][0], rprime)
-  Cgammar := pairing.NewG1().MulZn(C, gammar)
-  // =
-  tau := pairing.NewG1().Add(Cpos, Gi)
-  taui := pairing.NewG1().Add(tau, Cgammar)
-  if verbose {fmt.Println(taui)}
-
+  Gr := pairing.NewG1().MulZn(G, rprime)
+  tau := pairing.NewG1().Add(C, Gr)
+  if verbose {fmt.Println(tau)}
 
   if verbose {fmt.Println("Verify Proof")}
-  ret := VerifyEquation2(pairing, proof, G, taui, sigma)
+  ret := VerifyEquation2(pairing, proof, G, tau, sigma)
 
   if verbose {
     fmt.Println("Verify Result: ", ret)

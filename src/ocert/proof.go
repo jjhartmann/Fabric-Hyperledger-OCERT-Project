@@ -7,7 +7,7 @@ package ocert
 import (
 	"github.com/Nik-U/pbc"
 	"reflect"
-	"fmt"
+	_ "fmt"
 )
 
 /*
@@ -157,37 +157,30 @@ func ProveEquation2(pairing *pbc.Pairing, rprime *pbc.Element, G *pbc.Element, C
 
 	// Create commitment in B1 for C
 	c, _, R := CreateCommitmentOnG1(pairing, []*pbc.Element{C}, sigma)
+  if R.rows != 1 && R.cols != 2 {
+    panic("Issues in conversion and creation of samples in Zp for R")
+  }
 
 	// Create commitment in B2 for r' TODO: This should be in B2 - Done : Check?
 	dprime, _, S := CreateCommitmentPrimeOnG2(pairing, []*pbc.Element{rprime}, sigma)
+  if S.cols != 1 && S.rows != 1 {
+    panic("Issues in conversion and creation of samples in Zp for S")
+  }
+  s := S.mat[0][0]
 
 	// Convert parameters to B groups
-	Gi := Iota1(pairing, G)
-	pos1 := IotaPrime2(pairing, pairing.NewZr().SetInt32(1), sigma)
-
-	// Random samples from Zp
-	if S.cols != 1 && S.rows != 1 {
-		panic("Issues in conversion and creation of samples in Zp for S")
-	}
-
-	s := S.mat[0][0]
-
-	if R.rows != 1 && R.cols != 2 {
-		panic("Issues in conversion and creation of samples in Zp for R")
-	}
 
 	////////////////////////////////////////////
-	// Pi: In G1
-	_ = pos1
-	_ = rprime
+	// Pi: In G2
+  ////////////////////////////////////////////
 
-	Ri := R.InvertMatrix()                        // R Invert = R'
-	Rpos := Ri.MulBScalarinB2(pairing, *pos1)     // R'*ι'_2(1)
+  Ri := R.InvertMatrix()                        // R Invert = R'
+  pos1 := IotaPrime2(pairing, pairing.NewZr().Set1(), sigma)
+  Rpos := Ri.MulBScalarinB2(pairing, *pos1)     // R'*ι'_2(1)
 	// +
-
 	T := NewRMatrix(pairing, 1, 2)
 	Ti := T.InvertMatrix()                 // T' invert
-	Tv := Ti.MulCommitmentKeysG1(pairing, []CommitmentKey{sigma.V[0]})
+	Tv := Ti.MulCommitmentKeysG2(pairing, []CommitmentKey{sigma.V[0]})
 
 	if len(Rpos) != len(Tv) {
 		panic("All section lengths need to be equivalent")
@@ -214,13 +207,14 @@ func ProveEquation2(pairing *pbc.Pairing, rprime *pbc.Element, G *pbc.Element, C
 
 	/////////////////////////////////////
 	// Theta: In G1
+  /////////////////////////////////////
 
 	// Multiply Scalar from Zn on B elements
-	Gir := Gi.MulScalarInG1(pairing, s)           // s*ι_1(C)
+  Gi := Iota1(pairing, G)
+  Gir := Gi.MulScalarInG1(pairing, s)           // s*ι_1(C)
 
 	// Multiple Phi by commitment keys
 	Thetai := T.MulCommitmentKeysG1(pairing, sigma.U) // TU (commitment key in G1)
-
 	if len(Thetai) > 1{
 		panic("Thetai Should have len == 1")
 	}
@@ -290,24 +284,14 @@ func VerifyEquation2(pairing *pbc.Pairing, proof *ProofOfEquation, G *pbc.Elemen
 	// Construct LHS
 	Gi := Iota1(pairing, G)
 	FiGdp := FMap(pairing, Gi, proof.dprime[0])
-
 	//+
-	pos1 := IotaPrime2(pairing, pairing.NewZr().SetInt32(1), sigma)
+	pos1 := IotaPrime2(pairing, pairing.NewZr().Set1(), sigma)
 	Fcpos := FMap(pairing, proof.c[0], pos1)
-
-	// +
-	gamma := proof.Gamma.mat[0][0]
-	dpgamma := proof.dprime[0].MulScalarInG2(pairing, gamma)
-	Fcdp := FMap(pairing, proof.c[0], dpgamma)
 	// =
-	tmp1 := FiGdp.AddinGT(pairing, Fcpos)
-	LHS := tmp1.AddinGT(pairing, Fcdp)
-	fmt.Println("LHS:",LHS)
-
+  LHS := FiGdp.AddinGT(pairing, Fcpos)
 
 	// Construct RHS
 	taui := IotaHat2(pairing, tau, sigma)
-	fmt.Println("taui:", taui)
 	// +
 	v := sigma.V[0].ConvertToBPair()
 	Fvp := FMap(pairing, proof.Theta[0], v)
@@ -320,12 +304,9 @@ func VerifyEquation2(pairing *pbc.Pairing, proof *ProofOfEquation, G *pbc.Elemen
 	//=
 	tmp2 := taui.AddinGT(pairing, Fup1)
 	tmp2 = tmp2.AddinGT(pairing, Fup2)
-
 	RHS := tmp2.AddinGT(pairing, Fvp)
-	fmt.Println("RHS:", RHS)
 
-
-	// Perform Equality //TODO: Test for nil == nill
+  // Perform Equality //TODO: Test for nil == nill
 	ret := reflect.DeepEqual(LHS, RHS)
 	return ret
 }
