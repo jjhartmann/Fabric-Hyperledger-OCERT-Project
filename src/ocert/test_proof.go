@@ -968,8 +968,20 @@ func TestEquation5Equality(verbose bool) bool {
     pairing.NewG2().SetBytes(sharedParams.G2))
   if verbose {fmt.Println("eGH:", eGH)}
 
+  // Test Revised
+  eR1 := pairing.NewGT().Pair(pairing.NewG1().SetBytes(ecert.R),
+    pairing.NewG2().Set1())
+  if verbose {fmt.Println("eR1:", eR1)}
+  e1T := pairing.NewGT().Pair(pairing.NewG1().Set1(),
+    pairing.NewG2().SetBytes(ecert.T))
+  if verbose {fmt.Println("e1T:", e1T)}
+
   res := pairing.NewGT().Mul(eRT, eUPKc)
+  res = pairing.NewGT().Mul(res, eR1)
+  res = pairing.NewGT().Mul(res, e1T)
   if verbose {fmt.Println("Res:", res)}
+
+
 
   return res.Equals(eGH)
 }
