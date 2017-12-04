@@ -320,20 +320,22 @@ func (l BPair) AddinG2(pairing *pbc.Pairing, r *BPair) *BPair{
 
   return ret
 }
-func (l BPair) SubinG1(pairing *pbc.Pairing, r *BPair) *BPair{
-  ret := new(BPair)
 
-  // Convert to Groups
-  Bp1 := pairing.NewG1().Sub(pairing.NewG1().SetBytes(l.b1),
-                            pairing.NewG1().SetBytes(l.b1))
-  Bp2 := pairing.NewG1().Sub(pairing.NewG1().SetBytes(l.b2),
-                             pairing.NewG1().SetBytes(l.b2))
-
-  ret.b1 = Bp1.Bytes()
-  ret.b2 = Bp2.Bytes()
-
-  return ret
-}
+// TODO: Why doesn't this work!
+//func (tmp BPair) SubinG1(pairing *pbc.Pairing, l *BPair, r *BPair) *BPair{
+//  ret := new(BPair)
+//
+//  // Convert to Groups
+//  Bp1 := pairing.NewG1().Sub(pairing.NewG1().SetBytes(l.b1),
+//                            pairing.NewG1().SetBytes(r.b1))
+//  Bp2 := pairing.NewG1().Sub(pairing.NewG1().SetBytes(l.b2),
+//                             pairing.NewG1().SetBytes(r.b2))
+//
+//  ret.b1 = Bp1.Bytes()
+//  ret.b2 = Bp2.Bytes()
+//
+//  return ret
+//}
 func (l BPair) MulScalarInG1(pairing *pbc.Pairing, r *pbc.Element) *BPair {
   pair := new (BPair)
 
