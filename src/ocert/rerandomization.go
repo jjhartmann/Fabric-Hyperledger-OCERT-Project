@@ -47,6 +47,7 @@ func EEnc(sharedParams *SharedParams, PKa *AuditorPublicKey, id *ClientID) *Pseu
   PK:=pairing.NewG1().SetBytes(PKa.PK)
   D:=pairing.NewG1().MulZn(PK,r)
 
+
 	//Convert the id into an element in G1
 	Cid:=pairing.NewG1().SetBytes(id.ID)
 
@@ -68,7 +69,18 @@ func EDec(sharedParams *SharedParams, SKa *AuditorSecretKey, P *Pseudonym) *Clie
 
 	pairing, _ := pbc.NewPairingFromString(sharedParams.Params)
 
+	//Getting C & D from the Pseudonym P that has been passed into the function
+	C:=pairing.NewG1().SetBytes(P.C)
+	D:=pairing.NewG1().SetBytes(P.D)
 
+	//Get xa from SKa
+	xa:=pairing.NewG1().SetBytes(SKa.SK)
+
+	//Multiply xa with D & store it in "temp"
+  temp:=pairing.NewG1().MulZn(D,xa)
+
+	//To get the decrypted message, add temp to C of Pseudonym
+	id:=pairing.NewG1().Add(temp,id)
 
 	return id
 }
