@@ -8,6 +8,13 @@ import (
  * RMatrix: Builds a matrix of random elements from Zp
  */
 
+type BMatrix struct {
+  mat [][]*BPair
+  rows int
+  cols int
+  invert bool
+}
+
 type RMatrix struct {
   mat [][]*pbc.Element
   rows int
@@ -95,6 +102,33 @@ func NewIdentiyMatrix(pairing *pbc.Pairing, rows int, cols int) *RMatrix {
 }
 
 
+func (rmat *RMatrix) MultBPairMatrixG2(pairing *pbc.Pairing, X *BMatrix) *BMatrix {
+  if len(X.mat) != len(rmat.mat[0]) {
+    panic("Matrix elements need to be compatiable")
+  }
+
+  retMat := new(BMatrix)
+  retMat.rows = len(rmat.mat)
+  retMat.cols = len(X.mat[0])
+
+  for i := 0; i < rmat.rows; i++ {
+    elementRow := []*BPair{}
+    for j := 0; j < len(X.mat[0]); j++ {
+      el := new(BPair)
+      el.b1 = pairing.NewG2().Set1().Bytes()
+      el.b2 = pairing.NewG2().Set1().Bytes()
+      for k := 0; k < len(X.mat); k++ {
+        tmp := X.mat[k][j].MulScalarInG2(pairing, rmat.mat[i][k])
+        el = el.AddinG2(pairing, tmp)
+      }
+      elementRow = append(elementRow, el)
+    }
+    retMat.mat = append(retMat.mat, elementRow)
+  }
+  return retMat
+}
+
+
 func (rmat *RMatrix) MultElementArrayZr(pairing *pbc.Pairing, X [][]*pbc.Element) *RMatrix {
   if len(X) != len(rmat.mat[0]) {
     panic("Matrix elements need to be compatiable")
@@ -118,6 +152,10 @@ func (rmat *RMatrix) MultElementArrayZr(pairing *pbc.Pairing, X [][]*pbc.Element
   }
   return retMat
 }
+
+
+
+
 
 func (rmat *RMatrix) MultElementArrayG2(pairing *pbc.Pairing, X [][]*pbc.Element) *RMatrix {
   if len(X) != len(rmat.mat[0]) {
