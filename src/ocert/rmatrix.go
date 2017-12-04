@@ -30,6 +30,65 @@ func NewRMatrix(pairing *pbc.Pairing, rows int, cols int) *RMatrix {
   return rmat
 }
 
+func NewOnesMatrix(pairing *pbc.Pairing, rows int, cols int) *RMatrix {
+  rmat := new(RMatrix)
+  rmat.rows = rows
+  rmat.cols = cols
+  for i := 0; i < rows; i++ {
+    elementRow := []*pbc.Element{}
+    for j := 0; j < cols; j++ {
+      el := pairing.NewZr().Set1()
+      elementRow = append(elementRow, el)
+    }
+    rmat.mat = append(rmat.mat, elementRow)
+  }
+  return rmat
+}
+
+func NewIdentiyMatrix(pairing *pbc.Pairing, rows int, cols int) *RMatrix {
+  rmat := new(RMatrix)
+  rmat.rows = rows
+  rmat.cols = cols
+  for i := 0; i < rows; i++ {
+    elementRow := []*pbc.Element{}
+    for j := 0; j < cols; j++ {
+      el := pairing.NewZr().SetInt32(0)
+      if i == j {
+        el = pairing.NewZr().Set1()
+      }
+      elementRow = append(elementRow, el)
+    }
+    rmat.mat = append(rmat.mat, elementRow)
+  }
+  return rmat
+}
+
+func (rmat *RMatrix) MultElementArrayG2(pairing *pbc.Pairing, X [][]*pbc.Element) *RMatrix {
+  if len(X) != len(rmat.mat[0]) {
+    panic("Matrix elements need to be compatiable")
+  }
+
+  retMat := new(RMatrix)
+  retMat.cols = len(rmat.mat)
+  retMat.rows = len(X[0])
+
+  for i := 0; i < rmat.rows; i++ {
+    elementRow := []*pbc.Element{}
+    for j := 0; j < len(X[0]); j++ {
+      el := pairing.NewG2().Set1()
+      for k := 0; k < len(X); k++ {
+        tmp := pairing.NewG2().MulZn(X[k][j], rmat.mat[i][k])
+        el = pairing.NewG2().Add(el, tmp)
+      }
+      elementRow = append(elementRow, el)
+    }
+    retMat.mat = append(retMat.mat, elementRow)
+  }
+  return retMat
+
+
+}
+
 // TODO: A lot of these fucntions could be optimised!
 func (rmat *RMatrix) InvertMatrix() *RMatrix{
   R := new(RMatrix)

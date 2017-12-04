@@ -157,6 +157,46 @@ func TestRMatrixInversion(verbose bool, rows int, cols int) bool {
   return ret && TestRMatrixStructure(verbose, R) && TestRMatrixStructure(verbose, Ri)
 }
 
+
+func TestRMatrixMultiplicationforElementinG2(verbose bool, rows int, cols int) bool {
+  sharedParams := GenerateSharedParams()
+  pairing, _ := pbc.NewPairingFromString(sharedParams.Params)
+  g1 := pairing.NewG1().Rand()
+  g2 := pairing.NewG2().Rand()
+  gt := pairing.NewGT().Pair(g1, g2)
+  _ = gt
+
+  ones := NewIdentiyMatrix(pairing, rows, cols)
+  X := [][]*pbc.Element{
+    []*pbc.Element{pairing.NewG2().Rand(), pairing.NewG2().Rand()},
+    []*pbc.Element{pairing.NewG2().Rand(), pairing.NewG2().Rand()},
+  }
+  if verbose {
+    fmt.Println("X:")
+    for i := 0; i < 2; i++ {
+      for j := 0; j < 2; j++ {
+        fmt.Printf("%s", X[i][j])
+      }
+      fmt.Println()
+    }
+  }
+
+  ret := ones.MultElementArrayG2(pairing, X)
+  if verbose {
+    fmt.Println("RET:")
+    for i := 0; i < ret.rows; i++ {
+      for j := 0; j < ret.cols; j++ {
+        fmt.Printf("%s", ret.mat[i][j])
+      }
+      fmt.Println()
+    }
+  }
+
+  return false
+
+}
+
+
 func TestRMatrixStructure(verbose bool, R *RMatrix) bool{
    if (verbose) {fmt.Println("Testing R Matrix Structure")}
    ret1 := R.rows == len(R.mat)
