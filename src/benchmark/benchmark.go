@@ -33,6 +33,8 @@ func main() {
 	db.DB = make(map[string][]byte)
 
 	// Benchmark starts here
+
+	// Setup
 	setupArgs := [][]byte{}
 	_, err := ocert.Setup(db, setupArgs)
 	if err != nil {
@@ -67,6 +69,7 @@ func main() {
 	fmt.Println(sharedParams)
 	pairing, _ := pbc.NewPairingFromString(sharedParams.Params)
 
+	// GenECert
 	IDc := new(ocert.ClientID)
 	IDc.ID = pairing.NewG1().Rand().Bytes()
 	fmt.Printf("[Benchmark] IDc: ")

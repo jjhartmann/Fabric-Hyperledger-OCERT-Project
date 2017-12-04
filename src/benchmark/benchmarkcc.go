@@ -37,6 +37,26 @@ func setup() {
 	}
 }
 
+func auditorPK() *ocert.AuditorPublicKey {
+	queryCmd := "peer chaincode query -n mycc -c '{\"Args\":[\"get\", \"auditor_pk\"]}' -C myc"
+	out, err := exec.Command("sh","-c", queryCmd).Output()
+
+	if err != nil {
+		fmt.Println(err)
+		panic(err.Error())
+	}
+	
+	auditorPK := new(ocert.AuditorPublicKey)
+	err = auditorPK.SetBytes(parseOut(out))
+
+	if err != nil {
+		fmt.Println(err)
+		panic(err.Error())
+	}
+
+	return auditorPK
+}
+
 func sharedParams() *ocert.SharedParams {
 	queryCmd := "peer chaincode query -n mycc -c '{\"Args\":[\"sharedParams\"]}' -C myc"
 	out, err := exec.Command("sh","-c", queryCmd).Output()
@@ -82,7 +102,7 @@ func rsaPK() (interface{}) {
 	return pk
 }
 
-func genECert(id *ocert.ClientID, pkc *ocert.ClientPublicKey) {
+func genECert(id *ocert.ClientID, pkc *ocert.ClientPublicKey) (*ocert.Pseudonym, *ocert.Ecert){
 	request := new(ocert.GenECertRequest)
 	request.IDc = id.ID
 	request.PKc = pkc.PK
@@ -103,9 +123,6 @@ func genECert(id *ocert.ClientID, pkc *ocert.ClientPublicKey) {
 		fmt.Println(err)
 		panic(err.Error())
 	}
-	fmt.Println(out)
-
-	return
 
 	out = parseOut(out)
 	reply := new(ocert.GenECertReply)
@@ -126,9 +143,7 @@ func genECert(id *ocert.ClientID, pkc *ocert.ClientPublicKey) {
 		fmt.Println(err)
 		panic(err.Error())
 	}
-	fmt.Println(p)
-	fmt.Println(ecert)
-
+	return p, ecert
 }
 
 func genOCert(pkc *ocert.ClientPublicKey, p *ocert.Pseudonym) {
@@ -193,25 +208,42 @@ func main () {
 		panic(err.Error())
 	}
 
+	// Setup
 	// setup()
+	auditorPK := auditorPK()
+	fmt.Printf("[Benchmarkcc] auditorPK: ")
+	fmt.Println(auditorPK)
+
 	sharedParams := sharedParams()
+	fmt.Printf("[Benchmarkcc] sharedParams: ")
 	fmt.Println(sharedParams)
+
+	// GenEcert
 	pairing, _ := pbc.NewPairingFromString(sharedParams.Params)
 	IDc := new(ocert.ClientID)
 	IDc.ID = pairing.NewG1().Rand().Bytes()
+	fmt.Printf("[Benchmarkcc] IDc: ")
+	fmt.Println(IDc)
+
 	PKc := new(ocert.ClientPublicKey)
 	PKc.PK = pairing.NewG1().Rand().Bytes()
-	// genECert(IDc, PKc)
+	fmt.Printf("[Benchmarkcc] PKc: ")
+	fmt.Println(PKc)
+	P, ecert := genECert(IDc, PKc)
+	fmt.Printf("[Benchmarkcc] P: ")
+	fmt.Println(P)
+	fmt.Printf("[Benchmarkcc] ecert: ")
+	fmt.Println(ecert)
 
-	start := time.Now()
-	end := time.Now()
-	elapsed := end.Sub(start)
-	fmt.Println("proof generation: ")
-	fmt.Println(elapsed)
+	// start := time.Now()
+	// end := time.Now()
+	// elapsed := end.Sub(start)
+	// fmt.Println("proof generation: ")
+	// fmt.Println(elapsed)
 
-	fmt.Printf("rsa pk: ")
-	fmt.Println(rsaPK())
+	// fmt.Printf("rsa pk: ")
+	// fmt.Println(rsaPK())
 
-	genOCertLog.WriteString("genOCert: " + elapsed.String() + "\n")
-	genProofLog.WriteString("genProof: " + elapsed.String() + "\n")
+	// genOCertLog.WriteString("genOCert: " + elapsed.String() + "\n")
+	// genProofLog.WriteString("genProof: " + elapsed.String() + "\n")
 }

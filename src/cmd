@@ -9,6 +9,7 @@ docker exec -it cli bash
 
 	peer chaincode query -n mycc -c '{"Args":["get","structure_preserving_vk"]}' -C myc
 	peer chaincode query -n mycc -c '{"Args":["get","rsa_pk"]}' -C myc
+	peer chaincode query -n mycc -c '{"Args":["get","auditor_pk"]}' -C myc
 	peer chaincode query -n mycc -c '{"Args":["sharedParams"]}' -C myc
 
 
