@@ -69,11 +69,6 @@ func ProveEquation1(pairing *pbc.Pairing, xc *pbc.Element, H *pbc.Element, PKc *
     panic("Issues in conversion and creation of samples in Zp for S")
   }
 
-	// Convert parameters to B groups
-	//Hi := Iota2(pairing, H)
-	//pos1 := IotaPrime1(pairing, pairing.NewZr().Set1(), sigma)
-	//xci := IotaPrime1(pairing, xc, sigma)
-
 	/////////////////////////////////////
 	// Pi: In G2
   /////////////////////////////////////
@@ -103,7 +98,7 @@ func ProveEquation1(pairing *pbc.Pairing, xc *pbc.Element, H *pbc.Element, PKc *
   ////////////////////////////////////////////
 	Si := S.InvertMatrix()                        // S Invert = S'
   pos1 := IotaPrime1(pairing, pairing.NewZr().Set1(), sigma)
-	Spos := Si.MulBScalarinB1(pairing, *pos1)     // S'*ι'_1(-1)
+	Spos := Si.MulBScalarinB1(pairing, *pos1)     // S'*ι'_1(1)
 	// +
 	Tu := T.MulCommitmentKeysG1(pairing, []CommitmentKey{sigma.U[0]}) // Tu_1
 
@@ -226,19 +221,13 @@ func ProveEquation2(pairing *pbc.Pairing, rprime *pbc.Element, G *pbc.Element, C
 func VerifyEquation1(pairing *pbc.Pairing, proof *ProofOfEquation, H *pbc.Element, tau *pbc.Element, sigma *Sigma) bool {
 
 	// Construct LHS
-	neg1 := IotaPrime1(pairing, pairing.NewZr().SetInt32(-1), sigma)
-	Fid := FMap(pairing, neg1, proof.d[0])
+	pos1 := IotaPrime1(pairing, pairing.NewZr().Set1(), sigma)
+	Fid := FMap(pairing, pos1, proof.d[0])
 	// +
 	Hi := Iota2(pairing, H)
 	FcH := FMap(pairing, proof.cprime[0], Hi)
-	// +
-	gamma := proof.Gamma.mat[0][0]
-	dgamma := proof.d[0].MulScalarInG2(pairing, gamma)
-	Fcd := FMap(pairing, proof.cprime[0], dgamma)
 	// =
-	tmp1 := Fid.AddinGT(pairing, FcH)
-	LHS := tmp1.AddinGT(pairing, Fcd)
-
+	LHS := Fid.AddinGT(pairing, FcH)
 
 	// Construct RHS
 	taui := IotaHat(pairing, tau, sigma)
@@ -255,7 +244,6 @@ func VerifyEquation1(pairing *pbc.Pairing, proof *ProofOfEquation, H *pbc.Elemen
 	tmp2 := taui.AddinGT(pairing, Fup)
 	tmp2 = tmp2.AddinGT(pairing, Fsv1)
 	RHS := tmp2.AddinGT(pairing, Fsv2)
-
 
 	// Perform Equality //TODO: Test for nil == nill
 	ret := reflect.DeepEqual(LHS, RHS)

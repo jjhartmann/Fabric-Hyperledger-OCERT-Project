@@ -867,26 +867,18 @@ func TestEquation1Verify(verbose bool) bool {
 
   Xc := pairing.NewZr().Rand() // Client Secret Key (variable)
   H  := pairing.NewG2().SetBytes(sharedParams.G2) // Shared Generator ??
-  PKc := pairing.NewG2().Rand() // Public Key (variable
+  PKc := pairing.NewG2().MulZn(H, Xc) // Public Key (variable
+  negPKc := pairing.NewG2().Neg(PKc)
 
   if verbose {fmt.Println("Creating CRS Sigma")}
   alpha := pairing.NewZr().Rand() // Another Secret Key..
   sigma := CreateCommonReferenceString(sharedParams, alpha) // CRS
 
   if verbose {fmt.Println("Generate Proof")}
-  proof := ProveEquation1(pairing, Xc, H, PKc, sigma)
+  proof := ProveEquation1(pairing, Xc, H, negPKc, sigma)
 
   if verbose {fmt.Println("Tetsting Initital Euqation: XcH + (-1)PKc = 0")}
-  neg1 := pairing.NewZr().SetInt32(-1)
-  XcH := pairing.NewG2().MulZn(H, Xc)
-  // +
-  PkcNeg := pairing.NewG2().MulZn(PKc, neg1)
-  // +
-  gPKc := pairing.NewG2().MulZn(PKc, proof.Gamma.mat[0][0])
-  XcPkcg := pairing.NewG2().MulZn(gPKc, Xc)
-  // =
-  tau := pairing.NewG2().Add(XcH, PkcNeg)
-  tau = pairing.NewG2().Add(tau, XcPkcg)
+  tau := pairing.NewG2().Add(PKc, negPKc)
   if verbose {fmt.Println(tau)}
 
 
@@ -896,6 +888,8 @@ func TestEquation1Verify(verbose bool) bool {
   if verbose {
     fmt.Println("Verify Restul: ", ret)
   }
+
+
 
   return ret
 }
