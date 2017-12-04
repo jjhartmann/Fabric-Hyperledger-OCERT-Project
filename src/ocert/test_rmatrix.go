@@ -234,6 +234,44 @@ func TestRMatrixMultiplicationforElementinG1(verbose bool, r_rows int, r_cols in
 
 }
 
+func TestRMatrixMultiplicationforElementinZr(verbose bool, r_rows int, r_cols int, x_rows int, x_cols int) bool {
+  sharedParams := GenerateSharedParams()
+  pairing, _ := pbc.NewPairingFromString(sharedParams.Params)
+  g1 := pairing.NewG1().Rand()
+  g2 := pairing.NewG2().Rand()
+  gt := pairing.NewGT().Pair(g1, g2)
+  _ = gt
+
+  ones := NewOnesMatrix(pairing, r_rows, r_cols)
+  X := NewRMatrix(pairing, x_rows, x_cols)
+
+  if verbose {
+    fmt.Println("X:")
+    for i := 0; i < len(X.mat); i++ {
+      for j := 0; j < len(X.mat[0]); j++ {
+        fmt.Printf("%s, ", X.mat[i][j])
+      }
+      fmt.Println()
+    }
+  }
+
+  mat := ones.MultElementArrayZr(pairing, X.mat)
+  if verbose {
+    fmt.Println("RET:")
+    for i := 0; i < mat.rows; i++ {
+      for j := 0; j < mat.cols; j++ {
+        fmt.Printf("%s, ", mat.mat[i][j])
+      }
+      fmt.Println()
+    }
+  }
+
+  ret1 := len(mat.mat) == len(ones.mat) && len(mat.mat[0]) == len(X.mat[0])
+
+  return TestRMatrixStructure(verbose, mat) && ret1
+
+}
+
 
 func TestRMatrixStructure(verbose bool, R *RMatrix) bool{
    if (verbose) {fmt.Println("Testing R Matrix Structure")}
@@ -276,6 +314,13 @@ func RunAllRTests(verbose bool) {
   fmt.Println("RMatrix Mult in G1 1x2 2x2     ", TestRMatrixMultiplicationforElementinG1(false,1, 2, 2, 2))
   fmt.Println("RMatrix Mult in G1 2x2 2x2     ", TestRMatrixMultiplicationforElementinG1(false,2, 2, 2, 2))
   fmt.Println("RMatrix Mult in G1 2x2 2x2     ", TestRMatrixMultiplicationforElementinG1(false,2, 2, 2, 2))
+  fmt.Println("RMatrix Mult in Zr 1x1 1x1     ", TestRMatrixMultiplicationforElementinZr(false,1, 1, 1, 1))
+  fmt.Println("RMatrix Mult in Zr 2x1 1x2     ", TestRMatrixMultiplicationforElementinZr(false,2, 1, 1, 2))
+  fmt.Println("RMatrix Mult in Zr 1x2 2x1     ", TestRMatrixMultiplicationforElementinZr(false,1, 2, 2, 1))
+  fmt.Println("RMatrix Mult in Zr 2x2 2x1     ", TestRMatrixMultiplicationforElementinZr(false,2, 2, 2, 1))
+  fmt.Println("RMatrix Mult in Zr 1x2 2x2     ", TestRMatrixMultiplicationforElementinZr(false,1, 2, 2, 2))
+  fmt.Println("RMatrix Mult in Zr 2x2 2x2     ", TestRMatrixMultiplicationforElementinZr(false,2, 2, 2, 2))
+  fmt.Println("RMatrix Mult in Zr 2x2 2x2     ", TestRMatrixMultiplicationforElementinZr(false,2, 2, 2, 2))
 
 }
 

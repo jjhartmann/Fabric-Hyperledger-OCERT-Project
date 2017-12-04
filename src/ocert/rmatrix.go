@@ -94,6 +94,31 @@ func NewIdentiyMatrix(pairing *pbc.Pairing, rows int, cols int) *RMatrix {
   return rmat
 }
 
+
+func (rmat *RMatrix) MultElementArrayZr(pairing *pbc.Pairing, X [][]*pbc.Element) *RMatrix {
+  if len(X) != len(rmat.mat[0]) {
+    panic("Matrix elements need to be compatiable")
+  }
+
+  retMat := new(RMatrix)
+  retMat.rows = len(rmat.mat)
+  retMat.cols = len(X[0])
+
+  for i := 0; i < rmat.rows; i++ {
+    elementRow := []*pbc.Element{}
+    for j := 0; j < len(X[0]); j++ {
+      el := pairing.NewZr().Set1()
+      for k := 0; k < len(X); k++ {
+        tmp := pairing.NewZr().Mul(X[k][j], rmat.mat[i][k])
+        el = pairing.NewZr().Add(el, tmp)
+      }
+      elementRow = append(elementRow, el)
+    }
+    retMat.mat = append(retMat.mat, elementRow)
+  }
+  return retMat
+}
+
 func (rmat *RMatrix) MultElementArrayG2(pairing *pbc.Pairing, X [][]*pbc.Element) *RMatrix {
   if len(X) != len(rmat.mat[0]) {
     panic("Matrix elements need to be compatiable")
