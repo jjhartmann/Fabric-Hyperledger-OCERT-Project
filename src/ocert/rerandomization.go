@@ -92,7 +92,7 @@ func EDec(sharedParams *SharedParams, SKa *AuditorSecretKey, P *Pseudonym) *Clie
  * P' = (C', D'), where P' is also in G1 * G1.
  */
 // TODO This function may also return the extra information used in validation
-func ERerand(sharedParams *SharedParams,PKa *AuditorPublicKey, P *Pseudonym) *Pseudonym {
+func ERerand(sharedParams *SharedParams, PKa *AuditorPublicKey, P *Pseudonym) *Pseudonym {
 	// TODO rerandomize P
 	pairing, _ := pbc.NewPairingFromString(sharedParams.Params)
 	g1 := pairing.NewG1().SetBytes(sharedParams.G1)

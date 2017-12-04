@@ -22,7 +22,7 @@ func Etest() bool {
 		return false
 	}
 
-	PPrime := ERerand(sharedParams, P)
+	PPrime := ERerand(sharedParams, PK, P)
 	return ERerandVerify(sharedParams, P, PPrime)
 }
 
