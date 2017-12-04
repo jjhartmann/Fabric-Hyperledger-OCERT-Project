@@ -10,8 +10,11 @@ import (
 	"ocert"
 	"github.com/Nik-U/pbc"
 	"strings"
-	"time"
+	// "time"
+	"crypto"
 	"crypto/x509"
+	"crypto/sha256"
+	"crypto/rsa"
 	"os"
 )
 
@@ -146,10 +149,34 @@ func genECert(id *ocert.ClientID, pkc *ocert.ClientPublicKey) (*ocert.Pseudonym,
 	return p, ecert
 }
 
-func genOCert(pkc *ocert.ClientPublicKey, p *ocert.Pseudonym) {
+func genOCert(sharedParams *ocert.SharedParams, p *ocert.Pseudonym, auditorPK *ocert.AuditorPublicKey) (*ocert.ClientPublicKey, *ocert.Pseudonym, []byte){
+	pairing, _ := pbc.NewPairingFromString(sharedParams.Params)
+
+	// New client public key and pseudonym
+	newPKc := new(ocert.ClientPublicKey)
+	newPKc.PK = pairing.NewG1().Rand().Bytes()
+	fmt.Printf("[Benchmarkcc] newPKc: ")
+	fmt.Println(newPKc)
+
+	newP, rprime := ocert.ERerand(sharedParams, auditorPK, p)
+	fmt.Printf("[Benchmarkcc] newP: ")
+	fmt.Println(newP)
+	fmt.Printf("[Benchmarkcc] rprime: ")
+	fmt.Println(rprime)
+
+	// TODO proof generation
+
+	// start := time.Now()
+	// end := time.Now()
+	// elapsed := end.Sub(start)
+	// fmt.Println("proof generation: ")
+	// fmt.Println(elapsed)
+
+	// genProofLog.WriteString("genProof: " + elapsed.String() + "\n")
+
 	request := new(ocert.GenOCertRequest)
-	request.PKc = pkc.PK
-	pBytes, err := p.Bytes()
+	request.PKc = newPKc.PK
+	pBytes, err := newP.Bytes()
 	if err != nil {
 		fmt.Println(err)
 		panic(err.Error())
@@ -166,16 +193,14 @@ func genOCert(pkc *ocert.ClientPublicKey, p *ocert.Pseudonym) {
 
 	queryCmd := "peer chaincode query -n mycc -c '{\"Args\":[\"genOCert\" ,\"" +
 				requestStr + "\"]}' -C myc"
-	fmt.Println(queryCmd)
 
-	return
-
-	start := time.Now()
+	// start := time.Now()
 	out, err := exec.Command("sh","-c", queryCmd).Output()
-	end := time.Now()
-	elapsed := end.Sub(start)
-	fmt.Println("genOCert: ")
-	fmt.Println(elapsed)
+	// end := time.Now()
+	// elapsed := end.Sub(start)
+	// fmt.Println("genOCert: ")
+	// fmt.Println(elapsed)
+	// genOCertLog.WriteString("genOCert: " + elapsed.String() + "\n")
 
 	if err != nil {
 		fmt.Println(err)
@@ -190,6 +215,7 @@ func genOCert(pkc *ocert.ClientPublicKey, p *ocert.Pseudonym) {
 		fmt.Println(err)
 		panic(err.Error())
 	}
+	return newPKc, newP, reply.Sig
 }
 
 var genOCertLog *os.File
@@ -210,10 +236,17 @@ func main () {
 
 	// Setup
 	// setup()
+
+	// Keys
 	auditorPK := auditorPK()
 	fmt.Printf("[Benchmarkcc] auditorPK: ")
 	fmt.Println(auditorPK)
 
+	rsaPK := rsaPK()
+	fmt.Printf("[Benchmarkcc] rsa_pk: ")
+	fmt.Println(rsaPK)
+
+	// Bilinear group
 	sharedParams := sharedParams()
 	fmt.Printf("[Benchmarkcc] sharedParams: ")
 	fmt.Println(sharedParams)
@@ -235,15 +268,23 @@ func main () {
 	fmt.Printf("[Benchmarkcc] ecert: ")
 	fmt.Println(ecert)
 
-	// start := time.Now()
-	// end := time.Now()
-	// elapsed := end.Sub(start)
-	// fmt.Println("proof generation: ")
-	// fmt.Println(elapsed)
+	// GenOCert
+	newPKc, newP, signature := genOCert(sharedParams, P, auditorPK)
+	fmt.Printf("[Benchmarkcc] signature: ")
+	fmt.Println(signature)
 
-	// fmt.Printf("rsa pk: ")
-	// fmt.Println(rsaPK())
-
-	// genOCertLog.WriteString("genOCert: " + elapsed.String() + "\n")
-	// genProofLog.WriteString("genProof: " + elapsed.String() + "\n")
+	// Verify signature
+	msg, err := ocert.OCertSingedBytes(newPKc, newP)
+	if err != nil {
+		fmt.Println(err)
+		panic(err.Error())
+	}
+	hashed := sha256.Sum256(msg)
+	err = rsa.VerifyPKCS1v15(rsaPK.(*rsa.PublicKey), crypto.SHA256, hashed[:], signature)
+	if err != nil {
+		fmt.Println(err)
+		panic(err.Error())
+	} else {
+		fmt.Println("[Benchmarkcc] ocert verified")
+	}
 }
