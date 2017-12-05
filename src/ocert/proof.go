@@ -234,7 +234,7 @@ func ProveEquation5(pairing *pbc.Pairing,
 	// Create commitment in B2 for PKc
 	Ymat := [][]*BPair{[]*BPair{Iota2(pairing, T)}, []*BPair{Iota2(pairing, PKc)}}
 	Yvec := []*pbc.Element{T, PKc}
-	d, _, Smat := CreateCommitmentOnG2(pairing, Yvec, sigma)
+	d, _, Smat := CreateCommitmentOnG2(pairing, Yvec, sigma) // T, PKc
 	if Smat.rows != 2 && Smat.cols != 2 {
 		panic("Issues in conversion and creation of samples in Zp for S")
 	}
@@ -439,11 +439,11 @@ func VerifyEquation2(pairing *pbc.Pairing, proof *ProofOfEquation, G *pbc.Elemen
 func VerifyEquation5(pairing *pbc.Pairing, proof *ProofOfEquation, U *pbc.Element, tau *pbc.Element, sigma *Sigma) bool {
 
   // Construct LHS
-  Uiota := Iota1(pairing, U)
-  Fu := FMap(pairing, Uiota, proof.d[0])
-  // +
   pos1 := Iota1(pairing, pairing.NewG1().Set1())
-  Fpos1 := FMap(pairing, pos1, proof.d[1])
+  Fpos1 := FMap(pairing, pos1, proof.d[0])
+  // +
+  Uiota := Iota1(pairing, U)
+  Fu := FMap(pairing, Uiota, proof.d[1])
   // +
   pos2 := Iota2(pairing, pairing.NewG2().Set1())
   Fpos2 := FMap(pairing, proof.c[0], pos2)
