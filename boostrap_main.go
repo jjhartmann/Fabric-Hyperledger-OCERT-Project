@@ -11,14 +11,16 @@ import (
 )
 
 func main() {
-  fmt.Printf("\nRun Structure Perserving Tests\n")
-  fmt.Println(ocert.Stest())
+  //fmt.Printf("\nRun Structure Perserving Tests\n")
+  //fmt.Println(ocert.Stest())
 
-  fmt.Printf("\nRun Proof Tests\n")
-  ocert.RunAllPTests(false)
+  //fmt.Printf("\nRun Proof Tests\n")
+  //ocert.RunAllPTests(false)
 
-  fmt.Printf("\nRun RMatrix Tests\n")
-  ocert.RunAllRTests(false)
+  fmt.Println("RMatrix Mult in G1 2x2 2x2     ", ocert.TestRMatrixMultiplicationforElementinG1(true,2, 2, 2, 2))
+
+  //fmt.Printf("\nRun RMatrix Tests\n")
+  //ocert.RunAllRTests(false)
 
   //fmt.Println(ocert.TestEquation1Verify(true))
 

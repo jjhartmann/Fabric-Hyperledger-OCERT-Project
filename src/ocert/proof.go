@@ -220,60 +220,67 @@ func ProveEquation2(pairing *pbc.Pairing, rprime *pbc.Element, G *pbc.Element, C
  *   V, H, W1, W2 from group G2: Constants
  *
  * Proof:
-R>◆2(B~)+R> ◆2(Y~)+(R> S T>)~v
- *    Pi     := R'*ι_2(V) * ι_2(H) * ι_2(W1) * ι_2(W2) + (R'*lambda*S - T')*V
+ *    Pi     := R'*(ι_2(V), ι_2(H), ι_2(W1), ι_2(W2)) + ( - T')*V
  *    Theta  := S'*lambda'*ι_1(R) *ι_1(S) *ι_1(C) *ι_1(D) + T*U
  */
 func ProveEquation4(pairing *pbc.Pairing, R *pbc.Element, S *pbc.Element, C *pbc.Element, D *pbc.Element, V *pbc.Element, H *pbc.Element, W1 *pbc.Element, W2 *pbc.Element, sigma *Sigma) *ProofOfEquation {
 	proof := new(ProofOfEquation)
 
 	// Create commitment in B1 for R
-	c1, _, R1 := CreateCommitmentOnG1(pairing, []*pbc.Element{R}, sigma)
-	if R1.cols != 1 && R1.rows != 1 {
+	//chi := pairing.NewG1().NewFieldElement(R, S, C, D)
+	c, _, R1 := CreateCommitmentOnG1(pairing, []*pbc.Element{R, S, C, D}, sigma)
+	if R1.cols != 2 && R1.rows != 4 {
 		panic("Issues in conversion and creation of samples in G1 for R1")
 	}
 
-	// Create commitment in B1 for S
-	c2, _, R2 := CreateCommitmentOnG1(pairing, []*pbc.Element{S}, sigma)
-	if R2.cols != 1 && R2.rows != 1 {
+	/////////////////////////////////////
+	// Pi: In G2
+	/////////////////////////////////////
+
+	// Multiply Vectors from B elements on R1
+	Viota := Iota2(pairing, V)
+	Hiota := Iota2(pairing, H)
+	W1iota := Iota2(pairing, W1)
+	W2iota := Iota2(pairing, W2)
+
+	Ri := R1.InvertMatrix()							//Invert R1 matrix
+
+	//Multiply elements from G2 to G2
+	R1i := Ri.MultElementArrayG2(pairing, [][]*pbc.Element{{pairing.NewG2().SetBytes(Viota.b1),pairing.NewG2().SetBytes(Viota.b2)},
+													{pairing.NewG2().SetBytes(Hiota.b1),pairing.NewG2().SetBytes(Hiota.b2)},
+													{pairing.NewG2().SetBytes(W1iota.b1),pairing.NewG2().SetBytes(W1iota.b2)},
+													{pairing.NewG2().SetBytes(W2iota.b1),pairing.NewG2().SetBytes(W2iota.b2)}})
+	if R1i.cols != 2 && R1i.rows != 4 {
 		panic("Issues in conversion and creation of samples in G1 for R1")
 	}
 
-	// Create commitment in B1 for C
-	c3, _, R3 := CreateCommitmentOnG1(pairing, []*pbc.Element{C}, sigma)
-	if R3.cols != 1 && R3.rows != 1 {
-		panic("Issues in conversion and creation of samples in G1 for R1")
+	// -
+	// Create Phi := ( T'* V)
+	T := NewRMatrix(pairing, 2, 4)
+	Ti := T.InvertMatrix()                 // T' invert
+	Vphi := Ti.MulCommitmentKeysG2(pairing, sigma.V) // (T')*V (commitment key in G2)
+	if len(Vphi) > 2{
+		panic("VPhi Should have len == 2")
 	}
+	//=
+	// Construct Pi (R1i - Vphi)
+	//R1ipair := R1i.ElementWiseSub(pairing, Vphi)
+	//Tv := Vphi[0]
+	//pi := new(BPair)
 
-	// Create commitment in B1 for D
-	c4, _, R4 := CreateCommitmentOnG1(pairing, []*pbc.Element{D}, sigma)
-	if R4.cols != 1 && R4.rows != 1 {
-		panic("Issues in conversion and creation of samples in G1 for R1")
-	}
+	//pi.b1 = pairing.NewG2().Sub(pairing.NewG2().SetBytes(Hir.b1),
+	//	pairing.NewG2().SetBytes(Tv.b1)).Bytes()
+	//pi.b2 = pairing.NewG2().Sub(pairing.NewG2().SetBytes(Hir.b2),
+	//	pairing.NewG2().SetBytes(Tv.b2)).Bytes()
 
-	// Create commitment in B2 for V
-	d1, _, S1 := CreateCommitmentOnG1(pairing, []*pbc.Element{V}, sigma)
-	if S1.cols != 1 && S1.rows != 1 {
-		panic("Issues in conversion and creation of samples in G1 for R1")
-	}
+	//for i := 0; i < len(R1i); i++ {
+	//	Rposrp := R1i[i][0]
+	//	tmpB := R1i.SubinG2(pairing, Tv[i])
+	//	pi = append(pi, tmpB)
+	//}
 
-	// Create commitment in B2 for H
-	d2, _, S2 := CreateCommitmentOnG1(pairing, []*pbc.Element{H}, sigma)
-	if S2.cols != 1 && S2.rows != 1 {
-		panic("Issues in conversion and creation of samples in G1 for R1")
-	}
-
-	// Create commitment in B2 for W1
-	d3, _, S3 := CreateCommitmentOnG1(pairing, []*pbc.Element{W1}, sigma)
-	if S3.cols != 1 && S3.rows != 1 {
-		panic("Issues in conversion and creation of samples in G1 for R1")
-	}
-
-	// Create commitment in B2 for W2
-	d4, _, S4 := CreateCommitmentOnG1(pairing, []*pbc.Element{W2}, sigma)
-	if S4.cols != 1 && S4.rows != 1 {
-		panic("Issues in conversion and creation of samples in G1 for R1")
-	}
+	proof.c = c
+	return proof
 }
 
 
@@ -435,7 +442,6 @@ func CreateCommitmentOnG1(pairing *pbc.Pairing, chi []*pbc.Element, sigma *Sigma
 		B := tmp.AddinG1(pairing, Ru[i])
 		C = append(C, B)
 	}
-
 	return C, Ru, rmat
 }
 
