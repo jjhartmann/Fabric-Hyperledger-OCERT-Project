@@ -11,16 +11,16 @@ import (
 )
 
 func main() {
-  fmt.Printf("\nRun Structure Perserving Tests\n")
-  fmt.Println(ocert.Stest())
+  //fmt.Printf("\nRun Structure Perserving Tests\n")
+  //fmt.Println(ocert.Stest())
+  //
+  //fmt.Printf("\nRun Proof Tests\n")
+  //ocert.RunAllPTests(false)
+  //
+  //fmt.Printf("\nRun RMatrix Tests\n")
+  //ocert.RunAllRTests(false)
 
-  fmt.Printf("\nRun Proof Tests\n")
-  ocert.RunAllPTests(false)
-
-  fmt.Printf("\nRun RMatrix Tests\n")
-  ocert.RunAllRTests(false)
-
-  //fmt.Println(ocert.TestEquation1Verify(true))
+  fmt.Println(ocert.TestEquation5Verify(true))
 
   // Benchmark
   //ConstructMetricsForProofVerifyEq1(100)
