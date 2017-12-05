@@ -316,6 +316,8 @@ func TestRMatrixMultiplicationforBPairMatrixinG2(verbose bool, r_rows int, r_col
     }
   }
 
+
+
   ret1 := len(BMat.mat) == len(ones.mat) && len(BMat.mat[0]) == len(X.mat[0])
   return ret1 && TestBMatrixStructure(verbose, BMat)
 
