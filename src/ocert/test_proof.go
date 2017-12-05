@@ -1126,7 +1126,18 @@ func TestEquation5Equality(verbose bool) bool {
   fmt.Println("eRTPKc01:",eRTPKc01)
   ret2 := eRTPKc01.Equals(eRT)
 
-  return ret1 && ret2
+
+  /////////////////////////////////////////////
+  eRand1 := pairing.NewGT().Pair(pairing.NewG1().Rand(), pairing.NewG2().Set1())
+  fmt.Println("eRand1:", eRand1)
+  eRand2 := pairing.NewGT().Pair(pairing.NewG1().Set1(), pairing.NewG2().Rand())
+  fmt.Println("eRand2:", eRand2)
+  eRandRet := pairing.NewGT().Add(res, eRand1)
+  eRandRet = pairing.NewGT().Add(eRandRet, eRand2)
+  fmt.Println("eRandRet:", eRandRet)
+  ret3 := eRandRet.Equals(res)
+
+  return ret1 && ret2 && ret3
 }
 
 /*
