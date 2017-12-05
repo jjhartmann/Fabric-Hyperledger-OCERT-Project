@@ -317,6 +317,10 @@ func ProveEquation5(pairing *pbc.Pairing,
   // +
   Riota := Iota1(pairing, R)
   RG := Gi.MulBScalarinB1(pairing, *Riota)
+  fmt.Println("Riota:", Riota)
+  fmt.Println("RG1:", RG[0][0])
+  fmt.Println("RG2:", RG[1][0])
+
   RGmat := new(BMatrix)
   RGmat.mat = RG
   RGmat.rows = 2
@@ -439,14 +443,14 @@ func VerifyEquation2(pairing *pbc.Pairing, proof *ProofOfEquation, G *pbc.Elemen
 func VerifyEquation5(pairing *pbc.Pairing, proof *ProofOfEquation, U *pbc.Element, tau *pbc.Element, sigma *Sigma) bool {
 
   // Construct LHS
-  pos1 := Iota1(pairing, pairing.NewG1().Set1())
-  Fpos1 := FMap(pairing, pos1, proof.d[0])
+  //pos1 := Iota1(pairing, pairing.NewG1().Set1())
+  //Fpos1 := FMap(pairing, pos1, proof.d[0])
   // +
   Uiota := Iota1(pairing, U)
   Fu := FMap(pairing, Uiota, proof.d[1])
   // +
-  pos2 := Iota2(pairing, pairing.NewG2().Set1())
-  Fpos2 := FMap(pairing, proof.c[0], pos2)
+  //pos2 := Iota2(pairing, pairing.NewG2().Set1())
+  //Fpos2 := FMap(pairing, proof.c[0], pos2)
   // +
   Gamma :=  NewIdentiyMatrix(pairing, 1, 2)
   dBmat := new(BMatrix)
@@ -459,9 +463,9 @@ func VerifyEquation5(pairing *pbc.Pairing, proof *ProofOfEquation, U *pbc.Elemen
   }
   Fcd := FMap(pairing, proof.c[0], dprime.mat[0][0])
   // =
-  LHS := Fu.AddinGT(pairing, Fpos1)
-  LHS = LHS.AddinGT(pairing, Fpos2)
-  LHS = LHS.AddinGT(pairing, Fcd)
+  //LHS := Fu.AddinGT(pairing, Fpos1)
+  //LHS = LHS.AddinGT(pairing, Fpos2)
+  LHS := Fu.AddinGT(pairing, Fcd)
   fmt.Println("LHS:")
   fmt.Println(LHS.el11)
   fmt.Println(LHS.el12)
