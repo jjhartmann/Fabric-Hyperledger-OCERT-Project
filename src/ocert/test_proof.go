@@ -1047,7 +1047,7 @@ func TestEquation5Verify(verbose bool) bool {
   if verbose {fmt.Println("Generate Proof")}
   proof := ProveEquation5(pairing, R, T, PK, U, sigma)
 
-  if verbose {fmt.Println("Tetsting Initital Euqation: XcH + (-1)PKc = 0")}
+  if verbose {fmt.Println("Tetsting Initital Euqation: e(R, T)e(U, PKc) = e(G, G)")}
   tau := eGH
   if verbose {fmt.Println(tau)}
 
@@ -1106,14 +1106,27 @@ func TestEquation5Equality(verbose bool) bool {
     pairing.NewG2().SetBytes(ecert.T))
   if verbose {fmt.Println("e1T:", e1T)}
 
-  res := pairing.NewGT().Mul(eRT, eUPKc)
-  res = pairing.NewGT().Mul(res, eR1)
-  res = pairing.NewGT().Mul(res, e1T)
+  eUPKcT := pairing.NewGT().Add(eUPKc, e1T)
+  res := pairing.NewGT().Mul(eUPKcT, eR1)
+  res = pairing.NewGT().Mul(res, eRT)
   if verbose {fmt.Println("Res:", res)}
 
+  ret1 := res.Equals(eGH)
 
+  /////////////////////////////////////////////
 
-  return res.Equals(eGH)
+  eRPkc0 := pairing.NewGT().Pair(pairing.NewG1().SetBytes(ecert.R),
+    pairing.NewG2().MulZn(pairing.NewG2().SetBytes(PKc.PK),
+      pairing.NewZr().SetInt32(0)))
+  eRT1 := pairing.NewGT().Pair(pairing.NewG1().SetBytes(ecert.R),
+    pairing.NewG2().MulZn(pairing.NewG2().SetBytes(ecert.T),
+      pairing.NewZr().SetInt32(1)))
+
+  eRTPKc01 := pairing.NewGT().Add(eRPkc0, eRT1)
+  fmt.Println("eRTPKc01:",eRTPKc01)
+  ret2 := eRTPKc01.Equals(eRT)
+
+  return ret1 && ret2
 }
 
 /*
