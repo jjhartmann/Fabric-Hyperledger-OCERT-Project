@@ -258,7 +258,7 @@ func ProveEquation5(pairing *pbc.Pairing,
 	YBMat := new(BMatrix) // TODO: Can clean this up
 	YBMat.mat = Ymat
 	YBMat.rows = 2
-	YBMat.cols = 2
+	YBMat.cols = 1
 	Ygamma := Gamma.MultBPairMatrixG2(pairing, YBMat)
   RYg := Ri.MultBPairMatrixG2(pairing, Ygamma)
   if RYg.rows != 2 && RYg.cols != 1 {
@@ -306,7 +306,7 @@ func ProveEquation5(pairing *pbc.Pairing,
   fmt.Println("Gammai:", Gi.mat)
 
   Amat := new(BMatrix)
-  Amat.mat = [][]*BPair{[]*BPair{Iota1(pairing, U)}, []*BPair{Iota1(pairing, pairing.NewG1().Set1())}}
+  Amat.mat = [][]*BPair{ []*BPair{Iota1(pairing, pairing.NewG1().Set1())}, []*BPair{Iota1(pairing, U)}}
   Amat.rows = 2
   Amat.cols = 1
 
