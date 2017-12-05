@@ -7,6 +7,7 @@
  * It contains the following helper functions
  *  - Get
  *  - GetSharedParams
+ *  - GetAuditorKeypair
  */
 
 package ocert
@@ -38,6 +39,21 @@ var verifyProofLog *os.File
 func getSerialNumber() (*big.Int) {
 	serialNumber.Add(serialNumber, big.NewInt(1))
 	return serialNumber
+}
+
+func Get(stub Wrapper, args [][]byte) ([]byte, error) {
+	if len(args) != 1 {
+		return nil, fmt.Errorf("Incorrect arguments. Expecting a key")
+	}
+
+	value, err := stub.GetState(string(args[0]))
+	if err != nil {
+		return nil, fmt.Errorf("Failed to get asset: %s with error: %s", args[0], err)
+	}
+	if value == nil {
+		return nil, fmt.Errorf("Asset not found: %s", args[0])
+	}
+	return value, nil
 }
 
 func GetSharedParams(stub Wrapper, args [][]byte) ([]byte, error) {
