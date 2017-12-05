@@ -285,6 +285,149 @@ func ProveEquation4(pairing *pbc.Pairing, R *pbc.Element, S *pbc.Element, C *pbc
 
 
 /*
+ * Proof Equation 5
+ */
+func ProveEquation5(pairing *pbc.Pairing,
+										R *pbc.Element,
+										T *pbc.Element,
+										PKc *pbc.Element,
+										U *pbc.Element,
+										sigma *Sigma) *ProofOfEquation {
+	proof := new(ProofOfEquation)
+
+	// Create commitment in B1 for Xc
+	c, _, Rmat := CreateCommitmentOnG1(pairing, []*pbc.Element{R}, sigma)
+	if Rmat.cols != 2 && Rmat.rows != 1 {
+		panic("Issues in conversion and creation of samples in Zp for R")
+	}
+
+	// Create commitment in B2 for PKc
+	Ymat := [][]*BPair{[]*BPair{Iota2(pairing, T)}, []*BPair{Iota2(pairing, PKc)}}
+	Yvec := []*pbc.Element{T, PKc}
+	d, _, Smat := CreateCommitmentOnG2(pairing, Yvec, sigma)
+	if Smat.rows != 2 && Smat.cols != 2 {
+		panic("Issues in conversion and creation of samples in Zp for S")
+	}
+
+	//////////////////////////////////
+	// PI: for G2
+	/////////////////////////////////////
+  Gamma := NewOnesMatrix(pairing, 1, 2)
+  Ri := Rmat.InvertMatrix()
+  Tmat := NewRMatrix(pairing, 2, 2)
+  Ti := Tmat.InvertMatrix()
+
+  pos1 := Iota2(pairing, pairing.NewG2().Set1())
+	RPos1 := Ri.MulBScalarinB2(pairing, *pos1) // Rmat*ι_2(1)
+	if len(RPos1) != 2 && len(RPos1[0]) != 1 {
+	  panic("RPos1 dimensionality is incorrect.")
+  }
+	// +
+	YBMat := new(BMatrix) // TODO: Can clean this up
+	YBMat.mat = Ymat
+	YBMat.rows = 2
+	YBMat.cols = 2
+	Ygamma := Gamma.MultBPairMatrixG2(pairing, YBMat)
+  RYg := Ri.MultBPairMatrixG2(pairing, Ygamma)
+  if RYg.rows != 2 && RYg.cols != 1 {
+    panic("Issue when multipling equations")
+  }
+  // + (
+  Sg := Gamma.MultElementArrayZr(pairing, Smat.mat)
+  if Sg.rows != 1 && Sg.cols != 2 {
+    panic("Sg has wrong dimensionality.")
+  }
+  RSg := Ri.MultElementArrayZr(pairing, Sg.mat)
+  if RSg.rows != 2 && RSg.cols != 2 {
+    panic("RSg does not have correct dimensionality.")
+  }
+  RSgT := RSg.ElementWiseSub(pairing, Ti);
+  RSgTv := RSgT.MulCommitmentKeysG2(pairing, sigma.V)
+  if len(RSgTv) != 2 {
+    panic("RSgTv dimensionality is incorrect should be 2")
+  }
+  // ) =  Construct pi
+  if len(RSgTv) != RYg.rows && RYg.rows != len(RPos1) {
+    panic("All preliminary output for PI needs to have equivalent dimensionality")
+  }
+  pi := []*BPair{}
+  _ = RPos1    // [][]Bpair 2x1 // TODO: this can be streamlined
+  _ = RYg      // *BMatrix 2x1
+  _ = RSgTv    // []*BPair 2x1
+
+  for i := 0; i < len(RPos1); i++ {
+    tmpRp := RPos1[i][0]
+    tmpRy := RYg.mat[i][0]
+    tmpRs := RSgTv[i]
+
+    tmpBPair := tmpRp.AddinG2(pairing, tmpRy)
+    tmpBPair = tmpBPair.AddinG2(pairing, tmpRs)
+
+    pi = append(pi, tmpBPair)
+  }
+
+  //////////////////////////////////
+  // Theta: for G1
+  /////////////////////////////////////
+  Si := Smat.InvertMatrix()
+  Gi := Gamma.InvertMatrix()
+  Amat := new(BMatrix)
+  Amat.mat = [][]*BPair{[]*BPair{Iota1(pairing, U)}, []*BPair{Iota1(pairing, pairing.NewG1().Set1())}}
+  Amat.rows = 2
+  Amat.cols = 1
+
+  SiA := Si.MultBPairMatrixG1(pairing, Amat)
+  if len(SiA.mat) != 2 && len(SiA.mat[0]) != 1 {
+    panic("SiA dimensionality is wrong. Needs to be 2x1")
+  }
+  // +
+  Riota := Iota1(pairing, R)
+  RG := Gi.MulBScalarinB1(pairing, *Riota)
+  RGmat := new(BMatrix)
+  RGmat.mat = RG
+  RGmat.rows = 2
+  RGmat.cols = 1
+  if len(RG) != 2 && len(RG[0]) != 1 {
+    panic("RG dimensionality is wrong. Needs to be 2x1")
+  }
+  SRG := Si.MultBPairMatrixG1(pairing, RGmat)
+  if len(SRG.mat) != 2 && len(SRG.mat[0]) != 1 {
+    panic("SRG dimensionality is wrong. Needs to be 2x1")
+  }
+  // +
+  Tu := Tmat.MulCommitmentKeysG1(pairing, sigma.U)
+  if len(Tu) != 2 {
+    panic("Tu dimensionality is wrong. Needs to be len 2")
+  }
+  // =
+  if len(SiA.mat) != len(SRG.mat) && len(SRG.mat) != len(Tu){
+    panic("Equation dimensionality is wrong. Needs to be len 2x1")
+  }
+  theta := []*BPair{}
+  _ = SiA    // *BMatrix 2x1 // TODO: this can be streamlined
+  _ = SRG    // *BMatrix 2x1
+  _ = Tu     // []*BPair 2x1
+
+  for i := 0; i < len(RPos1); i++ {
+    tmpRp := SiA.mat[i][0]
+    tmpRy := SRG.mat[i][0]
+    tmpRs := Tu[i]
+
+    tmpBPair := tmpRp.AddinG1(pairing, tmpRy)
+    tmpBPair = tmpBPair.AddinG1(pairing, tmpRs)
+
+    theta = append(theta, tmpBPair)
+  }
+
+	proof.c = c
+	proof.d = d
+	proof.Pi = pi
+	proof.Theta = theta
+	return proof
+}
+
+
+/*
  * Verifiy Equation 1
  *
  */
@@ -354,6 +497,16 @@ func VerifyEquation2(pairing *pbc.Pairing, proof *ProofOfEquation, G *pbc.Elemen
   // Perform Equality //TODO: Test for nil == nill
 	ret := reflect.DeepEqual(LHS, RHS)
 	return ret
+}
+
+/*
+ * Verify Equation 5
+ */
+func VerifyEquation5(pairing *pbc.Pairing, proof *ProofOfEquation, U *pbc.Element, tau *pbc.Element, sigma *Sigma) bool {
+
+
+
+  return false
 }
 
 /*
