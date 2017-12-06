@@ -1322,7 +1322,11 @@ func RunAllPTests(verbose bool) {
   fmt.Println("Commitment: G2->B2    ", TestCreateCommitmentsG2(verbose))
   fmt.Println("Commitment: Zp->B2    ", TestCreateCommitmentPrimeOnG2(verbose))
   fmt.Println("Proof Generation EQ1  ", TestEquation1ProofGen(verbose))
-  fmt.Println("Proof Generation EQ2  ", TestEquation2ProofGen(verbose))
+  fmt.Println("Proof Generation EQ2-3", TestEquation2ProofGen(verbose))
+  fmt.Println("Proof Generation EQ4  ", TestEquation4ProofGen(verbose))
+  fmt.Println("Proof Generation EQ5  ", TestEquation5ProofGen(verbose))
   fmt.Println("Proof Verify EQ1      ", TestEquation1Verify(verbose))
-  fmt.Println("Proof Verify EQ2      ", TestEquation2Verify(verbose))
+  fmt.Println("Proof Verify EQ2-3    ", TestEquation2Verify(verbose))
+  fmt.Println("Proof Verify EQ4      ", TestEquation4Verify(verbose))
+  fmt.Println("Proof Verify EQ5      ", TestEquation5Verify(verbose))
 }

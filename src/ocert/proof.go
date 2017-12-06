@@ -335,7 +335,7 @@ func ProveEquation5(pairing *pbc.Pairing,
   // PI: for G2
   /////////////////////////////////////
   Gamma := NewIdentiyMatrix(pairing, 1, 2)
-  fmt.Println("Gamma:", Gamma.mat)
+  //fmt.Println("Gamma:", Gamma.mat)
 
   Ri := Rmat.InvertMatrix()
   Tmat := NewRMatrix(pairing, 2, 2)
@@ -395,7 +395,7 @@ func ProveEquation5(pairing *pbc.Pairing,
   /////////////////////////////////////
   Si := Smat.InvertMatrix()
   Gi := Gamma.InvertMatrix()
-  fmt.Println("Gammai:", Gi.mat)
+  //fmt.Println("Gammai:", Gi.mat)
 
   Amat := new(BMatrix)
   Amat.mat = [][]*BPair{ []*BPair{Iota1(pairing, pairing.NewG1().Set1())}, []*BPair{Iota1(pairing, U)}}
@@ -409,9 +409,9 @@ func ProveEquation5(pairing *pbc.Pairing,
   // +
   Riota := Iota1(pairing, R)
   RG := Gi.MulBScalarinB1(pairing, *Riota)
-  fmt.Println("Riota:", Riota)
-  fmt.Println("RG1:", RG[0][0])
-  fmt.Println("RG2:", RG[1][0])
+  //fmt.Println("Riota:", Riota)
+  //fmt.Println("RG1:", RG[0][0])
+  //fmt.Println("RG2:", RG[1][0])
 
   RGmat := new(BMatrix)
   RGmat.mat = RG
@@ -693,12 +693,6 @@ func VerifyEquation4(
   LHS := Fv.AddinGT(pairing, Fh)
   LHS = LHS.AddinGT(pairing, Fw1)
   LHS = LHS.AddinGT(pairing, Fw2)
-  fmt.Println("LHS:")
-  fmt.Println(LHS.el11)
-  fmt.Println(LHS.el12)
-  fmt.Println(LHS.el21)
-  fmt.Println(LHS.el22)
-
 
   // Construct RHS
   Taui := IotaT(pairing, tau)
@@ -719,11 +713,6 @@ func VerifyEquation4(
   RHS = RHS.AddinGT(pairing, Fu2)
   RHS = RHS.AddinGT(pairing, Fv1)
   RHS = RHS.AddinGT(pairing, Fv2)
-  fmt.Println("RHS:")
-  fmt.Println(RHS.el11)
-  fmt.Println(RHS.el12)
-  fmt.Println(RHS.el21)
-  fmt.Println(RHS.el22)
 
   return reflect.DeepEqual(LHS, RHS)
 }
@@ -758,11 +747,11 @@ func VerifyEquation5(pairing *pbc.Pairing, proof *ProofOfEquation, U *pbc.Elemen
   LHS := Fu.AddinGT(pairing, Fpos1)
   LHS = LHS.AddinGT(pairing, Fpos2)
   LHS = Fu.AddinGT(pairing, Fcd)
-  fmt.Println("LHS:")
-  fmt.Println(LHS.el11)
-  fmt.Println(LHS.el12)
-  fmt.Println(LHS.el21)
-  fmt.Println(LHS.el22)
+  //fmt.Println("LHS:")
+  //fmt.Println(LHS.el11)
+  //fmt.Println(LHS.el12)
+  //fmt.Println(LHS.el21)
+  //fmt.Println(LHS.el22)
 
 
   // Construct RHS
@@ -784,11 +773,11 @@ func VerifyEquation5(pairing *pbc.Pairing, proof *ProofOfEquation, U *pbc.Elemen
   RHS = RHS.AddinGT(pairing, Fu2)
   RHS = RHS.AddinGT(pairing, Fv1)
   RHS = RHS.AddinGT(pairing, Fv2)
-  fmt.Println("RHS:")
-  fmt.Println(RHS.el11)
-  fmt.Println(RHS.el12)
-  fmt.Println(RHS.el21)
-  fmt.Println(RHS.el22)
+  //fmt.Println("RHS:")
+  //fmt.Println(RHS.el11)
+  //fmt.Println(RHS.el12)
+  //fmt.Println(RHS.el21)
+  //fmt.Println(RHS.el22)
 
 
 
