@@ -665,19 +665,84 @@ func VerifyEquation2(pairing *pbc.Pairing, proof *ProofOfEquation, G *pbc.Elemen
 }
 
 /*
+ * Verify Equation 4
+ */
+func VerifyEquation4(
+  pairing *pbc.Pairing,
+  proof *ProofOfEquation,
+  V *pbc.Element,
+  H *pbc.Element,
+  W1 *pbc.Element,
+  W2 *pbc.Element,
+  tau *pbc.Element,
+  sigma *Sigma) bool {
+
+  // Construct LHS
+  Vi := Iota2(pairing, V)
+  Fv := FMap(pairing, proof.c[0], Vi)
+  // +
+  Hi := Iota2(pairing, H)
+  Fh := FMap(pairing, proof.c[1], Hi)
+  // +
+  W1i := Iota2(pairing, W1)
+  Fw1 := FMap(pairing, proof.c[2], W1i)
+  // +
+  W2i := Iota2(pairing, W2)
+  Fw2 := FMap(pairing, proof.c[3], W2i)
+  // =
+  LHS := Fv.AddinGT(pairing, Fh)
+  LHS = LHS.AddinGT(pairing, Fw1)
+  LHS = LHS.AddinGT(pairing, Fw2)
+  fmt.Println("LHS:")
+  fmt.Println(LHS.el11)
+  fmt.Println(LHS.el12)
+  fmt.Println(LHS.el21)
+  fmt.Println(LHS.el22)
+
+
+  // Construct RHS
+  Taui := IotaT(pairing, tau)
+  // +
+  u1 := sigma.U[0].ConvertToBPair()
+  Fu1 := FMap(pairing, u1, proof.Pi[0])
+  //+
+  u2 := sigma.U[1].ConvertToBPair()
+  Fu2 := FMap(pairing, u2, proof.Pi[1])
+  // +
+  v1 := sigma.V[0].ConvertToBPair()
+  Fv1 := FMap(pairing, proof.Theta[0], v1)
+  // +
+  v2 := sigma.V[1].ConvertToBPair()
+  Fv2 := FMap(pairing, proof.Theta[1], v2)
+  // +
+  RHS := Taui.AddinGT(pairing, Fu1)
+  RHS = RHS.AddinGT(pairing, Fu2)
+  RHS = RHS.AddinGT(pairing, Fv1)
+  RHS = RHS.AddinGT(pairing, Fv2)
+  fmt.Println("RHS:")
+  fmt.Println(RHS.el11)
+  fmt.Println(RHS.el12)
+  fmt.Println(RHS.el21)
+  fmt.Println(RHS.el22)
+
+  return reflect.DeepEqual(LHS, RHS)
+}
+
+
+/*
  * Verify Equation 5
  */
 func VerifyEquation5(pairing *pbc.Pairing, proof *ProofOfEquation, U *pbc.Element, tau *pbc.Element, sigma *Sigma) bool {
 
   // Construct LHS
-  //pos1 := Iota1(pairing, pairing.NewG1().Set1())
-  //Fpos1 := FMap(pairing, pos1, proof.d[0])
+  pos1 := Iota1(pairing, pairing.NewG1().Set1())
+  Fpos1 := FMap(pairing, pos1, proof.d[0])
   // +
   Uiota := Iota1(pairing, U)
   Fu := FMap(pairing, Uiota, proof.d[1])
   // +
-  //pos2 := Iota2(pairing, pairing.NewG2().Set1())
-  //Fpos2 := FMap(pairing, proof.c[0], pos2)
+  pos2 := Iota2(pairing, pairing.NewG2().Set1())
+  Fpos2 := FMap(pairing, proof.c[0], pos2)
   // +
   Gamma :=  NewIdentiyMatrix(pairing, 1, 2)
   dBmat := new(BMatrix)
@@ -690,9 +755,9 @@ func VerifyEquation5(pairing *pbc.Pairing, proof *ProofOfEquation, U *pbc.Elemen
   }
   Fcd := FMap(pairing, proof.c[0], dprime.mat[0][0])
   // =
-  //LHS := Fu.AddinGT(pairing, Fpos1)
-  //LHS = LHS.AddinGT(pairing, Fpos2)
-  LHS := Fu.AddinGT(pairing, Fcd)
+  LHS := Fu.AddinGT(pairing, Fpos1)
+  LHS = LHS.AddinGT(pairing, Fpos2)
+  LHS = Fu.AddinGT(pairing, Fcd)
   fmt.Println("LHS:")
   fmt.Println(LHS.el11)
   fmt.Println(LHS.el12)

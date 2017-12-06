@@ -1059,6 +1059,57 @@ func TestEquation2Verify(verbose bool) bool {
 }
 
 
+func TestEquation4Verify(verbose bool) bool {
+  sharedParams := GenerateSharedParams()
+  VK, SK := SKeyGen(sharedParams)
+  _ = VK
+
+  P := new(Pseudonym)
+  pairing, _ := pbc.NewPairingFromString(sharedParams.Params)
+  P.C = pairing.NewG1().Rand().Bytes()
+  P.D = pairing.NewG1().Rand().Bytes()
+  PKc := new(ClientPublicKey)
+  PKc.PK = pairing.NewG2().Rand().Bytes()
+  ecert := SSign(sharedParams, SK, P, PKc)
+
+  if verbose {fmt.Println("Test Proof Generation for Eq1")}
+
+  //Vars
+  R := pairing.NewG1().SetBytes(ecert.R)
+  S := pairing.NewG1().SetBytes(ecert.S)
+  C := pairing.NewG1().SetBytes(P.C)
+  D := pairing.NewG1().SetBytes(P.D)
+
+  //Constants
+  V := pairing.NewG2().SetBytes(VK.V)
+  H := pairing.NewG2().SetBytes(sharedParams.G2)
+  W1 := pairing.NewG2().SetBytes(VK.W1)
+  W2 := pairing.NewG2().SetBytes(VK.W2)
+
+
+  if verbose {fmt.Println("Creating CRS Sigma")}
+  alpha := pairing.NewZr().Rand() // Another Secret Key..
+  sigma := CreateCommonReferenceString(sharedParams, alpha) // CRS
+
+  proof := ProveEquation4(pairing, R, S, C, D, V, H, W1, W2, sigma)
+
+  if verbose {fmt.Println("Tetsting Initital Euqation: e(R, T)e(U, PKc) = e(G, G)")}
+  tau := pairing.NewGT().Pair(pairing.NewG1().SetBytes(sharedParams.G1),
+    pairing.NewG2().SetBytes(VK.Z))
+  if verbose {fmt.Println(tau)}
+
+
+  if verbose {fmt.Println("Verify Proof")}
+  ret := VerifyEquation4(pairing, proof, V, H, W1, W2, tau, sigma)
+
+  if verbose {
+    fmt.Println("Verify Restul: ", ret)
+  }
+
+  return ret
+}
+
+
 
 func TestEquation5Verify(verbose bool) bool {
   sharedParams := GenerateSharedParams()
