@@ -449,10 +449,11 @@ type ProofVariables struct {
  */
 type ProofConstants struct {
 	// g1, g2 and e(g1, g2) are from sharedParams
-	PKi    *SVerificationKey // U, V, W1, W2 and Z
+	VK    *SVerificationKey // U, V, W1, W2 and Z
 	PPrime *Pseudonym        // C' and D'
 	Egz    []byte            // e(g1, Z)
 	PKa    *AuditorPublicKey
+	Egh    []byte            // e(G, H)
 }
 
 /*****************************************************************/
