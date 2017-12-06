@@ -427,6 +427,7 @@ type ProofOfKnowledge struct {
 	Eq3 *ProofOfEquation
 	Eq4 *ProofOfEquation
 	Eq5 *ProofOfEquation
+	sigma *CommonReferenceString
 }
 
 /*
@@ -436,7 +437,9 @@ type ProofOfKnowledge struct {
 type ProofVariables struct {
 	P      *Pseudonym
 	PKc    *ClientPublicKey
+	PKa    *AuditorPublicKey
 	E      *Ecert
+	VK     *SVerificationKey
 	Xc     []byte // This is the client private key
 	RPrime []byte
 }

@@ -23,17 +23,51 @@ func PSetup(sharedParams *SharedParams, eqs *SystemOfEquations, vars *ProofVaria
   _ = gt
 
   pi := new(ProofOfKnowledge)
+  alpha := pairing.NewZr().Rand() // Seed for CRS
+  sigma := CreateCommonReferenceString(sharedParams, alpha) // CRS
 
   // TODO setup proof of eq1
-  //proof1 := ProveEquation1(pairing)
+  Xc := pairing.NewZr().SetBytes(vars.Xc)
+  H := pairing.NewG2().SetBytes(sharedParams.G2)
+  negPKc := pairing.NewG2().Neg(pairing.NewG2().SetBytes(vars.PKc.PK))
+  pi.Eq1 = ProveEquation1(pairing, Xc, H, negPKc, sigma)
+
   // TODO setup proof of eq2
+  C := pairing.NewG1().SetBytes(vars.P.C)
+  G := pairing.NewG1().SetBytes(sharedParams.G1)
+  rprime := pairing.NewZr().SetBytes(vars.RPrime)
+  pi.Eq2 = ProveEquation2(pairing, rprime, G, C, sigma)
 
   // TODO setup proof of eq3
+  D := pairing.NewG1().SetBytes(vars.P.D)
+  PKa := pairing.NewG1().SetBytes(vars.PKa.PK)
+  pi.Eq3 = ProveEquation2(pairing, rprime, PKa, D, sigma)
 
   // TODO setup proof of eq4
+  //Vars
+  R := pairing.NewG1().SetBytes(vars.E.R)
+  S := pairing.NewG1().SetBytes(vars.E.S)
+  _ = C
+  _ = D
+
+  //Constants
+  V := pairing.NewG2().SetBytes(vars.VK.V)
+  W1 := pairing.NewG2().SetBytes(vars.VK.W1)
+  W2 := pairing.NewG2().SetBytes(vars.VK.W2)
+  _ = H
+
+  pi.Eq4 = ProveEquation4(pairing, R, S, C, D, V, H, W1, W2, sigma)
 
   // TODO setup proof of eq5
+  _ = R
+  T := pairing.NewG2().SetBytes(vars.E.T)
+  PKc := pairing.NewG2().SetBytes(vars.PKc.PK)
+  U := pairing.NewG1().SetBytes(vars.VK.U)
 
+  pi.Eq5 = ProveEquation5(pairing, R, T, PKc, U, sigma)
+
+  // Set CRSf
+  pi.sigma = sigma
 	return pi
 }
 
