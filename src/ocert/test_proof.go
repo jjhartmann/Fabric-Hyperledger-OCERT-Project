@@ -1045,7 +1045,7 @@ func TestEquation5Verify(verbose bool) bool {
   sigma := CreateCommonReferenceString(sharedParams, alpha) // CRS
 
   if verbose {fmt.Println("Generate Proof")}
-  proof := ProveEquation5(pairing, R, T, PK, U, sigma)
+  proof := ProveEquation5_Exp(pairing, R, T, PK, U, sigma)
 
   if verbose {fmt.Println("Tetsting Initital Euqation: e(R, T)e(U, PKc) = e(G, G)")}
   tau := eGH
