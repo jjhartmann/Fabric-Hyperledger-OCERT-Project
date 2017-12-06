@@ -88,30 +88,43 @@ func PProve(sharedParams *SharedParams, pi *ProofOfKnowledge, consts *ProofConst
   Zero := pairing.NewG2().Set0()
   retVal := VerifyEquation1(pairing, pi.Eq1, H, Zero, pi.sigma)
 
+  //fmt.Println("EQ1:", retVal)
+
 	// TODO validate eq2
 	G := pairing.NewG1().SetBytes(sharedParams.G1)
 	Cprime := pairing.NewG1().SetBytes(consts.PPrime.C)
-	retVal = retVal && VerifyEquation2(pairing, pi.Eq2, G, Cprime, pi.sigma)
+	retVal2 := VerifyEquation2(pairing, pi.Eq2, G, Cprime, pi.sigma)
+  retVal = retVal && retVal2
 
-	// TODO validate eq3
+  //fmt.Println("EQ2:", retVal2)
+
+  // TODO validate eq3
   PKa := pairing.NewG1().SetBytes(consts.PKa.PK)
   Dprime := pairing.NewG1().SetBytes(consts.PPrime.D)
-  retVal = retVal && VerifyEquation2(pairing, pi.Eq3, PKa, Dprime, pi.sigma)
+  retVal3 := VerifyEquation2(pairing, pi.Eq3, PKa, Dprime, pi.sigma)
+  retVal = retVal && retVal3
 
-	// TODO validate eq4
+  //fmt.Println("EQ3:", retVal3)
+
+  // TODO validate eq4
 	V := pairing.NewG2().SetBytes(consts.VK.V)
 	_ = H
 	W1 := pairing.NewG2().SetBytes(consts.VK.W1)
 	W2 := pairing.NewG2().SetBytes(consts.VK.W2)
 	eGZ := pairing.NewGT().SetBytes(consts.Egz)
-	retVal = retVal && VerifyEquation4(pairing, pi.Eq4, V, H, W1, W2, eGZ, pi.sigma)
+	retVal4 := VerifyEquation4(pairing, pi.Eq4, V, H, W1, W2, eGZ, pi.sigma)
+  retVal = retVal && retVal4
 
-	// TODO validate eq5
+  //fmt.Println("EQ4:", retVal4)
+
+  // TODO validate eq5
   U := pairing.NewG1().SetBytes(consts.VK.U)
   eGH := pairing.NewGT().SetBytes(consts.Egh)
   _ = U
   _ = eGH
-  retVal = retVal // && VerifyEquation5(pairing, pi.Eq5, U, eGH, pi.sigma)
+  //retVal5 := VerifyEquation5(pairing, pi.Eq5, U, eGH, pi.sigma)
+
+  //fmt.Println("EQ5:", retVal)
 
 
 	return retVal
