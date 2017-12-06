@@ -80,7 +80,7 @@ func TestIotaRhoPrime(verbose bool) bool {
   gt := pairing.NewGT().Pair(g1, g2)
   _ = gt
 
-  if (verbose) {fmt.Println("Creating CRS Sigma")}
+  if (verbose) {fmt.Println("Creating CRS CommonReferenceString")}
   alpha := pairing.NewZr().Rand() // Secret Key
   sigma := CreateCommonReferenceString(sharedParams, alpha) // CRS
 
@@ -139,7 +139,7 @@ func TestFMap(verbose bool) bool {
   gt := pairing.NewGT().Pair(g1, g2)
   _ = gt
 
-  if (verbose) {fmt.Println("Creating CRS Sigma")}
+  if (verbose) {fmt.Println("Creating CRS CommonReferenceString")}
   alpha := pairing.NewZr().Rand() // Secret Key
   sigma := CreateCommonReferenceString(sharedParams, alpha) // CRS
 
@@ -182,7 +182,7 @@ func TestIotaHat(verbose bool) bool {
   gt := pairing.NewGT().Pair(g1, g2)
   _ = gt
 
-  if (verbose) {fmt.Println("Creating CRS Sigma")}
+  if (verbose) {fmt.Println("Creating CRS CommonReferenceString")}
   alpha := pairing.NewZr().Rand() // Secret Key
   sigma := CreateCommonReferenceString(sharedParams, alpha) // CRS
 
@@ -231,7 +231,7 @@ func TestCompleteMatrixMapping(verbose bool) bool {
   gt := pairing.NewGT().Pair(g1, g2)
   _ = gt
 
-  if (verbose) {fmt.Println("Creating CRS Sigma")}
+  if (verbose) {fmt.Println("Creating CRS CommonReferenceString")}
   alpha := pairing.NewZr().Rand() // Secret Key
   sigma := CreateCommonReferenceString(sharedParams, alpha) // CRS
 
@@ -337,7 +337,7 @@ func TestSimpleCommitment(verbose bool) bool {
   X := pairing.NewG1().Rand()
   Xi := Iota1(pairing, X)
 
-  if (verbose) {fmt.Println("Creating CRS Sigma")}
+  if (verbose) {fmt.Println("Creating CRS CommonReferenceString")}
   alpha := pairing.NewZr().Rand() // Secret Key
   sigma := CreateCommonReferenceString(sharedParams, alpha) // CRS
 
@@ -428,7 +428,7 @@ func TestCreateCommitmentsG1(verbose bool) bool {
   gt := pairing.NewGT().Pair(g1, g2)
   _ = gt
 
-  if (verbose) {fmt.Println("Creating CRS Sigma")}
+  if (verbose) {fmt.Println("Creating CRS CommonReferenceString")}
   alpha := pairing.NewZr().Rand() // Secret Key
   sigma := CreateCommonReferenceString(sharedParams, alpha) // CRS
 
@@ -526,7 +526,7 @@ func TestCreateCommitmentPrimeOnG1(verbose bool) bool {
   gt := pairing.NewGT().Pair(g1, g2)
   _ = gt
 
-  if (verbose) {fmt.Println("Creating CRS Sigma")}
+  if (verbose) {fmt.Println("Creating CRS CommonReferenceString")}
   alpha := pairing.NewZr().Rand() // Secret Key
   sigma := CreateCommonReferenceString(sharedParams, alpha) // CRS
 
@@ -600,7 +600,7 @@ func TestCreateCommitmentsG2(verbose bool) bool {
   gt := pairing.NewGT().Pair(g1, g2)
   _ = gt
 
-  if (verbose) {fmt.Println("Creating CRS Sigma")}
+  if (verbose) {fmt.Println("Creating CRS CommonReferenceString")}
   alpha := pairing.NewZr().Rand() // Secret Key
   sigma := CreateCommonReferenceString(sharedParams, alpha) // CRS
 
@@ -676,7 +676,7 @@ func TestCreateCommitmentPrimeOnG2(verbose bool) bool {
   gt := pairing.NewGT().Pair(g1, g2)
   _ = gt
 
-  if (verbose) {fmt.Println("Creating CRS Sigma")}
+  if (verbose) {fmt.Println("Creating CRS CommonReferenceString")}
   alpha := pairing.NewZr().Rand() // Secret Key
   sigma := CreateCommonReferenceString(sharedParams, alpha) // CRS
 
@@ -764,7 +764,7 @@ func TestEquation1ProofGen(verbose bool) bool {
   H  := pairing.NewG2().SetBytes(sharedParams.G2) // Shared Generator ??
   PKc := pairing.NewG2().Rand() // Public Key (variable
 
-  if verbose {fmt.Println("Creating CRS Sigma")}
+  if verbose {fmt.Println("Creating CRS CommonReferenceString")}
   alpha := pairing.NewZr().Rand() // Another Secret Key..
   sigma := CreateCommonReferenceString(sharedParams, alpha) // CRS
 
@@ -817,7 +817,7 @@ func TestEquation2ProofGen(verbose bool) bool {
   G  := pairing.NewG1().SetBytes(sharedParams.G1) // Shared Generator ??
   //rprime := pairing.NewG2().Rand() // Public Key (variable
 
-  if verbose {fmt.Println("Creating CRS Sigma")}
+  if verbose {fmt.Println("Creating CRS CommonReferenceString")}
   alpha := pairing.NewZr().Rand() // Another Secret Key..
   sigma := CreateCommonReferenceString(sharedParams, alpha) // CRS
 
@@ -883,7 +883,7 @@ func TestEquation4ProofGen(verbose bool) bool {
   W2 := pairing.NewG2().SetBytes(VK.W2)
 
 
-  if verbose {fmt.Println("Creating CRS Sigma")}
+  if verbose {fmt.Println("Creating CRS CommonReferenceString")}
   alpha := pairing.NewZr().Rand() // Another Secret Key..
   sigma := CreateCommonReferenceString(sharedParams, alpha) // CRS
 
@@ -942,7 +942,7 @@ func TestEquation5ProofGen(verbose bool) bool {
   PK := pairing.NewG2().SetBytes(PKc.PK)
   U := pairing.NewG1().SetBytes(VK.U)
 
-  if verbose {fmt.Println("Creating CRS Sigma")}
+  if verbose {fmt.Println("Creating CRS CommonReferenceString")}
   alpha := pairing.NewZr().Rand() // Another Secret Key..
   sigma := CreateCommonReferenceString(sharedParams, alpha) // CRS
 
@@ -996,7 +996,7 @@ func TestEquation1Verify(verbose bool) bool {
   PKc := pairing.NewG2().MulZn(H, Xc) // Public Key (variable
   negPKc := pairing.NewG2().Neg(PKc)
 
-  if verbose {fmt.Println("Creating CRS Sigma")}
+  if verbose {fmt.Println("Creating CRS CommonReferenceString")}
   alpha := pairing.NewZr().Rand() // Another Secret Key..
   sigma := CreateCommonReferenceString(sharedParams, alpha) // CRS
 
@@ -1036,7 +1036,7 @@ func TestEquation2Verify(verbose bool) bool {
   //r := pairing.NewZr().Rand()
   //rprime := pairing.NewG2().Rand() // Public Key (variable
 
-  if verbose {fmt.Println("Creating CRS Sigma")}
+  if verbose {fmt.Println("Creating CRS CommonReferenceString")}
   alpha := pairing.NewZr().Rand() // Another Secret Key..
   sigma := CreateCommonReferenceString(sharedParams, alpha) // CRS
 
@@ -1087,7 +1087,7 @@ func TestEquation4Verify(verbose bool) bool {
   W2 := pairing.NewG2().SetBytes(VK.W2)
 
 
-  if verbose {fmt.Println("Creating CRS Sigma")}
+  if verbose {fmt.Println("Creating CRS CommonReferenceString")}
   alpha := pairing.NewZr().Rand() // Another Secret Key..
   sigma := CreateCommonReferenceString(sharedParams, alpha) // CRS
 
@@ -1158,7 +1158,7 @@ func TestEquation5Verify(verbose bool) bool {
   PK := pairing.NewG2().SetBytes(PKc.PK)
   U := pairing.NewG1().SetBytes(VK.U)
 
-  if verbose {fmt.Println("Creating CRS Sigma")}
+  if verbose {fmt.Println("Creating CRS CommonReferenceString")}
   alpha := pairing.NewZr().Rand() // Another Secret Key..
   sigma := CreateCommonReferenceString(sharedParams, alpha) // CRS
 

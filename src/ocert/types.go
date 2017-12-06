@@ -375,9 +375,9 @@ func (btmat *BTMat) AddinGT(pairing *pbc.Pairing, rb *BTMat) *BTMat{
 
 ////////////////////////////////////////////////////////////////////////////////////
 /*
- * Sigma: the common reference string (CRS) for NIWI ProofOfEquation
+ * CommonReferenceString: the common reference string (CRS) for NIWI ProofOfEquation
  */
-type Sigma struct {
+type CommonReferenceString struct {
 	U []CommitmentKey // U[0].u1 holds generator G1
 	V []CommitmentKey // V[0].u1 holds generator G2
 	u CommitmentKey // For group G1 (used in Iota Prime)

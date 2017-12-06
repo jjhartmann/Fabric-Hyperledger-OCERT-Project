@@ -16,13 +16,23 @@ import (
  * equations) and outputs proof (e.g pi and theta ...)
  */
 func PSetup(sharedParams *SharedParams, eqs *SystemOfEquations, vars *ProofVariables) *ProofOfKnowledge {
-	pi := new(ProofOfKnowledge)
+  pairing, _ := pbc.NewPairingFromString(sharedParams.Params)
+  g1 := pairing.NewG1().Rand()
+  g2 := pairing.NewG2().Rand()
+  gt := pairing.NewGT().Pair(g1, g2)
+  _ = gt
 
-	// TODO setup proof of eq1
-	// TODO setup proof of eq2
-	// TODO setup proof of eq3
-	// TODO setup proof of eq4
-	// TODO setup proof of eq5
+  pi := new(ProofOfKnowledge)
+
+  // TODO setup proof of eq1
+  //proof1 := ProveEquation1(pairing)
+  // TODO setup proof of eq2
+
+  // TODO setup proof of eq3
+
+  // TODO setup proof of eq4
+
+  // TODO setup proof of eq5
 
 	return pi
 }
@@ -53,7 +63,7 @@ func PProve(sharedParams *SharedParams, pi *ProofOfKnowledge, consts *ProofConst
  *    Pi     := r*ι_2(H) + r*lambda*ι_2(PKc)  + (r*lambda*S - T')*V
  *    Theta  := S'*ι'_1(-1) + S*lambda*ι'_1(xc) + Tu_1
  */
-func ProveEquation1(pairing *pbc.Pairing, xc *pbc.Element, H *pbc.Element, PKc *pbc.Element, sigma *Sigma) *ProofOfEquation{
+func ProveEquation1(pairing *pbc.Pairing, xc *pbc.Element, H *pbc.Element, PKc *pbc.Element, sigma *CommonReferenceString) *ProofOfEquation{
 	proof := new(ProofOfEquation)
 
 	// Create commitment in B1 for Xc
@@ -134,7 +144,7 @@ func ProveEquation1(pairing *pbc.Pairing, xc *pbc.Element, H *pbc.Element, PKc *
  *    Pi     := R'*ι'_2(1) + R'*lambda*ι'_2(rprime)  + (R'*lambda*s - T')*v_1
  *    Theta  := s*ι_1(C) + s*lambda*ι_1(G) + TU
  */
-func ProveEquation2(pairing *pbc.Pairing, rprime *pbc.Element, G *pbc.Element, C *pbc.Element, sigma *Sigma) *ProofOfEquation{
+func ProveEquation2(pairing *pbc.Pairing, rprime *pbc.Element, G *pbc.Element, C *pbc.Element, sigma *CommonReferenceString) *ProofOfEquation{
 	proof := new(ProofOfEquation)
 
 	// Create commitment in B1 for C
@@ -227,7 +237,7 @@ func ProveEquation4(pairing *pbc.Pairing,
   H *pbc.Element,
   W1 *pbc.Element,
   W2 *pbc.Element,
-  sigma *Sigma) *ProofOfEquation {
+  sigma *CommonReferenceString) *ProofOfEquation {
   proof := new(ProofOfEquation)
 
   //// Create commitment in B2
@@ -314,7 +324,7 @@ func ProveEquation5(pairing *pbc.Pairing,
   T *pbc.Element,
   PKc *pbc.Element,
   U *pbc.Element,
-  sigma *Sigma) *ProofOfEquation {
+  sigma *CommonReferenceString) *ProofOfEquation {
   proof := new(ProofOfEquation)
 
   // Create commitment in B1 for Xc
@@ -341,12 +351,6 @@ func ProveEquation5(pairing *pbc.Pairing,
   Tmat := NewRMatrix(pairing, 2, 2)
   Ti := Tmat.InvertMatrix()
 
-  pos1 := Iota2(pairing, pairing.NewG2().Set1())
-  RPos1 := Ri.MulBScalarinB2(pairing, *pos1) // Rmat*ι_2(1)
-  if len(RPos1) != 2 && len(RPos1[0]) != 1 {
-    panic("RPos1 dimensionality is incorrect.")
-  }
-  // +
   YBMat := new(BMatrix) // TODO: Can clean this up
   YBMat.mat = Ymat
   YBMat.rows = 2
@@ -371,22 +375,18 @@ func ProveEquation5(pairing *pbc.Pairing,
     panic("RSgTv dimensionality is incorrect should be 2")
   }
   // ) =  Construct pi
-  if len(RSgTv) != RYg.rows && RYg.rows != len(RPos1) {
+  if len(RSgTv) != RYg.rows  {
     panic("All preliminary output for PI needs to have equivalent dimensionality")
   }
   pi := []*BPair{}
-  _ = RPos1    // [][]Bpair 2x1 // TODO: this can be streamlined
   _ = RYg      // *BMatrix 2x1
   _ = RSgTv    // []*BPair 2x1
 
-  for i := 0; i < len(RPos1); i++ {
-    tmpRp := RPos1[i][0]
+  for i := 0; i < len(RSgTv); i++ {
     tmpRy := RYg.mat[i][0]
     tmpRs := RSgTv[i]
 
-    tmpBPair := tmpRp.AddinG2(pairing, tmpRy)
-    tmpBPair = tmpBPair.AddinG2(pairing, tmpRs)
-
+    tmpBPair := tmpRy.AddinG2(pairing, tmpRs)
     pi = append(pi, tmpBPair)
   }
 
@@ -398,7 +398,7 @@ func ProveEquation5(pairing *pbc.Pairing,
   //fmt.Println("Gammai:", Gi.mat)
 
   Amat := new(BMatrix)
-  Amat.mat = [][]*BPair{ []*BPair{Iota1(pairing, pairing.NewG1().Set1())}, []*BPair{Iota1(pairing, U)}}
+  Amat.mat = [][]*BPair{ []*BPair{Iota1(pairing, pairing.NewG1().Set0())}, []*BPair{Iota1(pairing, U)}}
   Amat.rows = 2
   Amat.cols = 1
 
@@ -438,7 +438,7 @@ func ProveEquation5(pairing *pbc.Pairing,
   _ = SRG    // *BMatrix 2x1
   _ = Tu     // []*BPair 2x1
 
-  for i := 0; i < len(RPos1); i++ {
+  for i := 0; i < len(Tu); i++ {
     tmpRp := SiA.mat[i][0]
     tmpRy := SRG.mat[i][0]
     tmpRs := Tu[i]
@@ -465,7 +465,7 @@ func ProveEquation5_Exp(pairing *pbc.Pairing,
 										T *pbc.Element,
 										PKc *pbc.Element,
 										U *pbc.Element,
-										sigma *Sigma) *ProofOfEquation {
+										sigma *CommonReferenceString) *ProofOfEquation {
 	proof := new(ProofOfEquation)
 
 	// Create commitment in B1 for Xc
@@ -596,7 +596,7 @@ func ProveEquation5_Exp(pairing *pbc.Pairing,
  * Verifiy Equation 1
  *
  */
-func VerifyEquation1(pairing *pbc.Pairing, proof *ProofOfEquation, H *pbc.Element, tau *pbc.Element, sigma *Sigma) bool {
+func VerifyEquation1(pairing *pbc.Pairing, proof *ProofOfEquation, H *pbc.Element, tau *pbc.Element, sigma *CommonReferenceString) bool {
 
 	// Construct LHS
 	pos1 := IotaPrime1(pairing, pairing.NewZr().Set1(), sigma)
@@ -632,7 +632,7 @@ func VerifyEquation1(pairing *pbc.Pairing, proof *ProofOfEquation, H *pbc.Elemen
  * Verify Equation 2
  *
  */
-func VerifyEquation2(pairing *pbc.Pairing, proof *ProofOfEquation, G *pbc.Element, tau *pbc.Element, sigma *Sigma) bool {
+func VerifyEquation2(pairing *pbc.Pairing, proof *ProofOfEquation, G *pbc.Element, tau *pbc.Element, sigma *CommonReferenceString) bool {
 
 	// Construct LHS
 	Gi := Iota1(pairing, G)
@@ -675,7 +675,7 @@ func VerifyEquation4(
   W1 *pbc.Element,
   W2 *pbc.Element,
   tau *pbc.Element,
-  sigma *Sigma) bool {
+  sigma *CommonReferenceString) bool {
 
   // Construct LHS
   Vi := Iota2(pairing, V)
@@ -721,16 +721,16 @@ func VerifyEquation4(
 /*
  * Verify Equation 5
  */
-func VerifyEquation5(pairing *pbc.Pairing, proof *ProofOfEquation, U *pbc.Element, tau *pbc.Element, sigma *Sigma) bool {
+func VerifyEquation5(pairing *pbc.Pairing, proof *ProofOfEquation, U *pbc.Element, tau *pbc.Element, sigma *CommonReferenceString) bool {
 
   // Construct LHS
-  pos1 := Iota1(pairing, pairing.NewG1().Set1())
+  pos1 := Iota1(pairing, pairing.NewG1().Set0())
   Fpos1 := FMap(pairing, pos1, proof.d[0])
   // +
   Uiota := Iota1(pairing, U)
   Fu := FMap(pairing, Uiota, proof.d[1])
   // +
-  pos2 := Iota2(pairing, pairing.NewG2().Set1())
+  pos2 := Iota2(pairing, pairing.NewG2().Set0())
   Fpos2 := FMap(pairing, proof.c[0], pos2)
   // +
   Gamma :=  NewIdentiyMatrix(pairing, 1, 2)
@@ -742,16 +742,17 @@ func VerifyEquation5(pairing *pbc.Pairing, proof *ProofOfEquation, U *pbc.Elemen
   if len(dprime.mat) != 1 && len(dprime.mat[0]) != 1 {
     panic("Issue in dprime conversion on gamma. Should be 1x1")
   }
-  Fcd := FMap(pairing, proof.c[0], dprime.mat[0][0])
+  //Fcd := FMap(pairing, proof.c[0], dprime.mat[0][0])
+  Fcd := FMap(pairing, proof.c[0], proof.d[0])
   // =
   LHS := Fu.AddinGT(pairing, Fpos1)
   LHS = LHS.AddinGT(pairing, Fpos2)
   LHS = Fu.AddinGT(pairing, Fcd)
-  //fmt.Println("LHS:")
-  //fmt.Println(LHS.el11)
-  //fmt.Println(LHS.el12)
-  //fmt.Println(LHS.el21)
-  //fmt.Println(LHS.el22)
+  fmt.Println("LHS:")
+  fmt.Println(LHS.el11)
+  fmt.Println(LHS.el12)
+  fmt.Println(LHS.el21)
+  fmt.Println(LHS.el22)
 
 
   // Construct RHS
@@ -773,11 +774,11 @@ func VerifyEquation5(pairing *pbc.Pairing, proof *ProofOfEquation, U *pbc.Elemen
   RHS = RHS.AddinGT(pairing, Fu2)
   RHS = RHS.AddinGT(pairing, Fv1)
   RHS = RHS.AddinGT(pairing, Fv2)
-  //fmt.Println("RHS:")
-  //fmt.Println(RHS.el11)
-  //fmt.Println(RHS.el12)
-  //fmt.Println(RHS.el21)
-  //fmt.Println(RHS.el22)
+  fmt.Println("RHS:")
+  fmt.Println(RHS.el11)
+  fmt.Println(RHS.el12)
+  fmt.Println(RHS.el21)
+  fmt.Println(RHS.el22)
 
 
 
@@ -787,7 +788,7 @@ func VerifyEquation5(pairing *pbc.Pairing, proof *ProofOfEquation, U *pbc.Elemen
 /*
  * Verify Equation 5
  */
-func VerifyEquation5_Exp(pairing *pbc.Pairing, proof *ProofOfEquation, U *pbc.Element, tau *pbc.Element, sigma *Sigma) bool {
+func VerifyEquation5_Exp(pairing *pbc.Pairing, proof *ProofOfEquation, U *pbc.Element, tau *pbc.Element, sigma *CommonReferenceString) bool {
 
   // Construct LHS
 
@@ -843,7 +844,7 @@ func VerifyEquation5_Exp(pairing *pbc.Pairing, proof *ProofOfEquation, U *pbc.El
  * u1 = (O, P)
  * u2 = t * u1
  */
-func CreateCommonReferenceString(sharedParams *SharedParams, alpha *pbc.Element) *Sigma {
+func CreateCommonReferenceString(sharedParams *SharedParams, alpha *pbc.Element) *CommonReferenceString {
 	pairing, _ := pbc.NewPairingFromString(sharedParams.Params)
 
 	// Proof should use different generators then what is stored in the
@@ -852,7 +853,7 @@ func CreateCommonReferenceString(sharedParams *SharedParams, alpha *pbc.Element)
 	// Since the groups are cyclic, this should not matter.
 	g1 := pairing.NewG1().Rand()
 	g2 := pairing.NewG2().Rand()
-	sigma := new(Sigma)
+	sigma := new(CommonReferenceString)
 
 	// Create commit keys for u1 and u2 on G1
 	u11 := g1.Bytes()
@@ -898,7 +899,7 @@ func CreateCommonReferenceString(sharedParams *SharedParams, alpha *pbc.Element)
  * - Creates a commitment of a variable from G1 to B1
  *   c := ι1(X) + Ru
  */
-func CreateCommitmentOnG1(pairing *pbc.Pairing, chi []*pbc.Element, sigma *Sigma) ([]*BPair, []*BPair, *RMatrix){
+func CreateCommitmentOnG1(pairing *pbc.Pairing, chi []*pbc.Element, sigma *CommonReferenceString) ([]*BPair, []*BPair, *RMatrix){
 
 	// Create RMatrix of random elements
 	rows := len(chi)
@@ -931,7 +932,7 @@ func CreateCommitmentOnG1(pairing *pbc.Pairing, chi []*pbc.Element, sigma *Sigma
  *
  *  x: Is in Zp
  */
-func CreateCommitmentPrimeOnG1(pairing *pbc.Pairing, x []*pbc.Element, sigma *Sigma) ([]*BPair, []*BPair, *RMatrix){
+func CreateCommitmentPrimeOnG1(pairing *pbc.Pairing, x []*pbc.Element, sigma *CommonReferenceString) ([]*BPair, []*BPair, *RMatrix){
 
 	// Create RMatrix of random elements
 	rows := len(x)
@@ -962,7 +963,7 @@ func CreateCommitmentPrimeOnG1(pairing *pbc.Pairing, x []*pbc.Element, sigma *Si
  * - Creates a commitment of a variable from G1 to B1
  *   c := ι1(X) + Ru
  */
-func CreateCommitmentOnG2(pairing *pbc.Pairing, Y []*pbc.Element, sigma *Sigma) ([]*BPair, []*BPair, *RMatrix){
+func CreateCommitmentOnG2(pairing *pbc.Pairing, Y []*pbc.Element, sigma *CommonReferenceString) ([]*BPair, []*BPair, *RMatrix){
 
 	// Create RMatrix of random elements
 	rows := len(Y)
@@ -995,7 +996,7 @@ func CreateCommitmentOnG2(pairing *pbc.Pairing, Y []*pbc.Element, sigma *Sigma) 
  *
  *  x: Is in Zp
  */
-func CreateCommitmentPrimeOnG2(pairing *pbc.Pairing, y []*pbc.Element, sigma *Sigma) ([]*BPair, []*BPair, *RMatrix){
+func CreateCommitmentPrimeOnG2(pairing *pbc.Pairing, y []*pbc.Element, sigma *CommonReferenceString) ([]*BPair, []*BPair, *RMatrix){
 
 	// Create RMatrix of random elements
 	rows := len(y)
@@ -1066,7 +1067,7 @@ func FMap(pairing *pbc.Pairing, B1 *BPair, B2 *BPair) *BTMat {
  IotaHat: AT -> BT
  Here, the mapping is occuring from G2 -> B2^4
  */
-func IotaHat(pairing *pbc.Pairing, Z *pbc.Element, sigma *Sigma) *BTMat {
+func IotaHat(pairing *pbc.Pairing, Z *pbc.Element, sigma *CommonReferenceString) *BTMat {
 	// Element from G2, first convert to B1 and B2
 	// then map element into BT^4
 	B1 := IotaPrime1(pairing, pairing.NewZr().SetInt32(1), sigma)
@@ -1082,7 +1083,7 @@ func IotaHat(pairing *pbc.Pairing, Z *pbc.Element, sigma *Sigma) *BTMat {
  IotaHat2: AT -> BT
  Here, the mapping is occuring from G1 -> B1^4
  */
-func IotaHat2(pairing *pbc.Pairing, Z *pbc.Element, sigma *Sigma) *BTMat {
+func IotaHat2(pairing *pbc.Pairing, Z *pbc.Element, sigma *CommonReferenceString) *BTMat {
 	// Element from G1, first convert to B1 and B2
 	// then map element into BT^4
 	B1 := Iota1(pairing, Z)
@@ -1184,7 +1185,7 @@ func IotaT(pairing *pbc.Pairing, el *pbc.Element) *BTMat{
 /* IotaPrime1: Zp -> B1
  * IotaPrimt1(z) = zu
  */
-func IotaPrime1(pairing *pbc.Pairing, z *pbc.Element, sigma *Sigma) *BPair {
+func IotaPrime1(pairing *pbc.Pairing, z *pbc.Element, sigma *CommonReferenceString) *BPair {
 	pair := new(BPair)
 	u1 := pairing.NewG1().SetBytes(sigma.u.u1)
 	u2 := pairing.NewG1().SetBytes(sigma.u.u2)
@@ -1212,7 +1213,7 @@ func RhoPrime1(pairing *pbc.Pairing, pair *BPair, alpha *pbc.Element) *pbc.Eleme
 /* IotaPrime2: Zp -> B2
  * IotaPrimt1(z) = zu
  */
-func IotaPrime2(pairing *pbc.Pairing, z *pbc.Element, sigma *Sigma) *BPair {
+func IotaPrime2(pairing *pbc.Pairing, z *pbc.Element, sigma *CommonReferenceString) *BPair {
 	pair := new(BPair)
 	u1 := pairing.NewG2().SetBytes(sigma.v.u1)
 	u2 := pairing.NewG2().SetBytes(sigma.v.u2)

@@ -32,7 +32,7 @@ func TestRMatrixGen(verbose bool) bool{
   }
 
 
-  if (verbose) {fmt.Println("Creating CRS Sigma")}
+  if (verbose) {fmt.Println("Creating CRS CommonReferenceString")}
   alpha := pairing.NewZr().Rand() // Secret Key
   sigma := CreateCommonReferenceString(sharedParams, alpha) // CRS
 
