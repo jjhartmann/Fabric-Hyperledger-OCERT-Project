@@ -216,6 +216,97 @@ func ProveEquation2(pairing *pbc.Pairing, rprime *pbc.Element, G *pbc.Element, C
 
 
 /*
+ * Proof Equation 4
+ */
+func ProveEquation4(pairing *pbc.Pairing,
+  R *pbc.Element,
+  S *pbc.Element,
+  C *pbc.Element,
+  D *pbc.Element,
+  V *pbc.Element,
+  H *pbc.Element,
+  W1 *pbc.Element,
+  W2 *pbc.Element,
+  sigma *Sigma) *ProofOfEquation {
+  proof := new(ProofOfEquation)
+
+  //// Create commitment in B2
+  Xvec := []*pbc.Element{R, S, C, D}
+  c_commit, _, Rmat := CreateCommitmentOnG1(pairing, Xvec, sigma) // T, PKc
+  if Rmat.rows != 4 && Rmat.cols != 2 && len(c_commit) == 4 {
+    panic("Issues in conversion and creation of samples in Zp for S")
+  }
+
+  //////////////////////////////////
+  // PI: for G2
+  /////////////////////////////////////
+
+  Ri := Rmat.InvertMatrix()
+  if len(Ri.mat) !=2 && len(Ri.mat[0]) != 4 {
+    panic("Issue when inverting the R matrix")
+  }
+
+  B := new(BMatrix)
+  B.mat = [][]*BPair{
+    []*BPair{Iota2(pairing, V)},
+    []*BPair{Iota2(pairing, H)},
+    []*BPair{Iota2(pairing, W1)},
+    []*BPair{Iota2(pairing, W2)},
+  }
+  B.rows = 4
+  B.cols = 1
+
+  RB := Ri.MultBPairMatrixG2(pairing, B)
+  if len(RB.mat) != 2 && len(RB.mat[0]) != 1 {
+    panic("Issue in dimensionality when mult in B matrix")
+  }
+
+  // -
+
+  Tmat := NewRMatrix(pairing, 2, 2)
+  Ti := Tmat.InvertMatrix()
+  Tv := Ti.MulCommitmentKeysG2(pairing, sigma.V)
+  if len(Tv) != 2 {
+    panic("Issuen in commitment key multiplication.")
+  }
+
+  // ) =  Construct pi
+  if len(Tv) != len(RB.mat) {
+    panic("All preliminary output for PI needs to have equivalent dimensionality")
+  }
+  pi := []*BPair{}
+  _ = RB      // *BMatrix 2x1
+  _ = Tv    // []*BPair 2x1
+
+  for i := 0; i < len(Tv); i++ {
+    tmpRB := RB.mat[i][0]
+    tmpTv := Tv[i]
+
+    tmpBPair := new(BPair)
+    tmpBPair.b1 = pairing.NewG2().Sub(pairing.NewG2().SetBytes(tmpRB.b1),
+      pairing.NewG2().SetBytes(tmpTv.b1)).Bytes()
+    tmpBPair.b2 = pairing.NewG2().Sub(pairing.NewG2().SetBytes(tmpRB.b2),
+      pairing.NewG2().SetBytes(tmpTv.b2)).Bytes()
+
+    pi = append(pi, tmpBPair)
+  }
+
+
+  //////////////////////////////////
+  // Theta: for G1
+  /////////////////////////////////////
+
+  theta := Tmat.MulCommitmentKeysG1(pairing, sigma.U)
+
+
+  proof.c = c_commit
+  proof.Pi = pi
+  proof.Theta = theta
+  return proof
+}
+
+
+/*
  * Proof Equation 5
  */
 func ProveEquation5(pairing *pbc.Pairing,
