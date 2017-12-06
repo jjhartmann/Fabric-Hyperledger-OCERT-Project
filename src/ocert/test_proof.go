@@ -1073,6 +1073,51 @@ func RunPTest(b int) {
   }
 }
 
+func TestEquation4Equality(verbose bool) bool {
+  sharedParams := GenerateSharedParams()
+  VK, SK := SKeyGen(sharedParams)
+  _ = VK
+
+  P := new(Pseudonym)
+  pairing, _ := pbc.NewPairingFromString(sharedParams.Params)
+  P.C = pairing.NewG1().Rand().Bytes()
+  P.D = pairing.NewG1().Rand().Bytes()
+  PKc := new(ClientPublicKey)
+  PKc.PK = pairing.NewG2().Rand().Bytes()
+  ecert := SSign(sharedParams, SK, P, PKc)
+
+  eRV := pairing.NewGT().Pair(pairing.NewG1().SetBytes(ecert.R),
+    pairing.NewG2().SetBytes(VK.V))
+  if verbose {fmt.Println("eRV:", eRV)}
+
+  eSH := pairing.NewGT().Pair(pairing.NewG1().SetBytes(ecert.S),
+    pairing.NewG2().SetBytes(sharedParams.G2))
+  if verbose {fmt.Println("eSH:", eSH)}
+
+  eCW1 := pairing.NewGT().Pair(pairing.NewG1().SetBytes(P.C),
+    pairing.NewG2().SetBytes(VK.W1))
+  if verbose {fmt.Println("eCW1:", eCW1)}
+
+  eDW2 := pairing.NewGT().Pair(pairing.NewG1().SetBytes(P.D),
+    pairing.NewG2().SetBytes(VK.W2))
+  if verbose {fmt.Println("eDW2:", eDW2)}
+
+  eGZ := pairing.NewGT().Pair(pairing.NewG1().SetBytes(sharedParams.G1),
+    pairing.NewG2().SetBytes(VK.Z))
+  if verbose {fmt.Println("eGZ:", eGZ)}
+
+  res := pairing.NewGT().Mul(eRV, eSH)
+  res = pairing.NewGT().Mul(res, eCW1)
+  res = pairing.NewGT().Mul(res, eDW2)
+  if verbose {fmt.Println("Res:", res)}
+
+  ret1 := res.Equals(eGZ)
+
+
+  return ret1
+}
+
+
 func TestEquation5Equality(verbose bool) bool {
   sharedParams := GenerateSharedParams()
   VK, SK := SKeyGen(sharedParams)
