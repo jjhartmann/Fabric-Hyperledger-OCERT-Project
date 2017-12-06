@@ -94,6 +94,23 @@ func Ptest(verbose bool) bool {
   consts.Egz = pairing.NewGT().Pair(G, pairing.NewG2().SetBytes(VK.Z)).Bytes()
   consts.PPrime = Pprime
 
+  Cprime := pairing.NewG1().MulZn(G, pairing.NewZr().SetBytes(rprime))
+  Cprime = pairing.NewG1().Add(Cprime, pairing.NewG1().SetBytes(P.C))
+  if verbose {
+    fmt.Println("Cprime Equality:", reflect.DeepEqual(Cprime.Bytes(), Pprime.C))
+    fmt.Println("ERerand C':        ", Pprime.C)
+    fmt.Println("Reconstruced  C':  ", Cprime.Bytes())
+  }
+
+  Dprime := pairing.NewG1().MulZn(pairing.NewG1().SetBytes(PKa.PK),
+    pairing.NewZr().SetBytes(rprime))
+  Dprime = pairing.NewG1().Add(Dprime, pairing.NewG1().SetBytes(P.D))
+  if verbose {
+    fmt.Println("Dprime Equality:", reflect.DeepEqual(Cprime.Bytes(), Pprime.C))
+    fmt.Println("ERerand D':        ", Pprime.D)
+    fmt.Println("Reconstruced  D':  ", Dprime.Bytes())
+  }
+
   return retValEq1 && retValEq2 && retValEq3 &&
          retValEq4 && retValEq5 && PProve(sharedParams, pi, consts)
 }
@@ -1497,4 +1514,6 @@ func RunAllPTests(verbose bool) {
   fmt.Println("Proof Verify EQ3      ", TestEquation3Verify(verbose))
   fmt.Println("Proof Verify EQ4      ", TestEquation4Verify(verbose))
   fmt.Println("Proof Verify EQ5      ", TestEquation5Verify(verbose))
+  fmt.Println("Test Entire Pipeline  ", Ptest(verbose))
+
 }
