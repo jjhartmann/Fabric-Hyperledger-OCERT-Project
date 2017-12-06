@@ -1,7 +1,6 @@
 pkg/darwin_amd64/ocert.a
-src/chaincode-docker-devmode/myc.block
+chaincode-docker-devmode/myc.block
 src/chaincode/ocert/ocert
-src/chaincode/sacc/sacc
 .idea/*
-src/benchmark/benchmarkcc
+benchmark/benchmarkcc
 Analysis/.ipynb*
