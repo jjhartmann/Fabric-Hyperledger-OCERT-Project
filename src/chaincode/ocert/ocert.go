@@ -31,7 +31,10 @@ func (t *OcertAsset) Init(stub shim.ChaincodeStubInterface) peer.Response {
 
 /*
  * ocert chaincode provides the following functions
- *  -
+ *  - genECert
+ *  - genOCert
+ * and
+ *  - sharedParams
  */
 func (t *OcertAsset) Invoke(stub shim.ChaincodeStubInterface) peer.Response {
 	// Extract the function and args from the transaction proposal

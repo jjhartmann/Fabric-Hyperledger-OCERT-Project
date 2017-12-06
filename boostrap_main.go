@@ -20,9 +20,11 @@ func main() {
   fmt.Printf("\nRun RMatrix Tests\n")
   ocert.RunAllRTests(false)
 
-  //fmt.Println(ocert.TestEquation5Verify(true))
-  //fmt.Println(ocert.TestEquation4Verify(true))
-  //fmt.Println(ocert.TestRMatrixMultiplicationforBPairMatrixinG2(true, 1, 2, 2, 1))
+  fmt.Printf("\nRun ElGamal ReReand Tests\n")
+  ocert.ETestAll(false)
+
+  //Test Key generation from rerandomization
+  //ocert.ETestAll(false)
 
   // Benchmark
   //ConstructMetricsForProofVerifyEq1(100)

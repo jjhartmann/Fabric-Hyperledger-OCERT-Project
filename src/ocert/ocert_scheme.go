@@ -17,7 +17,10 @@ import (
  	"crypto/rsa"
  	"crypto/rand"
  	"crypto/sha256"
+ 	"crypto/x509"
  	"math/big"
+ 	// "time"
+ 	"os"
 )
 
 /*
@@ -29,6 +32,8 @@ var sSigningKey *SSigningKey
 var rsaPrivateKey *rsa.PrivateKey
 var serialNumber *big.Int
 var auditorKeypair []byte
+
+var verifyProofLog *os.File
 
 func getSerialNumber() (*big.Int) {
 	serialNumber.Add(serialNumber, big.NewInt(1))
@@ -47,6 +52,10 @@ func GetSharedParams(stub Wrapper, args [][]byte) ([]byte, error) {
 }
 
 func GetAuditorKeypair(stub Wrapper, args [][]byte)([]byte, error) {
+	if len(args) != 0 {
+		return nil, fmt.Errorf("Incorrect arguments. Expecting no arguments")
+	}
+
 	// TODO We are cheat here, we should verify the request is from the 
 	// auditor
 	if string(auditorKeypair) == "NoAuditorKeyPair" {
@@ -65,24 +74,59 @@ func GetAuditorKeypair(stub Wrapper, args [][]byte)([]byte, error) {
  * keys are in memory. It returns the Auditor's keypair to the auditor
  */
 func Setup(stub Wrapper, args [][]byte) ([]byte, error) {
-	fmt.Println("Setup")
+	fmt.Println("[Ocert Scheme] [Setup]")
 	if len(args) != 0 {
 		return nil, fmt.Errorf("Incorrect arguments. Expecting no arguments")
+	}
+
+	var err error;
+	// verifyProofLog, err = os.Create("/data/verifyProofLog.txt")
+	if err != nil {
+		fmt.Println(err)
+		panic(err.Error())
 	}
 
 	auditorKeypair = []byte("NoAuditorKeyPair")
 	serialNumber = big.NewInt(0)
 	sharedParams = GenerateSharedParams()
+	fmt.Printf("[Ocert Scheme] [Setup] sharedParams: ")
 	fmt.Println(sharedParams)
+
 	// Generate auditor's keypair
 	PKa, SKa := EKeyGen(sharedParams)
-	err := stub.PutState("auditor_pk", PKa.PK)
+	fmt.Printf("[Ocert Scheme] [Setup] auditor_pk: ")
+	fmt.Println(PKa)
+	PKaBytes, err := PKa.Bytes()
+	if err != nil {
+		return nil, err
+	}
+	err = stub.PutState("auditor_pk", PKaBytes)
+	if err != nil {
+		return nil, err
+	}
 	KPa := new(AuditorKeypair)
 	KPa.PK = PKa.PK
 	KPa.SK = SKa.SK
 
 	// Generate RSA keypair
 	rsaPrivateKey, err = rsa.GenerateKey(rand.Reader, 2048)
+	if err != nil {
+		return nil, err
+	}
+	fmt.Printf("[Ocert Scheme] [Setup] rsa pk: ")
+	fmt.Println(&rsaPrivateKey.PublicKey)
+
+	rsaPublicKeyBytes, err := x509.MarshalPKIXPublicKey(&rsaPrivateKey.PublicKey)
+	if err != nil {
+		return nil, err
+	}
+	rsaPK := new(RSAPK)
+	rsaPK.PK = rsaPublicKeyBytes
+	rsaPKBytes, err := rsaPK.Bytes()
+	if err != nil {
+		return nil, err
+	}
+	err = stub.PutState("rsa_pk", rsaPKBytes)
 	if err != nil {
 		return nil, err
 	}
@@ -133,8 +177,10 @@ func GenECert(stub Wrapper, args [][]byte) ([]byte, error) {
 	PKc := new(ClientPublicKey)
 	PKc.PK = request.PKc
 
-	fmt.Println("GenECert")
+	fmt.Println("[Ocert Scheme] [GenECert]")
+	fmt.Printf("[Ocert Scheme] [GenECert] arg0: ")
 	fmt.Println(IDc)
+	fmt.Printf("[Ocert Scheme] [GenECert] arg1: ")
 	fmt.Println(PKc)
 
 	// Generate pseudonym P
@@ -146,19 +192,26 @@ func GenECert(stub Wrapper, args [][]byte) ([]byte, error) {
 		return nil, fmt.Errorf("Asset not found: auditor_pk")
 	}
 	PKa := new(AuditorPublicKey)
-	PKa.PK = valuePKa
+	err = PKa.SetBytes(valuePKa)
+	if err != nil {
+		return nil, err
+	}
 
 	P := EEnc(sharedParams, PKa, IDc)
+	fmt.Printf("[Ocert Scheme] [GenECert] P: ")
+	fmt.Println(P)
 
 	// Generate ecert
 	ecert := SSign(sharedParams, sSigningKey, P, PKc)
+	fmt.Printf("[Ocert Scheme] [GenECert] ecert: ")
+	fmt.Println(ecert)
 
 	reply := new(GenECertReply)
 	reply.P, err = P.Bytes()
 	if err != nil {
 		return nil, err
 	}
-	reply.ecert, err = ecert.Bytes()
+	reply.Ecert, err = ecert.Bytes()
 	if err != nil {
 		return nil, err
 	}
@@ -175,19 +228,40 @@ func GenECert(stub Wrapper, args [][]byte) ([]byte, error) {
  * proof of knowledge, and returns the ocert to the client 
  */
 func GenOCert(stub Wrapper, args [][]byte) ([]byte, error) {
-	if len(args) != 3 {
-		return nil, fmt.Errorf("Incorrect arguments. Expecting the PK, P, and PoK of client")
+	if len(args) != 1 {
+		return nil, fmt.Errorf("Incorrect arguments.")
 	}
 
-	PKc := new(ClientPublicKey)
-	PKc.PK = args[0]
-	P := new(Pseudonym)
-	err := P.SetBytes(args[1])
+	request := new(GenOCertRequest)
+	err := request.SetBytes(args[0])
 	if err != nil {
 		return nil, err
 	}
 
+
+	PKc := new(ClientPublicKey)
+	PKc.PK = request.PKc
+	P := new(Pseudonym)
+	err = P.SetBytes(request.P)
+	if err != nil {
+		return nil, err
+	}
+
+	// TODO get proof
+
+	fmt.Println("[Ocert Scheme] [GenOCert]")
+	fmt.Printf("[Ocert Scheme] [GenOert] arg0: ")
+	fmt.Println(PKc)
+	fmt.Printf("[Ocert Scheme] [GenOCert] arg1: ")
+	fmt.Println(P)
+
 	// TODO verify proof of knowledge
+	// start := time.Now()
+	// end := time.Now()
+	// elapsed := end.Sub(start)
+	// fmt.Println("proof verfication: ")
+	// fmt.Println(elapsed)
+	// verifyProofLog.WriteString("verifyProof: " + elapsed.String() + "\n")
 
 	// TODO generate X.509 certificate
 	msg, err := OCertSingedBytes(PKc, P)
@@ -199,6 +273,14 @@ func GenOCert(stub Wrapper, args [][]byte) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+	fmt.Printf("[Ocert Scheme] [GenOCert] signature: ")
+	fmt.Println(signature)
 
-	return signature, nil
+	reply := new(GenOCertReply)
+	reply.Sig = signature
+	replyBytes, err := reply.Bytes()
+	if err != nil {
+		return nil, err
+	}
+	return replyBytes, nil
 }
