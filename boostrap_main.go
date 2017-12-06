@@ -36,24 +36,21 @@ func main() {
   //g2 := pairing.NewG2().Rand()
   //gt := pairing.NewGT().Pair(g1, g2)
   //_ = gt
-
-  //z := pairing.NewZr().Rand()
-  //zP := pairing.NewG1().MulZn(g1, z)
   //
-  //fmt.Println(z)
-  //fmt.Println(zP)
+  //x := pairing.NewZr().Rand()
+  //H := pairing.NewG2().Rand()
+  //PK := pairing.NewG2().MulZn(H, x)
+  //fmt.Println(PK)
   //
-  //negG1 := pairing.NewG1().Invert(g1)
-  //zprime := pairing.NewG1().Mul(zP, negG1)
+  //identity := pairing.NewZr().Set1()
+  //fmt.Println(identity)
   //
-  //fmt.Println(negG1)
-  //fmt.Println("ZPrime:",zprime)
+  //negId := pairing.NewZr().Neg(identity)
+  //fmt.Println(negId)
   //
-  //
-  //z := pairing.NewZr().SetInt32(2)
-  //fmt.Println(pairing.NewG1().Add(g1, g1) )
-  //fmt.Println( pairing.NewG1().MulZn(g1, z))
-  //fmt.Println(pairing.NewG1().Add(g1, g1).Equals(pairing.NewG1().MulZn(g1, z)))
+  //negPK := pairing.NewG2().Neg(PK)
+  //fmt.Println(negPK)
+  //fmt.Println(pairing.NewG2().Add(PK, negPK))
 }
 
 
