@@ -1004,7 +1004,7 @@ func TestEquation1Verify(verbose bool) bool {
   proof := ProveEquation1(pairing, Xc, H, negPKc, sigma)
 
   if verbose {fmt.Println("Tetsting Initital Euqation: XcH + (-1)PKc = 0")}
-  tau := pairing.NewG2().Add(PKc, negPKc)
+  tau := pairing.NewG2().Set0()
   if verbose {fmt.Println(tau)}
 
 
