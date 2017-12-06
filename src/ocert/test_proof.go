@@ -10,14 +10,109 @@ import (
 /*
  * Run a single test
  */
-func Ptest() bool {
+func Ptest(verbose bool) bool {
   sharedParams := GenerateSharedParams()
+  pairing, _ := pbc.NewPairingFromString(sharedParams.Params)
+  g1 := pairing.NewG1().Rand()
+  g2 := pairing.NewG2().Rand()
+  gt := pairing.NewGT().Pair(g1, g2)
+  _ = gt
+
+  if verbose {fmt.Println("Creating Equations")}
+
+  // Shared generators
+  G  := pairing.NewG1().SetBytes(sharedParams.G1)
+  H  := pairing.NewG2().SetBytes(sharedParams.G2)
+
+  // Verifcation key
+  VK, SK := SKeyGen(sharedParams)
+
+  // Auditor Key pair
+  PKa, SKa := EKeyGen(sharedParams)
+  _ = SKa
+
+  // Pseudonym Generation
+  clientID := new(ClientID)
+  clientID.ID = pairing.NewG1().Rand().Bytes()
+  P := EEnc(sharedParams, PKa, clientID)
+
+  // Rerandomization
+  Pprime, rprime := ERerand(sharedParams, PKa, P)
+
+  // Client Keypair
+  PKc := new(ClientPublicKey)
+  Xc := pairing.NewZr().Rand().Bytes()
+  PKc.PK = pairing.NewG2().MulZn(H, pairing.NewZr().SetBytes(Xc)).Bytes()
+
+  // Ecert Generation
+  ecert := SSign(sharedParams, SK, P, PKc)
+
+  // Construct Var
   eqs := new(SystemOfEquations)
   vars := new(ProofVariables)
+  vars.PKa = PKa
+  vars.P = P
+  vars.VK = VK
+  vars.RPrime = rprime
+  vars.PKc = PKc
+  vars.Xc = Xc
+  vars.E = ecert
+
   pi := PSetup(sharedParams, eqs, vars)
 
+  if verbose {fmt.Println("Testing Structure Integrity")}
+  retValEq1 := len(pi.Eq1.Theta) == 2 && len(pi.Eq1.Pi) == 1 &&
+    len(pi.Eq1.d) == 1 && len(pi.Eq1.cprime) == 1 &&
+    len(pi.Eq1.c) == 0 && len(pi.Eq1.dprime) == 0
+  if verbose {fmt.Println("Eq1 Structure:\t", retValEq1)}
+
+  retValEq2 := len(pi.Eq2.Theta) == 1 && len(pi.Eq2.Pi) == 2 &&
+    len(pi.Eq2.d) == 0 && len(pi.Eq2.cprime) == 0 &&
+    len(pi.Eq2.c) == 1 && len(pi.Eq2.dprime) == 1
+  if verbose {fmt.Println("Eq2 Structure:\t", retValEq2)}
+
+  retValEq3 := len(pi.Eq3.Theta) == 1 && len(pi.Eq3.Pi) == 2 &&
+    len(pi.Eq3.d) == 0 && len(pi.Eq3.cprime) == 0 &&
+    len(pi.Eq3.c) == 1 && len(pi.Eq3.dprime) == 1
+  if verbose {fmt.Println("Eq3 Structure:\t", retValEq3)}
+
+  retValEq4 := len(pi.Eq4.Theta) == 2 && len(pi.Eq4.Pi) == 2 &&
+    len(pi.Eq4.d) == 0 && len(pi.Eq4.cprime) == 0 &&
+    len(pi.Eq4.c) == 4 && len(pi.Eq4.dprime) == 0
+  if verbose {fmt.Println("Eq4 Structure:\t", retValEq4)}
+
+  retValEq5 := len(pi.Eq5.Theta) == 2 && len(pi.Eq5.Pi) == 2 &&
+    len(pi.Eq5.d) == 2 && len(pi.Eq5.cprime) == 0 &&
+    len(pi.Eq5.c) == 1 && len(pi.Eq5.dprime) == 0
+  if verbose {fmt.Println("Eq5 Structure:\t", retValEq5)}
+
+  // Create constants for verify
   consts := new(ProofConstants)
-  return PProve(sharedParams, pi, consts)
+  consts.VK = VK
+  consts.PKa = PKa
+  consts.Egh = pairing.NewGT().Pair(G, H).Bytes()
+  consts.Egz = pairing.NewGT().Pair(G, pairing.NewG2().SetBytes(VK.Z)).Bytes()
+  consts.PPrime = Pprime
+
+  Cprime := pairing.NewG1().MulZn(G, pairing.NewZr().SetBytes(rprime))
+  Cprime = pairing.NewG1().Add(Cprime, pairing.NewG1().SetBytes(P.C))
+  if verbose {
+    fmt.Println("Cprime Equality:", reflect.DeepEqual(Cprime.Bytes(), Pprime.C))
+    fmt.Println("ERerand C':        ", Pprime.C)
+    fmt.Println("Reconstruced  C':  ", Cprime.Bytes())
+  }
+
+  Dprime := pairing.NewG1().MulZn(pairing.NewG1().SetBytes(PKa.PK),
+    pairing.NewZr().SetBytes(rprime))
+  Dprime = pairing.NewG1().Add(Dprime, pairing.NewG1().SetBytes(P.D))
+  if verbose {
+    fmt.Println("Dprime Equality:", reflect.DeepEqual(Cprime.Bytes(), Pprime.C))
+    fmt.Println("ERerand D':        ", Pprime.D)
+    fmt.Println("Reconstruced  D':  ", Dprime.Bytes())
+  }
+
+  return retValEq1 && retValEq2 && retValEq3 &&
+         retValEq4 && retValEq5 && PProve(sharedParams, pi, consts)
 }
 
 // Test mapping between G and B
@@ -80,7 +175,7 @@ func TestIotaRhoPrime(verbose bool) bool {
   gt := pairing.NewGT().Pair(g1, g2)
   _ = gt
 
-  if (verbose) {fmt.Println("Creating CRS Sigma")}
+  if (verbose) {fmt.Println("Creating CRS CommonReferenceString")}
   alpha := pairing.NewZr().Rand() // Secret Key
   sigma := CreateCommonReferenceString(sharedParams, alpha) // CRS
 
@@ -139,7 +234,7 @@ func TestFMap(verbose bool) bool {
   gt := pairing.NewGT().Pair(g1, g2)
   _ = gt
 
-  if (verbose) {fmt.Println("Creating CRS Sigma")}
+  if (verbose) {fmt.Println("Creating CRS CommonReferenceString")}
   alpha := pairing.NewZr().Rand() // Secret Key
   sigma := CreateCommonReferenceString(sharedParams, alpha) // CRS
 
@@ -182,7 +277,7 @@ func TestIotaHat(verbose bool) bool {
   gt := pairing.NewGT().Pair(g1, g2)
   _ = gt
 
-  if (verbose) {fmt.Println("Creating CRS Sigma")}
+  if (verbose) {fmt.Println("Creating CRS CommonReferenceString")}
   alpha := pairing.NewZr().Rand() // Secret Key
   sigma := CreateCommonReferenceString(sharedParams, alpha) // CRS
 
@@ -231,7 +326,7 @@ func TestCompleteMatrixMapping(verbose bool) bool {
   gt := pairing.NewGT().Pair(g1, g2)
   _ = gt
 
-  if (verbose) {fmt.Println("Creating CRS Sigma")}
+  if (verbose) {fmt.Println("Creating CRS CommonReferenceString")}
   alpha := pairing.NewZr().Rand() // Secret Key
   sigma := CreateCommonReferenceString(sharedParams, alpha) // CRS
 
@@ -337,7 +432,7 @@ func TestSimpleCommitment(verbose bool) bool {
   X := pairing.NewG1().Rand()
   Xi := Iota1(pairing, X)
 
-  if (verbose) {fmt.Println("Creating CRS Sigma")}
+  if (verbose) {fmt.Println("Creating CRS CommonReferenceString")}
   alpha := pairing.NewZr().Rand() // Secret Key
   sigma := CreateCommonReferenceString(sharedParams, alpha) // CRS
 
@@ -428,7 +523,7 @@ func TestCreateCommitmentsG1(verbose bool) bool {
   gt := pairing.NewGT().Pair(g1, g2)
   _ = gt
 
-  if (verbose) {fmt.Println("Creating CRS Sigma")}
+  if (verbose) {fmt.Println("Creating CRS CommonReferenceString")}
   alpha := pairing.NewZr().Rand() // Secret Key
   sigma := CreateCommonReferenceString(sharedParams, alpha) // CRS
 
@@ -526,7 +621,7 @@ func TestCreateCommitmentPrimeOnG1(verbose bool) bool {
   gt := pairing.NewGT().Pair(g1, g2)
   _ = gt
 
-  if (verbose) {fmt.Println("Creating CRS Sigma")}
+  if (verbose) {fmt.Println("Creating CRS CommonReferenceString")}
   alpha := pairing.NewZr().Rand() // Secret Key
   sigma := CreateCommonReferenceString(sharedParams, alpha) // CRS
 
@@ -600,7 +695,7 @@ func TestCreateCommitmentsG2(verbose bool) bool {
   gt := pairing.NewGT().Pair(g1, g2)
   _ = gt
 
-  if (verbose) {fmt.Println("Creating CRS Sigma")}
+  if (verbose) {fmt.Println("Creating CRS CommonReferenceString")}
   alpha := pairing.NewZr().Rand() // Secret Key
   sigma := CreateCommonReferenceString(sharedParams, alpha) // CRS
 
@@ -676,7 +771,7 @@ func TestCreateCommitmentPrimeOnG2(verbose bool) bool {
   gt := pairing.NewGT().Pair(g1, g2)
   _ = gt
 
-  if (verbose) {fmt.Println("Creating CRS Sigma")}
+  if (verbose) {fmt.Println("Creating CRS CommonReferenceString")}
   alpha := pairing.NewZr().Rand() // Secret Key
   sigma := CreateCommonReferenceString(sharedParams, alpha) // CRS
 
@@ -764,7 +859,7 @@ func TestEquation1ProofGen(verbose bool) bool {
   H  := pairing.NewG2().SetBytes(sharedParams.G2) // Shared Generator ??
   PKc := pairing.NewG2().Rand() // Public Key (variable
 
-  if verbose {fmt.Println("Creating CRS Sigma")}
+  if verbose {fmt.Println("Creating CRS CommonReferenceString")}
   alpha := pairing.NewZr().Rand() // Another Secret Key..
   sigma := CreateCommonReferenceString(sharedParams, alpha) // CRS
 
@@ -817,7 +912,7 @@ func TestEquation2ProofGen(verbose bool) bool {
   G  := pairing.NewG1().SetBytes(sharedParams.G1) // Shared Generator ??
   //rprime := pairing.NewG2().Rand() // Public Key (variable
 
-  if verbose {fmt.Println("Creating CRS Sigma")}
+  if verbose {fmt.Println("Creating CRS CommonReferenceString")}
   alpha := pairing.NewZr().Rand() // Another Secret Key..
   sigma := CreateCommonReferenceString(sharedParams, alpha) // CRS
 
@@ -883,7 +978,7 @@ func TestEquation4ProofGen(verbose bool) bool {
   W2 := pairing.NewG2().SetBytes(VK.W2)
 
 
-  if verbose {fmt.Println("Creating CRS Sigma")}
+  if verbose {fmt.Println("Creating CRS CommonReferenceString")}
   alpha := pairing.NewZr().Rand() // Another Secret Key..
   sigma := CreateCommonReferenceString(sharedParams, alpha) // CRS
 
@@ -942,7 +1037,7 @@ func TestEquation5ProofGen(verbose bool) bool {
   PK := pairing.NewG2().SetBytes(PKc.PK)
   U := pairing.NewG1().SetBytes(VK.U)
 
-  if verbose {fmt.Println("Creating CRS Sigma")}
+  if verbose {fmt.Println("Creating CRS CommonReferenceString")}
   alpha := pairing.NewZr().Rand() // Another Secret Key..
   sigma := CreateCommonReferenceString(sharedParams, alpha) // CRS
 
@@ -996,7 +1091,7 @@ func TestEquation1Verify(verbose bool) bool {
   PKc := pairing.NewG2().MulZn(H, Xc) // Public Key (variable
   negPKc := pairing.NewG2().Neg(PKc)
 
-  if verbose {fmt.Println("Creating CRS Sigma")}
+  if verbose {fmt.Println("Creating CRS CommonReferenceString")}
   alpha := pairing.NewZr().Rand() // Another Secret Key..
   sigma := CreateCommonReferenceString(sharedParams, alpha) // CRS
 
@@ -1004,7 +1099,7 @@ func TestEquation1Verify(verbose bool) bool {
   proof := ProveEquation1(pairing, Xc, H, negPKc, sigma)
 
   if verbose {fmt.Println("Tetsting Initital Euqation: XcH + (-1)PKc = 0")}
-  tau := pairing.NewG2().Add(PKc, negPKc)
+  tau := pairing.NewG2().Set0()
   if verbose {fmt.Println(tau)}
 
 
@@ -1028,28 +1123,52 @@ func TestEquation2Verify(verbose bool) bool {
   gt := pairing.NewGT().Pair(g1, g2)
   _ = gt
 
-  if verbose {fmt.Println("Test Proof Generation for Eq2")}
+  if verbose {fmt.Println("Creating Equations")}
 
-  rprime := pairing.NewZr().Rand() // Client Secret Key (variable)
-  C  := pairing.NewG1().Rand()
-  G  := pairing.NewG1().SetBytes(sharedParams.G1) // Shared Generator ??
-  //r := pairing.NewZr().Rand()
-  //rprime := pairing.NewG2().Rand() // Public Key (variable
+  // Shared generators
+  G  := pairing.NewG1().SetBytes(sharedParams.G1)
+  H  := pairing.NewG2().SetBytes(sharedParams.G2)
+  _ = H
 
-  if verbose {fmt.Println("Creating CRS Sigma")}
+  // Verifcation key
+  VK, SK := SKeyGen(sharedParams)
+  _ = VK
+  _ = SK
+
+  // Auditor Key pair
+  PKa, SKa := EKeyGen(sharedParams)
+  _ = SKa
+
+  // Pseudonym Generation
+  clientID := new(ClientID)
+  clientID.ID = pairing.NewG1().Rand().Bytes()
+  P := EEnc(sharedParams, PKa, clientID)
+  C := pairing.NewG1().SetBytes(P.C)
+
+  // Rerandomization
+  Pprime, rprime := ERerand(sharedParams, PKa, P)
+  r := pairing.NewZr().SetBytes(rprime)
+  Cprime := pairing.NewG1().SetBytes(Pprime.C)
+
+  if verbose {fmt.Println("Creating CRS CommonReferenceString")}
   alpha := pairing.NewZr().Rand() // Another Secret Key..
   sigma := CreateCommonReferenceString(sharedParams, alpha) // CRS
 
   if verbose {fmt.Println("Generating proof:")}
-  proof := ProveEquation2(pairing, rprime, G, C, sigma)
+  proof := ProveEquation2(
+    pairing,
+    r,
+    G,
+    C,
+    sigma)
 
   if verbose {fmt.Println("Testing second Equation: C + rprime * G = Cprime")}
-  Gr := pairing.NewG1().MulZn(G, rprime)
-  tau := pairing.NewG1().Add(C, Gr)
+  tau := pairing.NewG1().MulZn(G, r)//pairing.NewG1().SetBytes(Pprime.C)
+  tau = pairing.NewG1().Add(C, tau)
   if verbose {fmt.Println(tau)}
 
   if verbose {fmt.Println("Verify Proof")}
-  ret := VerifyEquation2(pairing, proof, G, tau, sigma)
+  ret := VerifyEquation2(pairing, proof, G, Cprime, sigma)
 
   if verbose {
     fmt.Println("Verify Result: ", ret)
@@ -1058,6 +1177,71 @@ func TestEquation2Verify(verbose bool) bool {
   return ret
 }
 
+
+func TestEquation3Verify(verbose bool) bool {
+  sharedParams := GenerateSharedParams()
+  pairing, _ := pbc.NewPairingFromString(sharedParams.Params)
+  g1 := pairing.NewG1().Rand()
+  g2 := pairing.NewG2().Rand()
+  gt := pairing.NewGT().Pair(g1, g2)
+  _ = gt
+
+  if verbose {fmt.Println("Creating Equations")}
+
+  // Shared generators
+  G  := pairing.NewG1().SetBytes(sharedParams.G1)
+  H  := pairing.NewG2().SetBytes(sharedParams.G2)
+  _ = H
+  _ = G
+
+  // Verifcation key
+  VK, SK := SKeyGen(sharedParams)
+
+  _ = VK
+  _ = SK
+
+  // Auditor Key pair
+  PKa, SKa := EKeyGen(sharedParams)
+  PK := pairing.NewG1().SetBytes(PKa.PK)
+  _ = SKa
+
+  // Pseudonym Generation
+  clientID := new(ClientID)
+  clientID.ID = pairing.NewG1().Rand().Bytes()
+  P := EEnc(sharedParams, PKa, clientID)
+  D := pairing.NewG1().SetBytes(P.D)
+
+  // Rerandomization
+  Pprime, rprime := ERerand(sharedParams, PKa, P)
+  r := pairing.NewZr().SetBytes(rprime)
+  Dprime := pairing.NewG1().SetBytes(Pprime.D)
+
+  if verbose {fmt.Println("Creating CRS CommonReferenceString")}
+  alpha := pairing.NewZr().Rand() // Another Secret Key..
+  sigma := CreateCommonReferenceString(sharedParams, alpha) // CRS
+
+  if verbose {fmt.Println("Generating proof:")}
+  proof := ProveEquation2(
+    pairing,
+    r,
+    PK,
+    D,
+    sigma)
+
+  if verbose {fmt.Println("Testing second Equation: D + rprime * G = Dprime")}
+  tau := pairing.NewG1().MulZn(PK, r)
+  tau = pairing.NewG1().Add(D, tau)
+  if verbose {fmt.Println(tau)}
+
+  if verbose {fmt.Println("Verify Proof")}
+  ret := VerifyEquation2(pairing, proof, PK, Dprime, sigma)
+
+  if verbose {
+    fmt.Println("Verify Result: ", ret)
+  }
+
+  return ret
+}
 
 func TestEquation4Verify(verbose bool) bool {
   sharedParams := GenerateSharedParams()
@@ -1087,7 +1271,7 @@ func TestEquation4Verify(verbose bool) bool {
   W2 := pairing.NewG2().SetBytes(VK.W2)
 
 
-  if verbose {fmt.Println("Creating CRS Sigma")}
+  if verbose {fmt.Println("Creating CRS CommonReferenceString")}
   alpha := pairing.NewZr().Rand() // Another Secret Key..
   sigma := CreateCommonReferenceString(sharedParams, alpha) // CRS
 
@@ -1158,7 +1342,7 @@ func TestEquation5Verify(verbose bool) bool {
   PK := pairing.NewG2().SetBytes(PKc.PK)
   U := pairing.NewG1().SetBytes(VK.U)
 
-  if verbose {fmt.Println("Creating CRS Sigma")}
+  if verbose {fmt.Println("Creating CRS CommonReferenceString")}
   alpha := pairing.NewZr().Rand() // Another Secret Key..
   sigma := CreateCommonReferenceString(sharedParams, alpha) // CRS
 
@@ -1189,7 +1373,7 @@ func TestEquation5Verify(verbose bool) bool {
  */
 func RunPTest(b int) {
   for i := 0; i < b; i++ {
-    if !Ptest() {
+    if !Ptest(false) {
       os.Exit(1)
     }
   }
@@ -1326,7 +1510,10 @@ func RunAllPTests(verbose bool) {
   fmt.Println("Proof Generation EQ4  ", TestEquation4ProofGen(verbose))
   fmt.Println("Proof Generation EQ5  ", TestEquation5ProofGen(verbose))
   fmt.Println("Proof Verify EQ1      ", TestEquation1Verify(verbose))
-  fmt.Println("Proof Verify EQ2-3    ", TestEquation2Verify(verbose))
+  fmt.Println("Proof Verify EQ2      ", TestEquation2Verify(verbose))
+  fmt.Println("Proof Verify EQ3      ", TestEquation3Verify(verbose))
   fmt.Println("Proof Verify EQ4      ", TestEquation4Verify(verbose))
   fmt.Println("Proof Verify EQ5      ", TestEquation5Verify(verbose))
+  fmt.Println("Test Entire Pipeline  ", Ptest(verbose))
+
 }

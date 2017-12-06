@@ -375,9 +375,9 @@ func (btmat *BTMat) AddinGT(pairing *pbc.Pairing, rb *BTMat) *BTMat{
 
 ////////////////////////////////////////////////////////////////////////////////////
 /*
- * Sigma: the common reference string (CRS) for NIWI ProofOfEquation
+ * CommonReferenceString: the common reference string (CRS) for NIWI ProofOfEquation
  */
-type Sigma struct {
+type CommonReferenceString struct {
 	U []CommitmentKey // U[0].u1 holds generator G1
 	V []CommitmentKey // V[0].u1 holds generator G2
 	u CommitmentKey // For group G1 (used in Iota Prime)
@@ -427,6 +427,7 @@ type ProofOfKnowledge struct {
 	Eq3 *ProofOfEquation
 	Eq4 *ProofOfEquation
 	Eq5 *ProofOfEquation
+	sigma *CommonReferenceString
 }
 
 /*
@@ -436,7 +437,9 @@ type ProofOfKnowledge struct {
 type ProofVariables struct {
 	P      *Pseudonym
 	PKc    *ClientPublicKey
+	PKa    *AuditorPublicKey
 	E      *Ecert
+	VK     *SVerificationKey
 	Xc     []byte // This is the client private key
 	RPrime []byte
 }
@@ -446,10 +449,11 @@ type ProofVariables struct {
  */
 type ProofConstants struct {
 	// g1, g2 and e(g1, g2) are from sharedParams
-	PKi    *SVerificationKey // U, V, W1, W2 and Z
+	VK    *SVerificationKey // U, V, W1, W2 and Z
 	PPrime *Pseudonym        // C' and D'
 	Egz    []byte            // e(g1, Z)
 	PKa    *AuditorPublicKey
+	Egh    []byte            // e(G, H)
 }
 
 /*****************************************************************/

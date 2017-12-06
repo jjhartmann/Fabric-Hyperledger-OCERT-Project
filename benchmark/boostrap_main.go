@@ -24,7 +24,9 @@ func main() {
   ocert.ETestAll(false)
 
   //Test Key generation from rerandomization
-  //ocert.ETestAll(false)
+  //fmt.Println(ocert.TestEquation5Verify(false))
+  //fmt.Println(ocert.Ptest(true))
+  //fmt.Println(ocert.TestEquation3Verify(true))
 
   // Benchmark
   //ConstructMetricsForProofVerifyEq1(100)
