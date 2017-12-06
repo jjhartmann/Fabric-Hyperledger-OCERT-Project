@@ -85,6 +85,8 @@ func ERerand(sharedParams *SharedParams, PKa *AuditorPublicKey, P *Pseudonym) (*
 	pairing, _ := pbc.NewPairingFromString(sharedParams.Params)
 	g1 := pairing.NewG1().SetBytes(sharedParams.G1)
 
+	PPrime := new(Pseudonym)
+
 	//Generate rprime
 	rprime := pairing.NewZr().Rand()
 
@@ -103,9 +105,9 @@ func ERerand(sharedParams *SharedParams, PKa *AuditorPublicKey, P *Pseudonym) (*
   	tempD := pairing.NewG1().MulZn(PK,rprime)
 	Dprime := pairing.NewG1().Add(D,tempD)
 
-	P.C = Cprime.Bytes()
-	P.D = Dprime.Bytes()
-	return P, rprime.Bytes()
+  PPrime.C = Cprime.Bytes()
+  PPrime.D = Dprime.Bytes()
+	return PPrime, rprime.Bytes()
 }
 
 /*
