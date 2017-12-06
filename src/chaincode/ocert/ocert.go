@@ -35,6 +35,7 @@ func (t *OcertAsset) Init(stub shim.ChaincodeStubInterface) peer.Response {
  *  - genOCert
  * and
  *  - sharedParams
+ *  - get
  */
 func (t *OcertAsset) Invoke(stub shim.ChaincodeStubInterface) peer.Response {
 	// Extract the function and args from the transaction proposal
@@ -54,8 +55,6 @@ func (t *OcertAsset) Invoke(stub shim.ChaincodeStubInterface) peer.Response {
 	var err error
 	if fn == "get" {
 		result, err = ocert.Get(stub, args)
-	} else if fn == "put" {
-		result, err = ocert.Put(stub, args)
 	} else if fn == "sharedParams" {
 		result, err = ocert.GetSharedParams(stub, args)
 	} else if fn == "genECert" {
@@ -65,6 +64,7 @@ func (t *OcertAsset) Invoke(stub shim.ChaincodeStubInterface) peer.Response {
 	} else {
 		return shim.Error("Unknown functions")
 	}
+	
 	if err != nil {
 		return shim.Error(err.Error())
 	}
