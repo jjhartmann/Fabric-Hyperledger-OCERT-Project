@@ -3,4 +3,4 @@ chaincode-docker-devmode/myc.block
 src/chaincode/ocert/ocert
 .idea/*
 benchmark/benchmarkcc
-Analysis/.ipynb*
+benchmark-analysis-tool/.ipynb*
