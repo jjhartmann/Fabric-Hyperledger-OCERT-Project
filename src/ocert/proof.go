@@ -26,24 +26,24 @@ func PSetup(sharedParams *SharedParams, eqs *SystemOfEquations, vars *ProofVaria
   alpha := pairing.NewZr().Rand() // Seed for CRS
   sigma := CreateCommonReferenceString(sharedParams, alpha) // CRS
 
-  // TODO setup proof of eq1
+  // setup proof of eq1
   Xc := pairing.NewZr().SetBytes(vars.Xc)
   H := pairing.NewG2().SetBytes(sharedParams.G2)
   negPKc := pairing.NewG2().Neg(pairing.NewG2().SetBytes(vars.PKc.PK))
   pi.Eq1 = ProveEquation1(pairing, Xc, H, negPKc, sigma)
 
-  // TODO setup proof of eq2
+  // setup proof of eq2
   C := pairing.NewG1().SetBytes(vars.P.C)
   G := pairing.NewG1().SetBytes(sharedParams.G1)
   rprime := pairing.NewZr().SetBytes(vars.RPrime)
   pi.Eq2 = ProveEquation2(pairing, rprime, G, C, sigma)
 
-  // TODO setup proof of eq3
+  // setup proof of eq3
   D := pairing.NewG1().SetBytes(vars.P.D)
   PKa := pairing.NewG1().SetBytes(vars.PKa.PK)
   pi.Eq3 = ProveEquation2(pairing, rprime, PKa, D, sigma)
 
-  // TODO setup proof of eq4
+  // setup proof of eq4
   //Vars
   R := pairing.NewG1().SetBytes(vars.E.R)
   S := pairing.NewG1().SetBytes(vars.E.S)
@@ -75,7 +75,6 @@ func PSetup(sharedParams *SharedParams, eqs *SystemOfEquations, vars *ProofVaria
  * Validate the proof of knowledage, return true if all the equations
  * in the system hold.
  */
-// TODO it may take extra information to prove
 func PProve(sharedParams *SharedParams, pi *ProofOfKnowledge, consts *ProofConstants) bool {
   pairing, _ := pbc.NewPairingFromString(sharedParams.Params)
   g1 := pairing.NewG1().Rand()
@@ -83,14 +82,14 @@ func PProve(sharedParams *SharedParams, pi *ProofOfKnowledge, consts *ProofConst
   gt := pairing.NewGT().Pair(g1, g2)
   _ = gt
 
-  // TODO validate eq1
+  // validate eq1
   H := pairing.NewG2().SetBytes(sharedParams.G2)
   Zero := pairing.NewG2().Set0()
   retVal := VerifyEquation1(pairing, pi.Eq1, H, Zero, pi.sigma)
 
   //fmt.Println("EQ1:", retVal)
 
-	// TODO validate eq2
+	// validate eq2
 	G := pairing.NewG1().SetBytes(sharedParams.G1)
 	Cprime := pairing.NewG1().SetBytes(consts.PPrime.C)
 	retVal2 := VerifyEquation2(pairing, pi.Eq2, G, Cprime, pi.sigma)
@@ -98,7 +97,7 @@ func PProve(sharedParams *SharedParams, pi *ProofOfKnowledge, consts *ProofConst
 
   //fmt.Println("EQ2:", retVal2)
 
-  // TODO validate eq3
+  // validate eq3
   PKa := pairing.NewG1().SetBytes(consts.PKa.PK)
   Dprime := pairing.NewG1().SetBytes(consts.PPrime.D)
   retVal3 := VerifyEquation2(pairing, pi.Eq3, PKa, Dprime, pi.sigma)
@@ -106,7 +105,7 @@ func PProve(sharedParams *SharedParams, pi *ProofOfKnowledge, consts *ProofConst
 
   //fmt.Println("EQ3:", retVal3)
 
-  // TODO validate eq4
+  // validate eq4
 	V := pairing.NewG2().SetBytes(consts.VK.V)
 	_ = H
 	W1 := pairing.NewG2().SetBytes(consts.VK.W1)
@@ -122,7 +121,8 @@ func PProve(sharedParams *SharedParams, pi *ProofOfKnowledge, consts *ProofConst
   eGH := pairing.NewGT().SetBytes(consts.Egh)
   _ = U
   _ = eGH
-  //retVal5 := VerifyEquation5(pairing, pi.Eq5, U, eGH, pi.sigma)
+  retVal5 := VerifyEquation5(pairing, pi.Eq5, U, eGH, pi.sigma)
+  _ = retVal5
 
   //fmt.Println("EQ5:", retVal)
 

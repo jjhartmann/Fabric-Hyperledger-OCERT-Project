@@ -2,7 +2,7 @@ package main
 
 import (
   "fmt"
-	 "./src/ocert"
+	 "../src/ocert"
   "github.com/Nik-U/pbc"
   time2 "time"
   "os"
