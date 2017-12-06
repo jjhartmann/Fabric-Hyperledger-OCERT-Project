@@ -579,6 +579,72 @@ func VerifyEquation2(pairing *pbc.Pairing, proof *ProofOfEquation, G *pbc.Elemen
 func VerifyEquation5(pairing *pbc.Pairing, proof *ProofOfEquation, U *pbc.Element, tau *pbc.Element, sigma *Sigma) bool {
 
   // Construct LHS
+  //pos1 := Iota1(pairing, pairing.NewG1().Set1())
+  //Fpos1 := FMap(pairing, pos1, proof.d[0])
+  // +
+  Uiota := Iota1(pairing, U)
+  Fu := FMap(pairing, Uiota, proof.d[1])
+  // +
+  //pos2 := Iota2(pairing, pairing.NewG2().Set1())
+  //Fpos2 := FMap(pairing, proof.c[0], pos2)
+  // +
+  Gamma :=  NewIdentiyMatrix(pairing, 1, 2)
+  dBmat := new(BMatrix)
+  dBmat.mat = [][]*BPair{ []*BPair{proof.d[0]}, []*BPair{proof.d[1]}}
+  dBmat.cols = 1
+  dBmat.rows = 2
+  dprime := Gamma.MultBPairMatrixG2(pairing, dBmat)
+  if len(dprime.mat) != 1 && len(dprime.mat[0]) != 1 {
+    panic("Issue in dprime conversion on gamma. Should be 1x1")
+  }
+  Fcd := FMap(pairing, proof.c[0], dprime.mat[0][0])
+  // =
+  //LHS := Fu.AddinGT(pairing, Fpos1)
+  //LHS = LHS.AddinGT(pairing, Fpos2)
+  LHS := Fu.AddinGT(pairing, Fcd)
+  fmt.Println("LHS:")
+  fmt.Println(LHS.el11)
+  fmt.Println(LHS.el12)
+  fmt.Println(LHS.el21)
+  fmt.Println(LHS.el22)
+
+
+  // Construct RHS
+  Taui := IotaT(pairing, tau)
+  // +
+  u1 := sigma.U[0].ConvertToBPair()
+  Fu1 := FMap(pairing, u1, proof.Pi[0])
+  //+
+  u2 := sigma.U[1].ConvertToBPair()
+  Fu2 := FMap(pairing, u2, proof.Pi[1])
+  // +
+  v1 := sigma.V[0].ConvertToBPair()
+  Fv1 := FMap(pairing, proof.Theta[0], v1)
+  // +
+  v2 := sigma.V[1].ConvertToBPair()
+  Fv2 := FMap(pairing, proof.Theta[1], v2)
+  // +
+  RHS := Taui.AddinGT(pairing, Fu1)
+  RHS = RHS.AddinGT(pairing, Fu2)
+  RHS = RHS.AddinGT(pairing, Fv1)
+  RHS = RHS.AddinGT(pairing, Fv2)
+  fmt.Println("RHS:")
+  fmt.Println(RHS.el11)
+  fmt.Println(RHS.el12)
+  fmt.Println(RHS.el21)
+  fmt.Println(RHS.el22)
+
+
+
+  return false
+}
+
+/*
+ * Verify Equation 5
+ */
+func VerifyEquation5_Exp(pairing *pbc.Pairing, proof *ProofOfEquation, U *pbc.Element, tau *pbc.Element, sigma *Sigma) bool {
+
+  // Construct LHS
 
   Uiota := Iota1(pairing, U)
   Fu := FMap(pairing, Uiota, proof.d[1])

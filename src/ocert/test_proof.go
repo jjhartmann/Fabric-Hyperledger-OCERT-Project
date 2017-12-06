@@ -1053,7 +1053,7 @@ func TestEquation5Verify(verbose bool) bool {
 
 
   if verbose {fmt.Println("Verify Proof")}
-  ret := VerifyEquation5(pairing, proof, U, tau, sigma)
+  ret := VerifyEquation5_Exp(pairing, proof, U, tau, sigma)
 
   if verbose {
     fmt.Println("Verify Restul: ", ret)
