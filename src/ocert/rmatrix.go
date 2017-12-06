@@ -118,7 +118,8 @@ func (rmat *RMatrix) MultBPairMatrixG2(pairing *pbc.Pairing, X *BMatrix) *BMatri
       el.b1 = pairing.NewG2().Set1().Bytes()
       el.b2 = pairing.NewG2().Set1().Bytes()
       for k := 0; k < len(X.mat); k++ {
-        tmp := X.mat[k][j].MulScalarInG2(pairing, rmat.mat[i][k])
+        tmpX := X.mat[k][j]
+        tmp := tmpX.MulScalarInG2(pairing, rmat.mat[i][k])
         el = el.AddinG2(pairing, tmp)
       }
       elementRow = append(elementRow, el)
@@ -145,7 +146,8 @@ func (rmat *RMatrix) MultBPairMatrixG1(pairing *pbc.Pairing, X *BMatrix) *BMatri
       el.b1 = pairing.NewG1().Set1().Bytes()
       el.b2 = pairing.NewG1().Set1().Bytes()
       for k := 0; k < len(X.mat); k++ {
-        tmp := X.mat[k][j].MulScalarInG1(pairing, rmat.mat[i][k])
+        tmpX := X.mat[k][j]
+        tmp := tmpX.MulScalarInG1(pairing, rmat.mat[i][k])
         el = el.AddinG1(pairing, tmp)
       }
       elementRow = append(elementRow, el)

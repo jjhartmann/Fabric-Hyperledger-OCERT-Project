@@ -4,6 +4,7 @@ import (
   "os"
   "fmt"
   "github.com/Nik-U/pbc"
+  "reflect"
 )
 
 func TestRMatrixGen(verbose bool) bool{
@@ -190,9 +191,25 @@ func TestRMatrixMultiplicationforElementinG2(verbose bool, r_rows int, r_cols in
     }
   }
 
+  // Check multiplication
+  ret2 := true
+  for i := 0; i < r_rows; i++ {
+    for j := 0; j < x_cols; j++ {
+      el := pairing.NewG2().Set1()
+      for k := 0; k < x_rows; k++ {
+        tmp := pairing.NewG2().MulZn(X.mat[k][j], ones.mat[i][k])
+        el = el.ThenAdd(tmp)
+      }
+      ret2 = ret2 && el.Equals(mat.mat[i][j])
+      if !ret2 && verbose {
+        fmt.Println("Failed at: [", i, "," ,j, "]")
+      }
+    }
+  }
+
   ret1 := len(mat.mat) == len(ones.mat) && len(mat.mat[0]) == len(X.mat[0])
 
-  return TestRMatrixStructure(verbose, mat) && ret1
+  return TestRMatrixStructure(verbose, mat) && ret1 && ret2
 
 }
 
@@ -204,7 +221,7 @@ func TestRMatrixMultiplicationforElementinG1(verbose bool, r_rows int, r_cols in
   gt := pairing.NewGT().Pair(g1, g2)
   _ = gt
 
-  ones := NewOnesMatrix(pairing, r_rows, r_cols)
+  ones := NewRMatrix(pairing, r_rows, r_cols)
   X := NewRMatrixinG1(pairing, x_rows, x_cols)
 
   if verbose {
@@ -228,9 +245,25 @@ func TestRMatrixMultiplicationforElementinG1(verbose bool, r_rows int, r_cols in
     }
   }
 
+  // Check multiplication
+  ret2 := true
+  for i := 0; i < r_rows; i++ {
+    for j := 0; j < x_cols; j++ {
+      el := pairing.NewG1().Set1()
+      for k := 0; k < x_rows; k++ {
+        tmp := pairing.NewG1().MulZn(X.mat[k][j], ones.mat[i][k])
+        el = el.ThenAdd(tmp)
+      }
+      ret2 = ret2 && el.Equals(mat.mat[i][j])
+      if !ret2 && verbose {
+        fmt.Println("Failed at: [", i, "," ,j, "]")
+      }
+    }
+  }
+
   ret1 := len(mat.mat) == len(ones.mat) && len(mat.mat[0]) == len(X.mat[0])
 
-  return TestRMatrixStructure(verbose, mat) && ret1
+  return TestRMatrixStructure(verbose, mat) && ret1 && ret2
 
 }
 
@@ -242,7 +275,7 @@ func TestRMatrixMultiplicationforElementinZr(verbose bool, r_rows int, r_cols in
   gt := pairing.NewGT().Pair(g1, g2)
   _ = gt
 
-  ones := NewOnesMatrix(pairing, r_rows, r_cols)
+  ones := NewRMatrix(pairing, r_rows, r_cols)
   X := NewRMatrix(pairing, x_rows, x_cols)
 
   if verbose {
@@ -266,9 +299,25 @@ func TestRMatrixMultiplicationforElementinZr(verbose bool, r_rows int, r_cols in
     }
   }
 
+  // Check multiplication
+  ret2 := true
+  for i := 0; i < r_rows; i++ {
+    for j := 0; j < x_cols; j++ {
+      el := pairing.NewZr().Set1()
+      for k := 0; k < x_rows; k++ {
+        tmp := pairing.NewZr().Mul(X.mat[k][j], ones.mat[i][k])
+        el = el.ThenAdd(tmp)
+      }
+      ret2 = ret2 && el.Equals(mat.mat[i][j])
+      if !ret2 && verbose {
+        fmt.Println("Failed at: [", i, "," ,j, "]")
+      }
+    }
+  }
+
   ret1 := len(mat.mat) == len(ones.mat) && len(mat.mat[0]) == len(X.mat[0])
 
-  return TestRMatrixStructure(verbose, mat) && ret1
+  return TestRMatrixStructure(verbose, mat) && ret1 && ret2
 
 }
 
@@ -281,7 +330,7 @@ func TestRMatrixMultiplicationforBPairMatrixinG2(verbose bool, r_rows int, r_col
   gt := pairing.NewGT().Pair(g1, g2)
   _ = gt
 
-  ones := NewOnesMatrix(pairing, r_rows, r_cols)
+  ones := NewRMatrix(pairing, r_rows, r_cols)
   X := new(BMatrix)
 
   for i := 0; i < x_rows; i++ {
@@ -316,10 +365,32 @@ func TestRMatrixMultiplicationforBPairMatrixinG2(verbose bool, r_rows int, r_col
     }
   }
 
-
+  // Check multiplication
+  ret2 := true
+  for i := 0; i < r_rows; i++ {
+    for j := 0; j < x_cols; j++ {
+      el := new(BPair)
+      el.b1 = pairing.NewG2().Set1().Bytes()
+      el.b2 = pairing.NewG2().Set1().Bytes()
+      for k := 0; k < x_rows; k++ {
+        tmpX := X.mat[k][j]
+        tmpR := ones.mat[i][k]
+        tmp := new(BPair)
+        tmp.b1 = pairing.NewG2().MulZn(pairing.NewG2().SetBytes(tmpX.b1), tmpR).Bytes()
+        tmp.b2 = pairing.NewG2().MulZn(pairing.NewG2().SetBytes(tmpX.b2), tmpR).Bytes()
+        el.b1 = pairing.NewG2().Add(pairing.NewG2().SetBytes(el.b1), pairing.NewG2().SetBytes(tmp.b1)).Bytes()
+        el.b2 = pairing.NewG2().Add(pairing.NewG2().SetBytes(el.b2), pairing.NewG2().SetBytes(tmp.b2)).Bytes()
+      }
+      ret2 = ret2 && reflect.DeepEqual(el, BMat.mat[i][j])
+      if !ret2 && verbose {
+        fmt.Println("Failed at: [", i, "," ,j, "]")
+      }
+    }
+  }
 
   ret1 := len(BMat.mat) == len(ones.mat) && len(BMat.mat[0]) == len(X.mat[0])
-  return ret1 && TestBMatrixStructure(verbose, BMat)
+
+  return ret1 && TestBMatrixStructure(verbose, BMat) && ret2
 
 }
 
@@ -333,7 +404,7 @@ func TestRMatrixMultiplicationforBPairMatrixinG1(verbose bool, r_rows int, r_col
   gt := pairing.NewGT().Pair(g1, g2)
   _ = gt
 
-  ones := NewOnesMatrix(pairing, r_rows, r_cols)
+  ones := NewRMatrix(pairing, r_rows, r_cols)
   X := new(BMatrix)
 
   for i := 0; i < x_rows; i++ {
@@ -368,8 +439,31 @@ func TestRMatrixMultiplicationforBPairMatrixinG1(verbose bool, r_rows int, r_col
     }
   }
 
+  // Check multiplication
+  ret2 := true
+  for i := 0; i < r_rows; i++ {
+    for j := 0; j < x_cols; j++ {
+      el := new(BPair)
+      el.b1 = pairing.NewG1().Set1().Bytes()
+      el.b2 = pairing.NewG1().Set1().Bytes()
+      for k := 0; k < x_rows; k++ {
+        tmpX := X.mat[k][j]
+        tmpR := ones.mat[i][k]
+        tmp := new(BPair)
+        tmp.b1 = pairing.NewG1().MulZn(pairing.NewG1().SetBytes(tmpX.b1), tmpR).Bytes()
+        tmp.b2 = pairing.NewG1().MulZn(pairing.NewG1().SetBytes(tmpX.b2), tmpR).Bytes()
+        el.b1 = pairing.NewG1().Add(pairing.NewG1().SetBytes(el.b1), pairing.NewG1().SetBytes(tmp.b1)).Bytes()
+        el.b2 = pairing.NewG1().Add(pairing.NewG1().SetBytes(el.b2), pairing.NewG1().SetBytes(tmp.b2)).Bytes()
+      }
+      ret2 = ret2 && reflect.DeepEqual(el, BMat.mat[i][j])
+      if !ret2 && verbose {
+        fmt.Println("Failed at: [", i, "," ,j, "]")
+      }
+    }
+  }
+
   ret1 := len(BMat.mat) == len(ones.mat) && len(BMat.mat[0]) == len(X.mat[0])
-  return ret1 && TestBMatrixStructure(verbose, BMat)
+  return ret1 && TestBMatrixStructure(verbose, BMat) && ret2
 
 }
 
