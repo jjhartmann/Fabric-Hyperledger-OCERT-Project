@@ -360,6 +360,99 @@ type CommonReferenceString struct {
 	v CommitmentKey // For group G2
 }
 
+func (crs *CommonReferenceString) Print() {
+	fmt.Println("\t[CommonReferenceString]")
+	fmt.Println("\t\t[U]: ")
+	for _, element := range crs.U {
+		(&element).Print()
+	}
+	fmt.Println("")
+
+	fmt.Println("\t\t[V]: ")
+	for _, element := range crs.U {
+		(&element).Print()
+	}
+	fmt.Println("")
+
+	fmt.Printf("\t\t[u]: ")
+	(&crs.u).Print()
+
+	fmt.Printf("\t\t[v]: ")
+	(&crs.v).Print()
+}
+
+
+func (crs *CommonReferenceString) Equals(crs2 *CommonReferenceString) bool {
+	if len(crs.U) != len(crs2.U) {
+		return false
+	}
+
+	if len(crs.V) != len(crs2.V) {
+		return false
+	}
+
+	for i, _ := range crs.U {
+		if !(&crs.U[i]).Equals(&crs2.U[i]) {
+			return false
+		}
+	}
+
+	for i, _ := range crs.V {
+		if !(&crs.V[i]).Equals(&crs2.V[i]) {
+			return false
+		}
+	}
+	return  (&crs.u).Equals(&crs2.u) &&
+		(&crs.v).Equals(&crs2.v)
+}
+
+func (crs *CommonReferenceString) Bytes() ([]byte, error) {
+	var BigU [][]byte
+	BigU = make([][]byte, len(crs.U), len(crs.U))
+	for i, _ := range crs.U {
+		ckBytes, err := (&crs.U[i]).Bytes()
+		if err != nil {
+			return nil, err
+		}
+		BigU[i] = ckBytes
+	}
+
+	var BigV [][]byte
+	BigV = make([][]byte, len(crs.V), len(crs.V))
+	for i, _ := range crs.V {
+		ckBytes, err := (&crs.V[i]).Bytes()
+		if err != nil {
+			return nil, err
+		}
+		BigV[i] = ckBytes
+	}
+
+	SmallU, err := (&crs.u).Bytes()
+	if err != nil {
+		return nil, err
+	}
+
+	SmallV, err := (&crs.v).Bytes()
+	if err != nil {
+		return nil, err
+	}
+
+	template := struct {
+		BigU   [][]byte
+		BigV   [][]byte
+		SmallU []byte
+		SmallV []byte
+	} {
+		BigU,
+		BigV,
+		SmallU,
+		SmallV,
+	}
+
+	msg, err := json.Marshal(template)
+	return msg, err
+}
+
 func (crs *CommonReferenceString) SetBytes(msg []byte) error {
 	template := new(struct {
 		BigU   [][]byte
@@ -413,101 +506,6 @@ func (crs *CommonReferenceString) SetBytes(msg []byte) error {
 	crs.v = *v
 
 	return nil
-}
-
-func (crs *CommonReferenceString) Bytes() ([]byte, error) {
-	var BigU [][]byte
-	BigU = make([][]byte, len(crs.U), len(crs.U))
-	for i, _ := range crs.U {
-		ckBytes, err := (&crs.U[i]).Bytes()
-		if err != nil {
-			return nil, err
-		}
-		BigU[i] = ckBytes
-	}
-
-	var BigV [][]byte
-	BigV = make([][]byte, len(crs.V), len(crs.V))
-	for i, _ := range crs.V {
-		ckBytes, err := (&crs.V[i]).Bytes()
-		if err != nil {
-			return nil, err
-		}
-		BigV[i] = ckBytes
-	}
-
-	SmallU, err := (&crs.u).Bytes()
-	if err != nil {
-		return nil, err
-	}
-
-	SmallV, err := (&crs.v).Bytes()
-	if err != nil {
-		return nil, err
-	}
-
-	template := struct {
-		BigU   [][]byte
-		BigV   [][]byte
-		SmallU []byte
-		SmallV []byte
-	} {
-		BigU,
-		BigV,
-		SmallU,
-		SmallV,
-	}
-
-	msg, err := json.Marshal(template)
-	return msg, err
-}
-
-
-
-func (crs *CommonReferenceString) Print() {
-	fmt.Println("\t[CommonReferenceString]")
-	fmt.Println("\t\t[U]: ")
-	for _, element := range crs.U {
-		(&element).Print()
-	}
-	fmt.Println("")
-
-	fmt.Println("\t\t[V]: ")
-	for _, element := range crs.U {
-		(&element).Print()
-	}
-	fmt.Println("")
-
-	fmt.Printf("\t\t[u]: ")
-	(&crs.u).Print()
-
-	fmt.Printf("\t\t[v]: ")
-	(&crs.v).Print()
-}
-
-
-func (crs *CommonReferenceString) Equals(crs2 *CommonReferenceString) bool {
-	if len(crs.U) != len(crs2.U) {
-		return false
-	}
-
-	if len(crs.V) != len(crs2.V) {
-		return false
-	}
-
-	for i, _ := range crs.U {
-		if !(&crs.U[i]).Equals(&crs2.U[i]) {
-			return false
-		}
-	}
-
-	for i, _ := range crs.V {
-		if !(&crs.V[i]).Equals(&crs2.V[i]) {
-			return false
-		}
-	}
-	return  (&crs.u).Equals(&crs2.u) &&
-		(&crs.v).Equals(&crs2.v)
 }
 
 type CommitmentKey struct {
