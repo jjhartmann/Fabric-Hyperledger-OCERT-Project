@@ -303,7 +303,7 @@ func TestRMatrixMultiplicationforElementinZr(verbose bool, r_rows int, r_cols in
   ret2 := true
   for i := 0; i < r_rows; i++ {
     for j := 0; j < x_cols; j++ {
-      el := pairing.NewZr().Set1()
+      el := pairing.NewZr().Set0()
       for k := 0; k < x_rows; k++ {
         tmp := pairing.NewZr().Mul(X.mat[k][j], ones.mat[i][k])
         el = el.ThenAdd(tmp)
