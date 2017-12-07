@@ -266,7 +266,7 @@ func main () {
 	}
 
 	// Setup
-	// setup()
+	setup()
 
 	// Wait for chaincode Init call finish
 	time.Sleep(3000 * time.Millisecond)
