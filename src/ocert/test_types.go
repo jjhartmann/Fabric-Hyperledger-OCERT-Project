@@ -85,8 +85,17 @@ func RunTypesTest() {
 	// fmt.Println(consts.Equals(consts3))
 	// fmt.Println(consts2.Equals(consts3))
 
-	result := PProve(sharedParams, pi, consts)
-	fmt.Println(result)
-	result3 := PProve(sharedParams, pi3, consts)
-	fmt.Println(result3)
+	constsBytes, err := consts.Bytes()
+	fmt.Println(err)
+	fmt.Println(constsBytes)
+	consts4 := new(ProofConstants)
+	err = consts4.SetBytes(constsBytes)
+	// consts4.Print()
+	fmt.Println(err)
+	fmt.Println(consts.Equals(consts4))
+
+	// result := PProve(sharedParams, pi, consts)
+	// fmt.Println(result)
+	// result3 := PProve(sharedParams, pi3, consts)
+	// fmt.Println(result3)
 }

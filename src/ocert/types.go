@@ -620,6 +620,75 @@ func (consts *ProofConstants) Equals(consts2 *ProofConstants) bool {
 		bytes.Equal(consts.Egh, consts2.Egh)
 }
 
+
+func (consts *ProofConstants) Bytes() ([]byte, error) {
+	VKbytes, err := consts.VK.Bytes()
+	if err != nil {
+		return nil, err
+	}
+
+	PPrimeBytes, err := consts.PPrime.Bytes()
+	if err != nil {
+		return nil, err
+	}
+
+	template := struct {
+		VK     []byte
+		PPrime []byte
+		Egz    []byte
+		PKa    []byte
+		Egh    []byte 
+	} {
+		VKbytes,
+		PPrimeBytes,
+		consts.Egz,
+		consts.PKa.PK,
+		consts.Egh,
+	}
+
+	msg, err := json.Marshal(template)
+	return msg, err
+}
+
+func (consts *ProofConstants) SetBytes(msg []byte) error {
+	template := new(struct {
+		VK     []byte
+		PPrime []byte
+		Egz    []byte
+		PKa    []byte
+		Egh    []byte 
+	})
+
+	err := json.Unmarshal(msg, template)
+	if err != nil {
+		return err
+	}
+
+	VK := new(SVerificationKey)
+	err = VK.SetBytes(template.VK)
+	if err != nil {
+		return err
+	}
+	consts.VK = VK
+
+	PPrime := new(Pseudonym)
+	err = PPrime.SetBytes(template.PPrime)
+	if err != nil {
+		return err
+	}
+	consts.PPrime = PPrime
+
+	consts.Egz = template.Egz
+
+	PKa := new(AuditorPublicKey)
+	PKa.PK = template.PKa
+	consts.PKa = PKa
+
+	consts.Egh = template.Egh
+
+	return nil
+}
+
 /*****************************************************************/
 /*
  * Request to and reply from main scheme (chaincode)
