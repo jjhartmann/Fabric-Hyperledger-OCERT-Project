@@ -20,8 +20,9 @@ import (
  	"crypto/sha256"
  	"crypto/x509"
  	"math/big"
- 	// "time"
+ 	"time"
  	"os"
+ 	"github.com/Nik-U/pbc"
 )
 
 /*
@@ -33,8 +34,10 @@ var sSigningKey *SSigningKey
 var rsaPrivateKey *rsa.PrivateKey
 var serialNumber *big.Int
 var auditorKeypair []byte
+var consts *ProofConstants
 
 var verifyProofLog *os.File
+
 
 func getSerialNumber() (*big.Int) {
 	serialNumber.Add(serialNumber, big.NewInt(1))
@@ -149,6 +152,8 @@ func Setup(stub Wrapper, args [][]byte) ([]byte, error) {
 
 	// Generate structure preserving keypair
 	VKei, SKei := SKeyGen(sharedParams)
+	fmt.Printf("[Ocert Scheme] [Setup] sVK: ")
+	fmt.Println(VKei)
 	sSigningKey = SKei
 	SVKb, err := VKei.Bytes()
 	if err != nil {
@@ -159,9 +164,16 @@ func Setup(stub Wrapper, args [][]byte) ([]byte, error) {
 		return nil, err
 	}
 
-	// TODO ?PSetup
-
-	// TODO generate certificate of CA
+	// Setup constants for proof
+	pairing, _ := pbc.NewPairingFromString(sharedParams.Params)
+	G := pairing.NewG1().SetBytes(sharedParams.G1)
+	H := pairing.NewG2().SetBytes(sharedParams.G2)
+	consts = new(ProofConstants)
+	consts.VK = VKei
+	consts.PPrime = nil
+	consts.PKa = PKa
+	consts.Egh = pairing.NewGT().Pair(G, H).Bytes()
+	consts.Egz = pairing.NewGT().Pair(G, pairing.NewG2().SetBytes(VKei.Z)).Bytes()
 
 	// Return keypair to the auditor
 	KPab, err := KPa.Bytes()
@@ -194,9 +206,9 @@ func GenECert(stub Wrapper, args [][]byte) ([]byte, error) {
 	PKc.PK = request.PKc
 
 	fmt.Println("[Ocert Scheme] [GenECert]")
-	fmt.Printf("[Ocert Scheme] [GenECert] arg0: ")
+	fmt.Printf("[Ocert Scheme] [GenECert] IDc: ")
 	fmt.Println(IDc)
-	fmt.Printf("[Ocert Scheme] [GenECert] arg1: ")
+	fmt.Printf("[Ocert Scheme] [GenECert] PKc: ")
 	fmt.Println(PKc)
 
 	// Generate pseudonym P
@@ -254,7 +266,6 @@ func GenOCert(stub Wrapper, args [][]byte) ([]byte, error) {
 		return nil, err
 	}
 
-
 	PKc := new(ClientPublicKey)
 	PKc.PK = request.PKc
 	P := new(Pseudonym)
@@ -262,21 +273,36 @@ func GenOCert(stub Wrapper, args [][]byte) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	// TODO get proof
+	pi := new(ProofOfKnowledge)
+	err = pi.SetBytes(request.Pi)
+	if err != nil {
+		return nil, err
+	}
 
 	fmt.Println("[Ocert Scheme] [GenOCert]")
-	fmt.Printf("[Ocert Scheme] [GenOert] arg0: ")
+	fmt.Printf("[Ocert Scheme] [GenOert] PKc: ")
 	fmt.Println(PKc)
-	fmt.Printf("[Ocert Scheme] [GenOCert] arg1: ")
+	fmt.Printf("[Ocert Scheme] [GenOCert] P: ")
 	fmt.Println(P)
+	fmt.Printf("[Ocert Scheme] [GenOCert] pi: ")
+	pi.Print()
 
-	// TODO verify proof of knowledge
-	// start := time.Now()
-	// end := time.Now()
-	// elapsed := end.Sub(start)
-	// fmt.Println("proof verfication: ")
-	// fmt.Println(elapsed)
+	// Verify proof of knowledge
+	start := time.Now()
+
+	consts.PPrime = P
+	result := PProve(sharedParams, pi, consts)
+	consts.PPrime = nil
+
+	end := time.Now()
+	elapsed := end.Sub(start)
+	fmt.Printf("[Ocert Scheme] [GenOCert] proof verfication time: ")
+	fmt.Println(elapsed)
+	fmt.Printf("[Ocert Scheme] [GenOCert] proof verfication time: ")
+	fmt.Println(result)
+	if !result {
+		return nil, fmt.Errorf("Proof verfication fails")
+	}
 	// verifyProofLog.WriteString("verifyProof: " + elapsed.String() + "\n")
 
 	// TODO generate X.509 certificate

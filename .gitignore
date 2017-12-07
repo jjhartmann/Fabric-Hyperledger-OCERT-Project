@@ -4,3 +4,4 @@ src/chaincode/ocert/ocert
 .idea/*
 benchmark/benchmarkcc
 benchmark-analysis-tool/.ipynb*
+benchmark/benchmark

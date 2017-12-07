@@ -128,5 +128,4 @@ func RunTypesTest() {
 	// fmt.Println(result)
 	// result3 := PProve(sharedParams, pi3, consts)
 	// fmt.Println(result3)
-
 }

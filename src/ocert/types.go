@@ -1132,7 +1132,7 @@ func (reply *GenECertReply) SetBytes(msg []byte) error {
 type GenOCertRequest struct {
 	PKc []byte
 	P []byte
-	// TODO pi
+	Pi []byte
 }
 
 func (request *GenOCertRequest) Bytes() ([]byte, error) {

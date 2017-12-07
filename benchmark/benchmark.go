@@ -80,6 +80,22 @@ func main() {
 	fmt.Printf("[Benchmark] rsa_pk: ")
 	fmt.Println(rsaPK)
 
+	sVKBytesKey := []byte("structure_preserving_vk")
+	getArgs = [][]byte{sVKBytesKey}
+	sVKBytes, err := ocert.Get(db, getArgs)
+		if err != nil {
+		fmt.Println(err)
+		panic(err.Error())
+	}
+	sVK := new(ocert.SVerificationKey)
+	err = sVK.SetBytes(sVKBytes)
+	if err != nil {
+		fmt.Println(err)
+		panic(err.Error())
+	}
+	fmt.Printf("[Benchmark] sVK: ")
+	fmt.Println(sVK)
+
 	// Biliear groups
 	sharedParamsBytes, err := ocert.GetSharedParams(db, setupArgs)
 	sharedParams := new(ocert.SharedParams)
@@ -91,6 +107,7 @@ func main() {
 	fmt.Printf("[Benchmark] sharedParams: ")
 	fmt.Println(sharedParams)
 	pairing, _ := pbc.NewPairingFromString(sharedParams.Params)
+	H := pairing.NewG2().SetBytes(sharedParams.G2)
 
 	// GenECert
 	IDc := new(ocert.ClientID)
@@ -99,7 +116,8 @@ func main() {
 	fmt.Println(IDc)
 
 	PKc := new(ocert.ClientPublicKey)
-	PKc.PK = pairing.NewG1().Rand().Bytes()
+	Xc := pairing.NewZr().Rand().Bytes()
+	PKc.PK = pairing.NewG2().MulZn(H, pairing.NewZr().SetBytes(Xc)).Bytes()
 	fmt.Printf("[Benchmark] PKc: ")
 	fmt.Println(PKc)
 
@@ -155,9 +173,26 @@ func main() {
 	fmt.Printf("[Benchmark] rprime: ")
 	fmt.Println(rprime)
 
+	// Proof generation
+	vars := new(ocert.ProofVariables)
+	vars.PKa = auditorPK
+	vars.P = P
+	vars.VK = sVK
+	vars.RPrime = rprime
+	vars.PKc = PKc
+	vars.Xc = Xc
+	vars.E = ecert
+
+	pi := ocert.PSetup(sharedParams, vars)
+
 	ocertRequest := new(ocert.GenOCertRequest)
 	ocertRequest.PKc = newPKc.PK
 	ocertRequest.P, err = newP.Bytes()
+	if err != nil {
+		fmt.Println(err)
+		panic(err.Error())
+	}
+	ocertRequest.Pi, err = pi.Bytes()
 	if err != nil {
 		fmt.Println(err)
 		panic(err.Error())
