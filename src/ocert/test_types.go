@@ -77,6 +77,14 @@ func RunTypesTest() {
 	fmt.Println(err)
 	fmt.Println(eq.Equals(eq2))
 	fmt.Println("-----------")
+	piBytes, err := pi.Bytes()
+	fmt.Println(err)
+	fmt.Println(piBytes)
+	pi4 := new(ProofOfKnowledge)
+	err = pi4.SetBytes(piBytes)
+	fmt.Println(err)
+	fmt.Println(pi.Equals(pi4))
+	fmt.Println("-----------")
 
 	// Create constants for verify
 	consts := new(ProofConstants)

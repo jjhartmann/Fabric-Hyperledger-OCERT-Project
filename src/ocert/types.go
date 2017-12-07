@@ -859,6 +859,118 @@ func (pi *ProofOfKnowledge) Equals(pi2 *ProofOfKnowledge) bool {
 		pi.sigma.Equals(pi2.sigma)
 }
 
+func (pi *ProofOfKnowledge) Bytes() ([]byte, error) {
+	Eq1Bytes, err := pi.Eq1.Bytes()
+	if err != nil {
+		return nil, err
+	}
+
+	Eq2Bytes, err := pi.Eq2.Bytes()
+	if err != nil {
+		return nil, err
+	}
+
+	Eq3Bytes, err := pi.Eq3.Bytes()
+	if err != nil {
+		return nil, err
+	}
+
+	Eq4Bytes, err := pi.Eq4.Bytes()
+	if err != nil {
+		return nil, err
+	}
+
+	Eq5Bytes, err := pi.Eq5.Bytes()
+	if err != nil {
+		return nil, err
+	}
+
+	sigmaBytes, err := pi.sigma.Bytes()
+	if err != nil {
+		return nil, err
+	}
+
+	template := struct {
+		Eq1   []byte
+		Eq2   []byte
+		Eq3   []byte
+		Eq4   []byte
+		Eq5   []byte
+		Sigma []byte
+	} {
+		Eq1Bytes,
+		Eq2Bytes,
+		Eq3Bytes,
+		Eq4Bytes,
+		Eq5Bytes,
+		sigmaBytes,
+	}
+
+	msg, err := json.Marshal(template)
+	return msg, err
+}
+
+func (pi *ProofOfKnowledge) SetBytes(msg []byte) error {
+	template := new(struct {
+		Eq1   []byte
+		Eq2   []byte
+		Eq3   []byte
+		Eq4   []byte
+		Eq5   []byte
+		Sigma []byte
+	})
+
+	err := json.Unmarshal(msg, template)
+	if err != nil {
+		return err
+	}
+
+	Eq1 := new(ProofOfEquation)
+	err = Eq1.SetBytes(template.Eq1)
+	if err != nil {
+		return err
+	}
+
+	Eq2 := new(ProofOfEquation)
+	err = Eq2.SetBytes(template.Eq2)
+	if err != nil {
+		return err
+	}
+
+	Eq3 := new(ProofOfEquation)
+	err = Eq3.SetBytes(template.Eq3)
+	if err != nil {
+		return err
+	}
+
+	Eq4 := new(ProofOfEquation)
+	err = Eq4.SetBytes(template.Eq4)
+	if err != nil {
+		return err
+	}
+
+	Eq5 := new(ProofOfEquation)
+	err = Eq5.SetBytes(template.Eq5)
+	if err != nil {
+		return err
+	}
+
+	sigma := new(CommonReferenceString)
+	err = sigma.SetBytes(template.Sigma)
+	if err != nil {
+		return err
+	}
+
+	pi.Eq1 = Eq1
+	pi.Eq2 = Eq2
+	pi.Eq3 = Eq3
+	pi.Eq4 = Eq4
+	pi.Eq5 = Eq5
+	pi.sigma = sigma
+
+	return nil
+}
+
 /*
  * The proof generate proof of knowledge by using these variables
  * as witness
