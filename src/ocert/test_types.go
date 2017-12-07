@@ -48,7 +48,13 @@ func RunTypesTest() {
 	vars.E = ecert
 
 	pi := PSetup(sharedParams, vars)
-	pi.Print()
+	pi2 := pi
+	pi3 := PSetup(sharedParams, vars)
+	// pi.Print()
+	// pi2.Print()
+	// pi23.Print()
+	fmt.Println(pi.Equals(pi2))
+	fmt.Println(pi.Equals(pi3))
 
 	// Create constants for verify
 	consts := new(ProofConstants)
@@ -58,8 +64,29 @@ func RunTypesTest() {
 	consts.Egz = pairing.NewGT().Pair(G, pairing.NewG2().SetBytes(VK.Z)).Bytes()
 	consts.PPrime = Pprime
 
-	consts.Print()
+	consts2 := new(ProofConstants)
+	consts2.VK = VK
+	consts2.PKa = PKa
+	consts2.Egh = pairing.NewGT().Pair(G, H).Bytes()
+	consts2.Egz = pairing.NewGT().Pair(G, pairing.NewG2().SetBytes(VK.Z)).Bytes()
+	consts2.PPrime = Pprime
+	
+	// consts.Print()
+	// consts2.Print()
+	// fmt.Println(consts.Equals(consts2))
+
+	consts3 := new(ProofConstants)
+	consts3.VK = VK
+	consts3.PKa = PKa
+	consts3.Egh = pairing.NewGT().Pair(G, H).Bytes()
+	consts3.Egz = pairing.NewGT().Pair(G, pairing.NewG2().SetBytes(VK.Z)).Bytes()
+	consts3.PPrime = P
+	// consts3.Print()
+	// fmt.Println(consts.Equals(consts3))
+	// fmt.Println(consts2.Equals(consts3))
 
 	result := PProve(sharedParams, pi, consts)
 	fmt.Println(result)
+	result3 := PProve(sharedParams, pi3, consts)
+	fmt.Println(result3)
 }

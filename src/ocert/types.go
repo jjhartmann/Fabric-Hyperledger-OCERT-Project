@@ -8,7 +8,7 @@ import (
  	"fmt"
 	// "github.com/Nik-U/pbc"
  	"encoding/json"
- 	// "bytes"
+ 	"bytes"
 	"github.com/Nik-U/pbc"
 )
 
@@ -116,6 +116,11 @@ func (P *Pseudonym) SetBytes(msg []byte) error {
 	return err
 }
 
+func (P *Pseudonym) Equals(P2 *Pseudonym) bool {
+	return  bytes.Equal(P.C, P2.C) &&
+		bytes.Equal(P.D, P2.D)
+}
+
 /*****************************************************************/
 
 /*
@@ -148,6 +153,14 @@ func (VK *SVerificationKey) Bytes() ([]byte, error) {
 func (VK *SVerificationKey) SetBytes(msg []byte) error {
 	err := json.Unmarshal(msg, VK)
 	return err
+}
+
+func (VK *SVerificationKey) Equals(VK2 *SVerificationKey) bool {
+	return  bytes.Equal(VK.U, VK2.U) &&
+		bytes.Equal(VK.V, VK2.V) &&
+		bytes.Equal(VK.W1, VK2.W1) &&
+		bytes.Equal(VK.W2, VK2.W2) &&
+		bytes.Equal(VK.Z, VK2.Z)
 }
 
 /*
@@ -207,6 +220,11 @@ func (bp *BPair) Print() {
 	fmt.Println(bp.b2)
 }
 
+func (bp *BPair) Equals(bp2 *BPair) bool {
+	return  bytes.Equal(bp.b1, bp2.b1) &&
+		bytes.Equal(bp.b2, bp2.b2)
+}
+
 
 // BPair Helper function to add elements
 func (l BPair) AddinG1(pairing *pbc.Pairing, r *BPair) *BPair{
@@ -223,6 +241,7 @@ func (l BPair) AddinG1(pairing *pbc.Pairing, r *BPair) *BPair{
 
   return ret
 }
+
 func (l BPair) AddinG2(pairing *pbc.Pairing, r *BPair) *BPair{
   ret := new(BPair)
 
@@ -314,22 +333,67 @@ type CommonReferenceString struct {
 
 func (crs *CommonReferenceString) Print() {
 	fmt.Println("\t[CommonReferenceString]")
-	fmt.Printf("\t\t[U]: ")
-	fmt.Println(crs.U)
+	fmt.Println("\t\t[U]: ")
+	for _, element := range crs.U {
+		(&element).Print()
+	}
+	fmt.Println("")
 
-	fmt.Printf("\t\t[V]: ")
-	fmt.Println(crs.V)
+	fmt.Println("\t\t[V]: ")
+	for _, element := range crs.U {
+		(&element).Print()
+	}
+	fmt.Println("")
 
 	fmt.Printf("\t\t[u]: ")
-	fmt.Println(crs.u)
+	(&crs.u).Print()
 
 	fmt.Printf("\t\t[v]: ")
-	fmt.Println(crs.v)
+	(&crs.v).Print()
+}
+
+
+func (crs *CommonReferenceString) Equals(crs2 *CommonReferenceString) bool {
+	if len(crs.U) != len(crs2.U) {
+		return false
+	}
+
+	if len(crs.V) != len(crs2.V) {
+		return false
+	}
+
+	for i, _ := range crs.U {
+		if !(&crs.U[i]).Equals(&crs2.U[i]) {
+			return false
+		}
+	}
+
+	for i, _ := range crs.V {
+		if !(&crs.V[i]).Equals(&crs2.V[i]) {
+			return false
+		}
+	}
+	return  (&crs.u).Equals(&crs2.u) &&
+		(&crs.v).Equals(&crs2.v)
 }
 
 type CommitmentKey struct {
 	u1 []byte
 	u2 []byte
+}
+
+func (ck *CommitmentKey) Print() {
+	fmt.Println("\t\t\t[CommitmentKey]")
+	fmt.Printf("\t\t\t[u1]: ")
+	fmt.Println(ck.u1)
+
+	fmt.Printf("\t\t\t[u2]: ")
+	fmt.Println(ck.u2)
+}
+
+func (ck *CommitmentKey) Equals(ck2 *CommitmentKey) bool {
+	return  bytes.Equal(ck.u1, ck2.u1) &&
+		bytes.Equal(ck.u2, ck2.u2)
 }
 
 func (ck CommitmentKey) ConvertToBPair() *BPair {
@@ -397,6 +461,70 @@ func (eq *ProofOfEquation) Print() {
 	fmt.Println("")
 }
 
+func (eq *ProofOfEquation) Equals(eq2 *ProofOfEquation) bool {
+	if len(eq.Pi) != len(eq2.Pi) {
+		return false
+	}
+
+	if len(eq.Theta) != len(eq2.Theta) {
+		return false
+	}
+
+	if len(eq.c) != len(eq2.c) {
+		return false
+	}
+
+	if len(eq.d) != len(eq2.d) {
+		return false
+	}
+
+	if len(eq.cprime) != len(eq2.cprime) {
+		return false
+	}
+
+	if len(eq.dprime) != len(eq2.dprime) {
+		return false
+	}
+
+	for i, _ := range eq.Pi {
+		if !eq.Pi[i].Equals(eq2.Pi[i]) {
+			return false
+		}
+	}
+
+	for i, _ := range eq.Theta {
+		if !eq.Theta[i].Equals(eq2.Theta[i]) {
+			return false
+		}
+	}
+
+	for i, _ := range eq.c {
+		if !eq.c[i].Equals(eq2.c[i]) {
+			return false
+		}
+	}
+
+	for i, _ := range eq.d {
+		if !eq.d[i].Equals(eq2.d[i]) {
+			return false
+		}
+	}
+
+	for i, _ := range eq.cprime {
+		if !eq.cprime[i].Equals(eq2.cprime[i]) {
+			return false
+		}
+	}
+
+	for i, _ := range eq.dprime {
+		if !eq.dprime[i].Equals(eq2.dprime[i]) {
+			return false
+		}
+	}
+
+	return true
+}
+
 type ProofOfKnowledge struct {
 	Eq1 *ProofOfEquation
 	Eq2 *ProofOfEquation
@@ -429,6 +557,15 @@ func (pi *ProofOfKnowledge) Print() {
 	fmt.Println("")
 }
 
+func (pi *ProofOfKnowledge) Equals(pi2 *ProofOfKnowledge) bool {
+	return pi.Eq1.Equals(pi2.Eq1) &&
+		pi.Eq2.Equals(pi2.Eq2) &&
+		pi.Eq3.Equals(pi2.Eq3) &&
+		pi.Eq4.Equals(pi2.Eq4) &&
+		pi.Eq5.Equals(pi2.Eq5) &&
+		pi.sigma.Equals(pi2.sigma)
+}
+
 /*
  * The proof generate proof of knowledge by using these variables
  * as witness
@@ -448,7 +585,7 @@ type ProofVariables struct {
  */
 type ProofConstants struct {
 	// g1, g2 and e(g1, g2) are from sharedParams
-	VK    *SVerificationKey // U, V, W1, W2 and Z
+	VK     *SVerificationKey // U, V, W1, W2 and Z
 	PPrime *Pseudonym        // C' and D'
 	Egz    []byte            // e(g1, Z)
 	PKa    *AuditorPublicKey
@@ -473,6 +610,14 @@ func (consts *ProofConstants) Print() {
 	fmt.Println(consts.Egh)
 	fmt.Println("-------------------")
 	fmt.Println("")
+}
+
+func (consts *ProofConstants) Equals(consts2 *ProofConstants) bool {
+	return consts.VK.Equals(consts2.VK) &&
+		consts.PPrime.Equals(consts2.PPrime) &&
+		bytes.Equal(consts.Egz, consts2.Egz) &&
+		bytes.Equal(consts.PKa.PK, consts2.PKa.PK) &&
+		bytes.Equal(consts.Egh, consts2.Egh)
 }
 
 /*****************************************************************/
