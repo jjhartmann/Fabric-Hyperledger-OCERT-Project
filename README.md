@@ -1,10 +1,11 @@
 # OCERT Hyperledger
 
-
-## Install
-
-In order to clone the submodules, use the '--recursive' flag:
-
-```
-git clone --recursive -j8 <repo>
-```
+## Structure
+* **src**: Source code of our main contribution, including **ocert package** that implements the protocol described before, and **ocert chaincode** that is run in **Hyperledger Fabric** network.
+    * **ocert**: Ocert package that implements ElGamal rerandomization encryption, structure-preserving signature and non-interactive zero knowledge proof system, as well as ocert main scheme.
+    * ***chaincode/ocert.go***: The script that run in **Hyperledger Fabric** network, which is based on ***ocert\_scheme.go***. It implements `Init` and `Invoke` chaincode functions, and provides functions like `GenECert` and `GenOCert` to the client.
+* **chaincode-docker-devmode**: This module relies on the **chaincode-docker-devmode** example in **Hyperledger Fabric** tutorial. It starts a docker environment that is used to test a chaincode, including a ***chaincode*** container where the **ocert chaincode** runs and a ***cli*** container where a client can interact with **ocert chaincode**. The docker-compose configuration file is modified so it first builds the images integrating **PBC** library for ***chaincode*** and ***cli*** containers before starting up the whole environment. During starting up, **ocert package** and **ocert chaincode** are copied into ***chaincode*** and ***cli*** containers. Once up, the docker environment is ready for running and testing **ocert chaincode**.
+* **docker**: This module contains two ***Dockerfile***s that are used to build the images mentioned in docker-compose configuration file, one for ***chaincode*** container and another for ***cli*** container. 
+* **benchmark**: This module contains scripts used in evaluation, including one script ***benchmarkcc.go***. It can run in ***cli*** container, interact with **ocert chaincode** and collect data for benchmark.
+* **data**: This module contains three files recording data generated during benchmark. ***genOCertLog.txt*** records the total time to generate one **ocert**; ***genProofLog.txt*** records the time to generate a proof of knowledge in one **ocert** generation; ***verifyProofLog.txt*** records the time to verify a proof of knowledge in one **ocert** generation.
+* **benchmark-analysis-tool**: This module contains the script used to evaluate benchmark date.
