@@ -170,6 +170,7 @@ func (rmat *RMatrix) MultElementArrayZr(pairing *pbc.Pairing, X [][]*pbc.Element
     elementRow := []*pbc.Element{}
     for j := 0; j < len(X[0]); j++ {
       el := pairing.NewZr().Set1()
+      el := pairing.NewZr().Set0()
       for k := 0; k < len(X); k++ {
         tmp := pairing.NewZr().Mul(X[k][j], rmat.mat[i][k])
         el = pairing.NewZr().Add(el, tmp)
