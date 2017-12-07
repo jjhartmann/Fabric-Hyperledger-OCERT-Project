@@ -15,7 +15,7 @@ import (
  * of equations(e.g. pairing product equations and multi-scalar multiplication
  * equations) and outputs proof (e.g pi and theta ...)
  */
-func PSetup(sharedParams *SharedParams, eqs *SystemOfEquations, vars *ProofVariables) *ProofOfKnowledge {
+func PSetup(sharedParams *SharedParams, vars *ProofVariables) *ProofOfKnowledge {
   pairing, _ := pbc.NewPairingFromString(sharedParams.Params)
   g1 := pairing.NewG1().Rand()
   g2 := pairing.NewG2().Rand()

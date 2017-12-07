@@ -48,7 +48,6 @@ func Ptest(verbose bool) bool {
   ecert := SSign(sharedParams, SK, P, PKc)
 
   // Construct Var
-  eqs := new(SystemOfEquations)
   vars := new(ProofVariables)
   vars.PKa = PKa
   vars.P = P
@@ -58,7 +57,7 @@ func Ptest(verbose bool) bool {
   vars.Xc = Xc
   vars.E = ecert
 
-  pi := PSetup(sharedParams, eqs, vars)
+  pi := PSetup(sharedParams, vars)
 
   if verbose {fmt.Println("Testing Structure Integrity")}
   retValEq1 := len(pi.Eq1.Theta) == 2 && len(pi.Eq1.Pi) == 1 &&
