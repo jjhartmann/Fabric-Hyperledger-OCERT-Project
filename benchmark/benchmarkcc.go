@@ -25,7 +25,7 @@ func parseOut(out []byte) []byte {
 }
 
 func setup() {
-	installCmd := "peer chaincode install -p chaincodedev/chaincode/ocert -n myccc -v 0"
+	installCmd := "peer chaincode install -p chaincodedev/chaincode/ocert -n mycc -v 0"
 	_, err := exec.Command("sh","-c", installCmd).Output()
 	if err != nil {
 		fmt.Println(err)
@@ -58,6 +58,26 @@ func auditorPK() *ocert.AuditorPublicKey {
 	}
 
 	return auditorPK
+}
+
+func sVK() *ocert.SVerificationKey {
+	queryCmd := "peer chaincode query -n mycc -c '{\"Args\":[\"get\", \"structure_preserving_vk\"]}' -C myc"
+	out, err := exec.Command("sh","-c", queryCmd).Output()
+
+	if err != nil {
+		fmt.Println(err)
+		panic(err.Error())
+	}
+	
+	sVK := new(ocert.SVerificationKey)
+	err = sVK.SetBytes(parseOut(out))
+
+	if err != nil {
+		fmt.Println(err)
+		panic(err.Error())
+	}
+
+	return sVK
 }
 
 func sharedParams() *ocert.SharedParams {
@@ -149,7 +169,11 @@ func genECert(id *ocert.ClientID, pkc *ocert.ClientPublicKey) (*ocert.Pseudonym,
 	return p, ecert
 }
 
-func genOCert(sharedParams *ocert.SharedParams, p *ocert.Pseudonym, auditorPK *ocert.AuditorPublicKey) (*ocert.ClientPublicKey, *ocert.Pseudonym, []byte){
+func genOCert(sharedParams *ocert.SharedParams, 
+			  p *ocert.Pseudonym, 
+			  auditorPK *ocert.AuditorPublicKey,
+			  vars *ocert.ProofVariables) (*ocert.ClientPublicKey, *ocert.Pseudonym, []byte){
+	fmt.Println("[Benchmarkcc] [genOCert]------------------------------------------------")
 	pairing, _ := pbc.NewPairingFromString(sharedParams.Params)
 
 	// New client public key and pseudonym
@@ -164,24 +188,38 @@ func genOCert(sharedParams *ocert.SharedParams, p *ocert.Pseudonym, auditorPK *o
 	fmt.Printf("[Benchmarkcc] rprime: ")
 	fmt.Println(rprime)
 
-	// TODO proof generation
+	vars.RPrime = rprime
 
-	// start := time.Now()
-	// end := time.Now()
-	// elapsed := end.Sub(start)
-	// fmt.Println("proof generation: ")
-	// fmt.Println(elapsed)
+	// Proof generation
+	start := time.Now()
 
-	// genProofLog.WriteString("genProof: " + elapsed.String() + "\n")
+	pi := ocert.PSetup(sharedParams, vars)
+	
+	end := time.Now()
+	elapsed := end.Sub(start)
+	fmt.Printf("[Benchmarkcc] ProofGeneration time: ")
+	fmt.Println(elapsed)
+	genProofLog.WriteString("genProof: " + elapsed.String() + "\n")
+
+	fmt.Printf("[Benchmarkcc] pi: ")
+	pi.Print()
 
 	request := new(ocert.GenOCertRequest)
 	request.PKc = newPKc.PK
+
 	pBytes, err := newP.Bytes()
 	if err != nil {
 		fmt.Println(err)
 		panic(err.Error())
 	}
 	request.P = pBytes
+
+	piBytes, err := pi.Bytes()
+	if err != nil {
+		fmt.Println(err)
+		panic(err.Error())
+	}
+	request.Pi = piBytes
 
 	requestBytes, err := request.Bytes()
 	if err != nil {
@@ -228,7 +266,10 @@ func main () {
 	}
 
 	// Setup
-	// setup()
+	setup()
+
+	// Wait for chaincode Init call finish
+	time.Sleep(3000 * time.Millisecond)
 
 	// Keys
 	auditorPK := auditorPK()
@@ -239,20 +280,26 @@ func main () {
 	fmt.Printf("[Benchmarkcc] rsa_pk: ")
 	fmt.Println(rsaPK)
 
+	sVK := sVK()
+	fmt.Printf("[Benchmarkcc] sVK: ")
+	fmt.Println(sVK)
+
 	// Bilinear group
 	sharedParams := sharedParams()
 	fmt.Printf("[Benchmarkcc] sharedParams: ")
 	fmt.Println(sharedParams)
+	pairing, _ := pbc.NewPairingFromString(sharedParams.Params)
+	H := pairing.NewG2().SetBytes(sharedParams.G2)
 
 	// GenEcert
-	pairing, _ := pbc.NewPairingFromString(sharedParams.Params)
 	IDc := new(ocert.ClientID)
 	IDc.ID = pairing.NewG1().Rand().Bytes()
 	fmt.Printf("[Benchmarkcc] IDc: ")
 	fmt.Println(IDc)
 
 	PKc := new(ocert.ClientPublicKey)
-	PKc.PK = pairing.NewG1().Rand().Bytes()
+	Xc := pairing.NewZr().Rand().Bytes()
+	PKc.PK = pairing.NewG2().MulZn(H, pairing.NewZr().SetBytes(Xc)).Bytes()
 	fmt.Printf("[Benchmarkcc] PKc: ")
 	fmt.Println(PKc)
 	P, ecert := genECert(IDc, PKc)
@@ -261,11 +308,21 @@ func main () {
 	fmt.Printf("[Benchmarkcc] ecert: ")
 	fmt.Println(ecert)
 
-	for i := 0; i < 10; i++ {
+	vars := new(ocert.ProofVariables)
+	vars.PKa = auditorPK
+	vars.P = P
+	vars.VK = sVK
+	vars.RPrime = nil
+	vars.PKc = PKc
+	vars.Xc = Xc
+	vars.E = ecert
+
+	for i := 0; i < 200; i++ {
+		fmt.Printf("iteration %d\n", i)
 		// GenOCert
 		start := time.Now()
 		
-		newPKc, newP, signature := genOCert(sharedParams, P, auditorPK)
+		newPKc, newP, signature := genOCert(sharedParams, P, auditorPK, vars)
 		
 		end := time.Now()
 		elapsed := end.Sub(start)

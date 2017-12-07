@@ -99,7 +99,7 @@ func Setup(stub Wrapper, args [][]byte) ([]byte, error) {
 	}
 
 	var err error;
-	// verifyProofLog, err = os.Create("/data/verifyProofLog.txt")
+	verifyProofLog, err = os.Create("/data/verifyProofLog.txt")
 	if err != nil {
 		fmt.Println(err)
 		panic(err.Error())
@@ -298,12 +298,12 @@ func GenOCert(stub Wrapper, args [][]byte) ([]byte, error) {
 	elapsed := end.Sub(start)
 	fmt.Printf("[Ocert Scheme] [GenOCert] proof verfication time: ")
 	fmt.Println(elapsed)
-	fmt.Printf("[Ocert Scheme] [GenOCert] proof verfication time: ")
+	fmt.Printf("[Ocert Scheme] [GenOCert] proof verfication result: ")
 	fmt.Println(result)
 	if !result {
 		return nil, fmt.Errorf("Proof verfication fails")
 	}
-	// verifyProofLog.WriteString("verifyProof: " + elapsed.String() + "\n")
+	verifyProofLog.WriteString("verifyProof: " + elapsed.String() + "\n")
 
 	// TODO generate X.509 certificate
 	msg, err := OCertSingedBytes(PKc, P)
