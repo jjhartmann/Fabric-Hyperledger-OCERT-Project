@@ -5,6 +5,7 @@
 package ocert
 
 import (
+ 	"fmt"
 	// "github.com/Nik-U/pbc"
  	"encoding/json"
  	// "bytes"
@@ -197,6 +198,16 @@ type BPair struct {
 	b2 []byte
 }
 
+func (bp *BPair) Print() {
+	fmt.Println("\t\t\t[BPair]")
+	fmt.Printf("\t\t\t[b1]: ")
+	fmt.Println(bp.b1)
+
+	fmt.Printf("\t\t\t[b2]: ")
+	fmt.Println(bp.b2)
+}
+
+
 // BPair Helper function to add elements
 func (l BPair) AddinG1(pairing *pbc.Pairing, r *BPair) *BPair{
   ret := new(BPair)
@@ -301,15 +312,31 @@ type CommonReferenceString struct {
 	v CommitmentKey // For group G2
 }
 
+func (crs *CommonReferenceString) Print() {
+	fmt.Println("\t[CommonReferenceString]")
+	fmt.Printf("\t\t[U]: ")
+	fmt.Println(crs.U)
+
+	fmt.Printf("\t\t[V]: ")
+	fmt.Println(crs.V)
+
+	fmt.Printf("\t\t[u]: ")
+	fmt.Println(crs.u)
+
+	fmt.Printf("\t\t[v]: ")
+	fmt.Println(crs.v)
+}
+
 type CommitmentKey struct {
 	u1 []byte
 	u2 []byte
 }
+
 func (ck CommitmentKey) ConvertToBPair() *BPair {
-  B := new(BPair)
-  B.b1 = ck.u1
-  B.b2 = ck.u2
-  return B
+	B := new(BPair)
+	B.b1 = ck.u1
+	B.b2 = ck.u2
+	return B
 }
 
 
@@ -325,11 +352,49 @@ type ProofString struct {
 type ProofOfEquation struct {
 	Pi     []*BPair
 	Theta  []*BPair
-  c      []*BPair
-  d      []*BPair
-  cprime []*BPair
-  dprime []*BPair
-  Gamma  *RMatrix
+	c      []*BPair
+	d      []*BPair
+	cprime []*BPair
+	dprime []*BPair
+}
+
+func (eq *ProofOfEquation) Print() {
+	fmt.Println("\t[ProofOfEquation]")
+	fmt.Println("\t\t[Pi]: ")
+	for _, element := range eq.Pi {
+		element.Print()
+	}
+	fmt.Println("")
+
+	fmt.Println("\t\t[Theta]: ")
+	for _, element := range eq.Theta {
+		element.Print()
+	}
+	fmt.Println("")
+
+	fmt.Println("\t\t[c]: ")
+	for _, element := range eq.c {
+		element.Print()
+	}
+	fmt.Println("")
+
+	fmt.Println("\t\t[d]: ")
+	for _, element := range eq.d {
+		element.Print()
+	}
+	fmt.Println("")
+
+	fmt.Println("\t\t[cprime]: ")
+	for _, element := range eq.cprime {
+		element.Print()
+	}
+	fmt.Println("")
+
+	fmt.Println("\t\t[dprime]: ")
+	for _, element := range eq.dprime {
+		element.Print()
+	}
+	fmt.Println("")
 }
 
 type ProofOfKnowledge struct {
@@ -339,6 +404,29 @@ type ProofOfKnowledge struct {
 	Eq4 *ProofOfEquation
 	Eq5 *ProofOfEquation
 	sigma *CommonReferenceString
+}
+
+func (pi *ProofOfKnowledge) Print() {
+	fmt.Println("[ProofOfKnowledge]-------------------")
+	fmt.Printf("\t[Eq1]: **********************")
+	pi.Eq1.Print()
+
+	fmt.Printf("\t[Eq2]: **********************")
+	pi.Eq2.Print()
+
+	fmt.Printf("\t[Eq3]: **********************")
+	pi.Eq3.Print()
+
+	fmt.Printf("\t[Eq4]: **********************")
+	pi.Eq4.Print()
+
+	fmt.Printf("\t[Eq5]: **********************")
+	pi.Eq5.Print()
+
+	fmt.Printf("\t[sigma]: **********************")
+	pi.sigma.Print()
+	fmt.Println("-------------------")
+	fmt.Println("")
 }
 
 /*
@@ -365,6 +453,26 @@ type ProofConstants struct {
 	Egz    []byte            // e(g1, Z)
 	PKa    *AuditorPublicKey
 	Egh    []byte            // e(G, H)
+}
+
+func (consts *ProofConstants) Print() {
+	fmt.Println("[ProofConstants]-------------------")
+	fmt.Printf("\t[VK]: ")
+	fmt.Println(consts.VK)
+
+	fmt.Printf("\t[PPrime]: ")
+	fmt.Println(consts.PPrime)
+
+	fmt.Printf("\t[Egs]: ")
+	fmt.Println(consts.Egz)
+
+	fmt.Printf("\t[PKa]: ")
+	fmt.Println(consts.PKa)
+
+	fmt.Printf("\t[Egh]: ")
+	fmt.Println(consts.Egh)
+	fmt.Println("-------------------")
+	fmt.Println("")
 }
 
 /*****************************************************************/
