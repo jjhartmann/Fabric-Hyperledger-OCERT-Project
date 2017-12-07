@@ -56,6 +56,18 @@ func RunTypesTest() {
 	fmt.Println(pi.Equals(pi2))
 	fmt.Println(pi.Equals(pi3))
 
+	fmt.Println("-----------")
+	crs := pi.sigma
+	fmt.Println(crs)
+	crsBytes, err := crs.Bytes()
+	fmt.Println(err)
+	fmt.Println(string(crsBytes))
+	crs2 := new(CommonReferenceString)
+	err = crs2.SetBytes(crsBytes)
+	fmt.Println(err)
+	fmt.Println(crs.Equals(crs2))
+	fmt.Println("-----------")
+
 	// Create constants for verify
 	consts := new(ProofConstants)
 	consts.VK = VK
@@ -98,4 +110,5 @@ func RunTypesTest() {
 	// fmt.Println(result)
 	// result3 := PProve(sharedParams, pi3, consts)
 	// fmt.Println(result3)
+
 }

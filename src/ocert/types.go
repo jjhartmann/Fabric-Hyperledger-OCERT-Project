@@ -225,6 +225,35 @@ func (bp *BPair) Equals(bp2 *BPair) bool {
 		bytes.Equal(bp.b2, bp2.b2)
 }
 
+func (bp *BPair) Bytes() ([]byte, error) {
+	template := struct {
+		B1 []byte
+		B2 []byte
+	} {
+		bp.b1,
+		bp.b2,
+	}
+
+	msg, err := json.Marshal(template)
+	return msg, err
+}
+
+func (bp *BPair) SetBytes(msg []byte) error {
+	template := new(struct {
+		B1 []byte
+		B2 []byte
+	})
+
+	err := json.Unmarshal(msg, template)
+	if err != nil {
+		return err
+	}
+
+	bp.b1 = template.B1
+	bp.b2 = template.B2
+
+	return nil
+}
 
 // BPair Helper function to add elements
 func (l BPair) AddinG1(pairing *pbc.Pairing, r *BPair) *BPair{
@@ -331,6 +360,110 @@ type CommonReferenceString struct {
 	v CommitmentKey // For group G2
 }
 
+func (crs *CommonReferenceString) SetBytes(msg []byte) error {
+	template := new(struct {
+		BigU   [][]byte
+		BigV   [][]byte
+		SmallU []byte
+		SmallV []byte
+	})
+
+	err := json.Unmarshal(msg, template)
+	if err != nil {
+		return err
+	}
+
+	var U []CommitmentKey
+	U = make([]CommitmentKey, len(template.BigU), len(template.BigU))
+	for i, _ := range template.BigU {
+		ck := new(CommitmentKey)
+		err := ck.SetBytes(template.BigU[i])
+		if err != nil {
+			return err
+		}
+		U[i] = *ck
+	}
+
+	var V []CommitmentKey
+	V = make([]CommitmentKey, len(template.BigV), len(template.BigV))
+	for i, _ := range template.BigV {
+		ck := new(CommitmentKey)
+		err := ck.SetBytes(template.BigV[i])
+		if err != nil {
+			return err
+		}
+		V[i] = *ck
+	}
+	
+	u := new(CommitmentKey)
+	err = u.SetBytes(template.SmallU)
+	if err != nil {
+		return err
+	}
+
+	v := new(CommitmentKey)
+	err = v.SetBytes(template.SmallV)
+	if err != nil {
+		return err
+	}
+
+	crs.U = U
+	crs.V = V
+	crs.u = *u
+	crs.v = *v
+
+	return nil
+}
+
+func (crs *CommonReferenceString) Bytes() ([]byte, error) {
+	var BigU [][]byte
+	BigU = make([][]byte, len(crs.U), len(crs.U))
+	for i, _ := range crs.U {
+		ckBytes, err := (&crs.U[i]).Bytes()
+		if err != nil {
+			return nil, err
+		}
+		BigU[i] = ckBytes
+	}
+
+	var BigV [][]byte
+	BigV = make([][]byte, len(crs.V), len(crs.V))
+	for i, _ := range crs.V {
+		ckBytes, err := (&crs.V[i]).Bytes()
+		if err != nil {
+			return nil, err
+		}
+		BigV[i] = ckBytes
+	}
+
+	SmallU, err := (&crs.u).Bytes()
+	if err != nil {
+		return nil, err
+	}
+
+	SmallV, err := (&crs.v).Bytes()
+	if err != nil {
+		return nil, err
+	}
+
+	template := struct {
+		BigU   [][]byte
+		BigV   [][]byte
+		SmallU []byte
+		SmallV []byte
+	} {
+		BigU,
+		BigV,
+		SmallU,
+		SmallV,
+	}
+
+	msg, err := json.Marshal(template)
+	return msg, err
+}
+
+
+
 func (crs *CommonReferenceString) Print() {
 	fmt.Println("\t[CommonReferenceString]")
 	fmt.Println("\t\t[U]: ")
@@ -394,6 +527,36 @@ func (ck *CommitmentKey) Print() {
 func (ck *CommitmentKey) Equals(ck2 *CommitmentKey) bool {
 	return  bytes.Equal(ck.u1, ck2.u1) &&
 		bytes.Equal(ck.u2, ck2.u2)
+}
+
+func (ck *CommitmentKey) Bytes() ([]byte, error) {
+	template := struct {
+		U1 []byte
+		U2 []byte
+	} {
+		ck.u1,
+		ck.u2,
+	}
+
+	msg, err := json.Marshal(template)
+	return msg, err
+}
+
+func (ck *CommitmentKey) SetBytes(msg []byte) error {
+	template := new(struct {
+		U1 []byte
+		U2 []byte
+	})
+
+	err := json.Unmarshal(msg, template)
+	if err != nil {
+		return err
+	}
+
+	ck.u1 = template.U1
+	ck.u2 = template.U2
+
+	return nil
 }
 
 func (ck CommitmentKey) ConvertToBPair() *BPair {
