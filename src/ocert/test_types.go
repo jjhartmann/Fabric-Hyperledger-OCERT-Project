@@ -58,14 +58,24 @@ func RunTypesTest() {
 
 	fmt.Println("-----------")
 	crs := pi.sigma
-	fmt.Println(crs)
+	crs.Print()
 	crsBytes, err := crs.Bytes()
 	fmt.Println(err)
-	fmt.Println(string(crsBytes))
+	fmt.Println(crsBytes)
 	crs2 := new(CommonReferenceString)
 	err = crs2.SetBytes(crsBytes)
 	fmt.Println(err)
 	fmt.Println(crs.Equals(crs2))
+	fmt.Println("-----------")
+	eq := pi.Eq1
+	eq.Print()
+	eqBytes, err := eq.Bytes()
+	fmt.Println(err)
+	fmt.Println(eqBytes)
+	eq2 := new(ProofOfEquation)
+	err = eq2.SetBytes(eqBytes)
+	fmt.Println(err)
+	fmt.Println(eq.Equals(eq2))
 	fmt.Println("-----------")
 
 	// Create constants for verify

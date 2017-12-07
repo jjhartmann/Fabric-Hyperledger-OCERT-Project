@@ -381,7 +381,6 @@ func (crs *CommonReferenceString) Print() {
 	(&crs.v).Print()
 }
 
-
 func (crs *CommonReferenceString) Equals(crs2 *CommonReferenceString) bool {
 	if len(crs.U) != len(crs2.U) {
 		return false
@@ -684,6 +683,139 @@ func (eq *ProofOfEquation) Equals(eq2 *ProofOfEquation) bool {
 	}
 
 	return true
+}
+
+func proofOfEquationBytesHelper(in []*BPair) ([][]byte, error) {
+	var IN [][]byte
+	IN = make([][]byte, len(in), len(in))
+	for i, _ := range in {
+		bpBytes, err := in[i].Bytes()
+		if err != nil {
+			return nil, err
+		}
+		IN[i] = bpBytes
+	}
+	return IN, nil
+}
+
+func (eq *ProofOfEquation) Bytes() ([]byte, error) {
+	Pi, err := proofOfEquationBytesHelper(eq.Pi)
+	if err != nil {
+		return nil, err
+	}
+
+	Theta, err := proofOfEquationBytesHelper(eq.Theta)
+	if err != nil {
+		return nil, err
+	}
+
+	c, err := proofOfEquationBytesHelper(eq.c)
+	if err != nil {
+		return nil, err
+	}
+
+	d, err := proofOfEquationBytesHelper(eq.d)
+	if err != nil {
+		return nil, err
+	}
+
+	cprime, err := proofOfEquationBytesHelper(eq.cprime)
+	if err != nil {
+		return nil, err
+	}
+
+	dprime, err := proofOfEquationBytesHelper(eq.dprime)
+	if err != nil {
+		return nil, err
+	}
+
+	template := struct {
+		Pi     [][]byte
+		Theta  [][]byte
+		C      [][]byte
+		D      [][]byte
+		Cprime [][]byte
+		Dprime [][]byte
+	} {
+		Pi,
+		Theta,
+		c,
+		d,
+		cprime,
+		dprime,
+	}
+
+	msg, err := json.Marshal(template)
+	return msg, err
+}
+
+func proofOfEquationSetBytesHelper(in [][]byte) ([]*BPair, error) {
+	var IN []*BPair
+	IN = make([]*BPair, len(in), len(in))
+	for i, _ := range in {
+		bp := new(BPair)
+		err := bp.SetBytes(in[i])
+		if err != nil {
+			return nil, err
+		}
+		IN[i] = bp
+	}
+	return IN, nil
+}
+
+func (eq *ProofOfEquation) SetBytes(msg []byte) error {
+	template := new(struct {
+		Pi     [][]byte
+		Theta  [][]byte
+		C      [][]byte
+		D      [][]byte
+		Cprime [][]byte
+		Dprime [][]byte
+	})
+
+	err := json.Unmarshal(msg, template)
+	if err != nil {
+		return err
+	}
+
+	Pi, err := proofOfEquationSetBytesHelper(template.Pi)
+	if err != nil {
+		return err
+	}
+
+	Theta, err := proofOfEquationSetBytesHelper(template.Theta)
+	if err != nil {
+		return err
+	}
+
+	c, err := proofOfEquationSetBytesHelper(template.C)
+	if err != nil {
+		return err
+	}
+
+	d, err := proofOfEquationSetBytesHelper(template.D)
+	if err != nil {
+		return err
+	}
+
+	cprime, err := proofOfEquationSetBytesHelper(template.Cprime)
+	if err != nil {
+		return err
+	}
+
+	dprime, err := proofOfEquationSetBytesHelper(template.Dprime)
+	if err != nil {
+		return err
+	}
+
+	eq.Pi = Pi
+	eq.Theta = Theta
+	eq.c = c
+	eq.d = d
+	eq.cprime = cprime
+	eq.dprime = dprime
+
+	return nil
 }
 
 type ProofOfKnowledge struct {
