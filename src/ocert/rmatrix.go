@@ -2,6 +2,7 @@ package ocert
 
 import (
   "github.com/Nik-U/pbc"
+  "fmt"
 )
 
 /*
@@ -99,6 +100,19 @@ func NewIdentiyMatrix(pairing *pbc.Pairing, rows int, cols int) *RMatrix {
     rmat.mat = append(rmat.mat, elementRow)
   }
   return rmat
+}
+
+// Group Type
+// 1: G1
+// 2: G2
+// 3: GT
+func (rmat *RMatrix) PrintAll(pairing *pbc.Pairing) {
+  for i := 0 ;i < rmat.rows; i ++ {
+    for j := 0; j < rmat.cols; j++ {
+      fmt.Printf("%s, ", rmat.mat[i][j])
+    }
+    fmt.Println()
+  }
 }
 
 
