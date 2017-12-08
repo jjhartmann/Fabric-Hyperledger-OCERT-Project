@@ -6,8 +6,7 @@
 package ocert
 
 import (
-	// "fmt"
-	"github.com/Nik-U/pbc"
+    "github.com/Nik-U/pbc"
 )
 
 /*
@@ -22,38 +21,38 @@ import (
  * g1 is the generator of group G1, and g2 is the generator of group G2
  */
 func SKeyGen(sharedParams *SharedParams) (*SVerificationKey, *SSigningKey) {
-	pairing, _ := pbc.NewPairingFromString(sharedParams.Params)
-	g1 := pairing.NewG1().SetBytes(sharedParams.G1)
-	g2 := pairing.NewG2().SetBytes(sharedParams.G2)
+    pairing, _ := pbc.NewPairingFromString(sharedParams.Params)
+    g1 := pairing.NewG1().SetBytes(sharedParams.G1)
+    g2 := pairing.NewG2().SetBytes(sharedParams.G2)
 
-	VK := new(SVerificationKey)
-	SK := new(SSigningKey)
+    VK := new(SVerificationKey)
+    SK := new(SSigningKey)
 
-	u := pairing.NewZr().Rand()
-	v := pairing.NewZr().Rand()
-	w1 := pairing.NewZr().Rand()
-	w2 := pairing.NewZr().Rand()
-	z := pairing.NewZr().Rand()
-	
-	SK.U = u.Bytes()
-	SK.V = v.Bytes()
-	SK.W1 = w1.Bytes()
-	SK.W2 = w2.Bytes()
-	SK.Z = z.Bytes()
+    u := pairing.NewZr().Rand()
+    v := pairing.NewZr().Rand()
+    w1 := pairing.NewZr().Rand()
+    w2 := pairing.NewZr().Rand()
+    z := pairing.NewZr().Rand()
+    
+    SK.U = u.Bytes()
+    SK.V = v.Bytes()
+    SK.W1 = w1.Bytes()
+    SK.W2 = w2.Bytes()
+    SK.Z = z.Bytes()
 
-	U := pairing.NewG1().MulZn(g1, u)
-	V := pairing.NewG2().MulZn(g2, v)
-	W1 := pairing.NewG2().MulZn(g2, w1)
-	W2 := pairing.NewG2().MulZn(g2, w2)
-	Z := pairing.NewG2().MulZn(g2, z)
+    U := pairing.NewG1().MulZn(g1, u)
+    V := pairing.NewG2().MulZn(g2, v)
+    W1 := pairing.NewG2().MulZn(g2, w1)
+    W2 := pairing.NewG2().MulZn(g2, w2)
+    Z := pairing.NewG2().MulZn(g2, z)
 
-	VK.U = U.Bytes()
-	VK.V = V.Bytes()
-	VK.W1 = W1.Bytes()
-	VK.W2 = W2.Bytes()
-	VK.Z = Z.Bytes()
+    VK.U = U.Bytes()
+    VK.V = V.Bytes()
+    VK.W1 = W1.Bytes()
+    VK.W2 = W2.Bytes()
+    VK.Z = Z.Bytes()
 
-	return VK, SK
+    return VK, SK
 }
 
 /*
@@ -67,52 +66,52 @@ func SKeyGen(sharedParams *SharedParams) (*SVerificationKey, *SSigningKey) {
  * T = (1 / 6) * (g2 + (-u) * PKc)
  */
 func SSign(sharedParams *SharedParams, SKei *SSigningKey, P *Pseudonym, PKc *ClientPublicKey) *Ecert {
-	ecert := new(Ecert)
-	pairing, _ := pbc.NewPairingFromString(sharedParams.Params)
-	g1 := pairing.NewG1().SetBytes(sharedParams.G1)
-	g2 := pairing.NewG2().SetBytes(sharedParams.G2)
+    ecert := new(Ecert)
+    pairing, _ := pbc.NewPairingFromString(sharedParams.Params)
+    g1 := pairing.NewG1().SetBytes(sharedParams.G1)
+    g2 := pairing.NewG2().SetBytes(sharedParams.G2)
 
-	u := pairing.NewZr().SetBytes(SKei.U)
-	v := pairing.NewZr().SetBytes(SKei.V)
-	w1 := pairing.NewZr().SetBytes(SKei.W1)
-	w2 := pairing.NewZr().SetBytes(SKei.W2)
-	z := pairing.NewZr().SetBytes(SKei.Z)
+    u := pairing.NewZr().SetBytes(SKei.U)
+    v := pairing.NewZr().SetBytes(SKei.V)
+    w1 := pairing.NewZr().SetBytes(SKei.W1)
+    w2 := pairing.NewZr().SetBytes(SKei.W2)
+    z := pairing.NewZr().SetBytes(SKei.Z)
 
-	C := pairing.NewG1().SetBytes(P.C)
-	D := pairing.NewG1().SetBytes(P.D)
+    C := pairing.NewG1().SetBytes(P.C)
+    D := pairing.NewG1().SetBytes(P.D)
 
-	N := pairing.NewG2().SetBytes(PKc.PK)
+    N := pairing.NewG2().SetBytes(PKc.PK)
 
-	// Generate R
-	r := pairing.NewZr().Rand()
-	R := pairing.NewG1().MulZn(g1, r)
-	ecert.R = R.Bytes()
+    // Generate R
+    r := pairing.NewZr().Rand()
+    R := pairing.NewG1().MulZn(g1, r)
+    ecert.R = R.Bytes()
 
-	// Generate S
-	s0 := pairing.NewZr().Mul(r, v)
-	s0.Sub(z, s0)
-	S0 := pairing.NewG1().MulZn(g1, s0)
+    // Generate S
+    s0 := pairing.NewZr().Mul(r, v)
+    s0.Sub(z, s0)
+    S0 := pairing.NewG1().MulZn(g1, s0)
 
-	negW1 := pairing.NewZr().Neg(w1)
-	S1 := pairing.NewG1().MulZn(C, negW1)
+    negW1 := pairing.NewZr().Neg(w1)
+    S1 := pairing.NewG1().MulZn(C, negW1)
 
-	negW2 := pairing.NewZr().Neg(w2)
-	S2 := pairing.NewG1().MulZn(D, negW2)
+    negW2 := pairing.NewZr().Neg(w2)
+    S2 := pairing.NewG1().MulZn(D, negW2)
 
-	S := pairing.NewG1().Add(S0, S1)
-	S.Add(S, S2)
-	ecert.S = S.Bytes()
+    S := pairing.NewG1().Add(S0, S1)
+    S.Add(S, S2)
+    ecert.S = S.Bytes()
 
-	// Generate T
-	negU := pairing.NewZr().Neg(u)
-	T0 := pairing.NewG2().MulZn(N, negU)
-	T := pairing.NewG2().Add(g2, T0)
+    // Generate T
+    negU := pairing.NewZr().Neg(u)
+    T0 := pairing.NewG2().MulZn(N, negU)
+    T := pairing.NewG2().Add(g2, T0)
 
-	invR := pairing.NewZr().Invert(r)
-	T.MulZn(T, invR)
-	ecert.T = T.Bytes()
+    invR := pairing.NewZr().Invert(r)
+    T.MulZn(T, invR)
+    ecert.T = T.Bytes()
 
-	return ecert
+    return ecert
 }
 
 /*
@@ -126,50 +125,50 @@ func SSign(sharedParams *SharedParams, SKei *SSigningKey, P *Pseudonym, PKc *Cli
  * e(R, T) * e(U, PKc) = e(g1, g2), where e is the pairing operation
  */
 func SVerify(sharedParams *SharedParams, VKei *SVerificationKey, P *Pseudonym, PKc *ClientPublicKey, ecert *Ecert) bool {
-	pairing, _ := pbc.NewPairingFromString(sharedParams.Params)
-	g1 := pairing.NewG1().SetBytes(sharedParams.G1)
-	g2 := pairing.NewG2().SetBytes(sharedParams.G2)
+    pairing, _ := pbc.NewPairingFromString(sharedParams.Params)
+    g1 := pairing.NewG1().SetBytes(sharedParams.G1)
+    g2 := pairing.NewG2().SetBytes(sharedParams.G2)
 
-	U := pairing.NewG1().SetBytes(VKei.U)
-	V := pairing.NewG2().SetBytes(VKei.V)
-	W1 := pairing.NewG2().SetBytes(VKei.W1)
-	W2 := pairing.NewG2().SetBytes(VKei.W2)
-	Z := pairing.NewG2().SetBytes(VKei.Z)
+    U := pairing.NewG1().SetBytes(VKei.U)
+    V := pairing.NewG2().SetBytes(VKei.V)
+    W1 := pairing.NewG2().SetBytes(VKei.W1)
+    W2 := pairing.NewG2().SetBytes(VKei.W2)
+    Z := pairing.NewG2().SetBytes(VKei.Z)
 
-	R := pairing.NewG1().SetBytes(ecert.R)
-	S := pairing.NewG1().SetBytes(ecert.S)
-	T := pairing.NewG2().SetBytes(ecert.T)
+    R := pairing.NewG1().SetBytes(ecert.R)
+    S := pairing.NewG1().SetBytes(ecert.S)
+    T := pairing.NewG2().SetBytes(ecert.T)
 
-	C := pairing.NewG1().SetBytes(P.C)
-	D := pairing.NewG1().SetBytes(P.D)
+    C := pairing.NewG1().SetBytes(P.C)
+    D := pairing.NewG1().SetBytes(P.D)
 
-	N := pairing.NewG2().SetBytes(PKc.PK)
+    N := pairing.NewG2().SetBytes(PKc.PK)
 
-	// Verify e1 * e2 * e3 * e4 = e5
-	e1 := pairing.NewGT().Pair(R, V)
-	e2 := pairing.NewGT().Pair(S, g2)
-	e3 := pairing.NewGT().Pair(C, W1)
-	e4 := pairing.NewGT().Pair(D, W2)
-	e5 := pairing.NewGT().Pair(g1, Z)
-	
-	LHS1 := pairing.NewGT().Mul(e1, e2)
-	LHS1.Mul(LHS1, e3)
-	LHS1.Mul(LHS1, e4)
+    // Verify e1 * e2 * e3 * e4 = e5
+    e1 := pairing.NewGT().Pair(R, V)
+    e2 := pairing.NewGT().Pair(S, g2)
+    e3 := pairing.NewGT().Pair(C, W1)
+    e4 := pairing.NewGT().Pair(D, W2)
+    e5 := pairing.NewGT().Pair(g1, Z)
+    
+    LHS1 := pairing.NewGT().Mul(e1, e2)
+    LHS1.Mul(LHS1, e3)
+    LHS1.Mul(LHS1, e4)
 
-	if !LHS1.Equals(e5) {
-		return false
-	}
+    if !LHS1.Equals(e5) {
+        return false
+    }
 
-	// Verify e6 * e7 = e8
-	e6 := pairing.NewGT().Pair(R, T)
-	e7 := pairing.NewGT().Pair(U, N)
-	e8 := pairing.NewGT().Pair(g1, g2)
+    // Verify e6 * e7 = e8
+    e6 := pairing.NewGT().Pair(R, T)
+    e7 := pairing.NewGT().Pair(U, N)
+    e8 := pairing.NewGT().Pair(g1, g2)
 
-	LHS2 := pairing.NewGT().Mul(e6, e7)
+    LHS2 := pairing.NewGT().Mul(e6, e7)
 
-	if !LHS2.Equals(e8) {
-		return false
-	}
+    if !LHS2.Equals(e8) {
+        return false
+    }
 
-	return true
+    return true
 }
