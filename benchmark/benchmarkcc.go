@@ -317,7 +317,7 @@ func main () {
 	vars.Xc = Xc
 	vars.E = ecert
 
-	for i := 0; i < 1; i++ {
+	for i := 0; i < 200; i++ {
 		fmt.Printf("iteration %d\n", i)
 		// GenOCert
 		start := time.Now()
