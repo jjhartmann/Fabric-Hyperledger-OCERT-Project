@@ -290,6 +290,8 @@ func TestRMatrixMultiplicationforElementinZr(verbose bool, r_rows int, r_cols in
 
   mat := ones.MultElementArrayZr(pairing, X.mat)
   if verbose {
+    fmt.Printf("Dimens: [%d, %d]\n\n", len(mat.mat), len(mat.mat[0]))
+
     fmt.Println("RET:")
     for i := 0; i < mat.rows; i++ {
       for j := 0; j < mat.cols; j++ {
@@ -303,7 +305,7 @@ func TestRMatrixMultiplicationforElementinZr(verbose bool, r_rows int, r_cols in
   ret2 := true
   for i := 0; i < r_rows; i++ {
     for j := 0; j < x_cols; j++ {
-      el := pairing.NewZr().Set1()
+      el := pairing.NewZr().Set0()
       for k := 0; k < x_rows; k++ {
         tmp := pairing.NewZr().Mul(X.mat[k][j], ones.mat[i][k])
         el = el.ThenAdd(tmp)

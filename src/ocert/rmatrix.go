@@ -2,6 +2,7 @@ package ocert
 
 import (
   "github.com/Nik-U/pbc"
+  "fmt"
 )
 
 /*
@@ -101,6 +102,19 @@ func NewIdentiyMatrix(pairing *pbc.Pairing, rows int, cols int) *RMatrix {
   return rmat
 }
 
+// Group Type
+// 1: G1
+// 2: G2
+// 3: GT
+func (rmat *RMatrix) PrintAll(pairing *pbc.Pairing) {
+  for i := 0 ;i < rmat.rows; i ++ {
+    for j := 0; j < rmat.cols; j++ {
+      fmt.Printf("%s, ", rmat.mat[i][j])
+    }
+    fmt.Println()
+  }
+}
+
 
 func (rmat *RMatrix) MultBPairMatrixG2(pairing *pbc.Pairing, X *BMatrix) *BMatrix {
   if len(X.mat) != len(rmat.mat[0]) {
@@ -169,7 +183,7 @@ func (rmat *RMatrix) MultElementArrayZr(pairing *pbc.Pairing, X [][]*pbc.Element
   for i := 0; i < rmat.rows; i++ {
     elementRow := []*pbc.Element{}
     for j := 0; j < len(X[0]); j++ {
-      el := pairing.NewZr().Set1()
+      el := pairing.NewZr().Set0()
       for k := 0; k < len(X); k++ {
         tmp := pairing.NewZr().Mul(X[k][j], rmat.mat[i][k])
         el = pairing.NewZr().Add(el, tmp)

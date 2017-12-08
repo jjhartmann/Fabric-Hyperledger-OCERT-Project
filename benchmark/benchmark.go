@@ -163,7 +163,7 @@ func main() {
 
 	// GenOCert
 	newPKc := new(ocert.ClientPublicKey)
-	newPKc.PK = pairing.NewG1().Rand().Bytes()
+	newPKc.PK = pairing.NewG2().Rand().Bytes()
 	fmt.Printf("[Benchmark] newPKc: ")
 	fmt.Println(newPKc)
 
