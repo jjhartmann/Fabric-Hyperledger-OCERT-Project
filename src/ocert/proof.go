@@ -115,13 +115,13 @@ func PProve(sharedParams *SharedParams, pi *ProofOfKnowledge, consts *ProofConst
 
   //fmt.Println("EQ4:", retVal4)
 
-  // TODO validate eq5
+  // validate eq5
   U := pairing.NewG1().SetBytes(consts.VK.U)
   eGH := pairing.NewGT().SetBytes(consts.Egh)
   _ = U
   _ = eGH
   retVal5 := VerifyEquation5(pairing, pi.Eq5, U, eGH, pi.sigma)
-  _ = retVal5
+  retVal = retVal && retVal5
 
   //fmt.Println("EQ5:", retVal)
 
