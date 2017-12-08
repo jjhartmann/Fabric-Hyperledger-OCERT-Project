@@ -5,4 +5,3 @@ src/chaincode/ocert/ocert
 benchmark/benchmarkcc
 benchmark-analysis-tool/.ipynb*
 benchmark/benchmark
-data/*

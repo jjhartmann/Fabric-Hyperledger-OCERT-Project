@@ -251,15 +251,21 @@ func genOCert(sharedParams *ocert.SharedParams,
 
 var genOCertLog *os.File
 var genProofLog *os.File
+var genECertLog *os.File
 
 func main () {
     var err error
-    genOCertLog, err = os.Create("/data/genOCertLog.txt")
+    genOCertLog, err = os.Create("/data/genOCertLog160.txt")
     if err != nil {
         fmt.Println(err)
         panic(err.Error())
     }
-    genProofLog, err = os.Create("/data/genProofLog.txt")
+    genProofLog, err = os.Create("/data/genProofLog160.txt")
+    if err != nil {
+        fmt.Println(err)
+        panic(err.Error())
+    }
+    genECertLog, err = os.Create("/data/genECertLog160.txt")
     if err != nil {
         fmt.Println(err)
         panic(err.Error())
@@ -291,7 +297,45 @@ func main () {
     pairing, _ := pbc.NewPairingFromString(sharedParams.Params)
     H := pairing.NewG2().SetBytes(sharedParams.G2)
 
-    // GenEcert
+    // Benchmark GenECert, We don't need to generate multiple ecerts in real use case,
+    // one ecert is enought
+    for i := 0; i < 100; i++ {
+        start := time.Now()
+        
+        IDc := new(ocert.ClientID)
+        IDc.ID = pairing.NewG1().Rand().Bytes()
+        fmt.Printf("[Benchmarkcc] IDc: ")
+        fmt.Println(IDc)
+
+        PKc := new(ocert.ClientPublicKey)
+        Xc := pairing.NewZr().Rand().Bytes()
+        PKc.PK = pairing.NewG2().MulZn(H, pairing.NewZr().SetBytes(Xc)).Bytes()
+        fmt.Printf("[Benchmarkcc] PKc: ")
+        fmt.Println(PKc)
+        P, ecert := genECert(IDc, PKc)
+        fmt.Printf("[Benchmarkcc] P: ")
+        fmt.Println(P)
+        fmt.Printf("[Benchmarkcc] ecert: ")
+        fmt.Println(ecert)
+
+        vars := new(ocert.ProofVariables)
+        vars.PKa = auditorPK
+        vars.P = P
+        vars.VK = sVK
+        vars.RPrime = nil
+        vars.PKc = PKc
+        vars.Xc = Xc
+        vars.E = ecert
+
+        end := time.Now()
+        elapsed := end.Sub(start)
+        fmt.Printf("[Benchmarkcc] genECert: ")
+        fmt.Println(elapsed)
+        genECertLog.WriteString("genECert: " + elapsed.String() + "\n")
+    }
+
+
+    // GenECert
     IDc := new(ocert.ClientID)
     IDc.ID = pairing.NewG1().Rand().Bytes()
     fmt.Printf("[Benchmarkcc] IDc: ")
@@ -317,7 +361,7 @@ func main () {
     vars.Xc = Xc
     vars.E = ecert
 
-    for i := 0; i < 200; i++ {
+    for i := 0; i < 100; i++ {
         fmt.Printf("iteration %d\n", i)
         // GenOCert
         start := time.Now()
