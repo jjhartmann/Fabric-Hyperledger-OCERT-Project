@@ -24,7 +24,8 @@ func main() {
   ocert.ETestAll(false)
 
   //Test Key generation from rerandomization
-  //fmt.Println(ocert.TestEquation5Verify(false))
+  //fmt.Println(ocert.TestEquation5Verify(true))
+  //fmt.Println(ocert.TestElementWiseSubtraction(true, 4, 4))
   //fmt.Println(ocert.Ptest(true))
   //fmt.Println(ocert.TestEquation3Verify(true))
 
@@ -39,20 +40,22 @@ func main() {
   //gt := pairing.NewGT().Pair(g1, g2)
   //_ = gt
   //
-  //x := pairing.NewZr().Rand()
-  //H := pairing.NewG2().Rand()
-  //PK := pairing.NewG2().MulZn(H, x)
-  //fmt.Println(PK)
   //
-  //identity := pairing.NewZr().Set1()
-  //fmt.Println(identity)
-  //
-  //negId := pairing.NewZr().Neg(identity)
-  //fmt.Println(negId)
-  //
-  //negPK := pairing.NewG2().Neg(PK)
-  //fmt.Println(negPK)
-  //fmt.Println(pairing.NewG2().Add(PK, negPK))
+  ////zero := pairing.NewZr().Set0()
+  ////one := pairing.NewZr().Set1()
+  //rand := pairing.NewZr().Rand()
+  //res := pairing.NewG1().MulZn(pairing.NewG1().Set0(), rand)
+  //fmt.Println(res)
+
+  //fmt.Println("G", g1)
+  //Gz := pairing.NewG1().MulZn(g1, zero)
+  //fmt.Println("Gz", Gz)
+  //Go := pairing.NewG1().MulZn(g1, one)
+  //fmt.Println("Go:", Go)
+  //fmt.Println("Identiy0:", pairing.NewGT().Set0())
+  //fmt.Println("Identiy:1", pairing.NewGT().Set1())
+
+
 }
 
 
