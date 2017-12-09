@@ -99,7 +99,7 @@ func Setup(stub Wrapper, args [][]byte) ([]byte, error) {
     }
 
     var err error;
-    verifyProofLog, err = os.Create("/data/verifyProofLog480.txt")
+    verifyProofLog, err = os.Create("/data/verifyProofLog640.txt")
     if err != nil {
         fmt.Println(err)
         panic(err.Error())

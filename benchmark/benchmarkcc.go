@@ -255,17 +255,17 @@ var genECertLog *os.File
 
 func main () {
     var err error
-    genOCertLog, err = os.Create("/data/genOCertLog480.txt")
+    genOCertLog, err = os.Create("/data/genOCertLog640.txt")
     if err != nil {
         fmt.Println(err)
         panic(err.Error())
     }
-    genProofLog, err = os.Create("/data/genProofLog480.txt")
+    genProofLog, err = os.Create("/data/genProofLog640.txt")
     if err != nil {
         fmt.Println(err)
         panic(err.Error())
     }
-    genECertLog, err = os.Create("/data/genECertLog480.txt")
+    genECertLog, err = os.Create("/data/genECertLog640.txt")
     if err != nil {
         fmt.Println(err)
         panic(err.Error())

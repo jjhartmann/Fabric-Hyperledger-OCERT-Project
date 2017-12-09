@@ -10,7 +10,7 @@ import (
  */
 func GenerateSharedParams() *SharedParams {
     sharedParams := new(SharedParams)
-    params := pbc.GenerateF(480)
+    params := pbc.GenerateF(640)
     pairing := params.NewPairing()
     g1 := pairing.NewG1().Rand()
     g2 := pairing.NewG2().Rand()
